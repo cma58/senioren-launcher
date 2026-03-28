@@ -34,7 +34,7 @@ class MainActivity : ComponentActivity() {
 
                     // Hier verbinden we de knoppen met de juiste schermen!
                     when (currentScreen) {
-                        "home" -> HomeScreen(onNav = { currentScreen = it }, vm = settingsViewModel)
+                        "home" -> HomeScreen(onNavigate = { currentScreen = it }, settingsVm = settingsViewModel)
                         "phone" -> ContactsScreen(onCall = {}, onBack = { currentScreen = "home" })
                         "sms" -> MessagesScreen(onBack = { currentScreen = "home" })
                         "flashlight" -> FlashlightScreen(onBack = { currentScreen = "home" })
@@ -43,7 +43,7 @@ class MainActivity : ComponentActivity() {
                         "calendar" -> CalendarScreen(onBack = { currentScreen = "home" })
                         "sos" -> EmergencyInfoScreen(onBack = { currentScreen = "home" })
                         // Als de app een knop nog niet kent, blijf dan veilig op het startscherm
-                        else -> HomeScreen(onNav = { currentScreen = it }, vm = settingsViewModel)
+                        else -> HomeScreen(onNavigate = { currentScreen = it }, settingsVm = settingsViewModel)
                     }
                 }
             }
