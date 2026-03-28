@@ -1,32 +1,25 @@
 package com.seniorenlauncher.ui.screens
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.seniorenlauncher.ui.components.ScreenHeader
 
-@Composable
-fun AlarmScreen(onBack: () -> Unit) {
-    Column(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background).padding(horizontal = 12.dp, vertical = 8.dp)) {
-        ScreenHeader(title = "Wekker", onBack = onBack)
-        Column(Modifier.weight(1f).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            // Scherm inhoud voor Wekker
-            Spacer(Modifier.height(20.dp))
-            Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
-                Text("Wekker", fontSize = 24.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onBackground)
-            }
-            // TODO: Volledig implementeren — zie React prototype voor design referentie
+@Composable fun AlarmScreen(onBack:()->Unit){
+    Column(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background).padding(12.dp,8.dp)){
+        ScreenHeader("Wekker",onBack)
+        Column(Modifier.weight(1f),horizontalAlignment=Alignment.CenterHorizontally,verticalArrangement=Arrangement.Center){
+            Text("⏰",fontSize=64.sp)
+            Spacer(Modifier.height(16.dp))
+            Text("Wekker",fontSize=28.sp,fontWeight=FontWeight.Bold,color=MaterialTheme.colorScheme.onBackground)
+            Spacer(Modifier.height(8.dp))
+            Text("Binnenkort beschikbaar",fontSize=16.sp,color=MaterialTheme.colorScheme.onSurfaceVariant,textAlign=TextAlign.Center)
         }
     }
 }
