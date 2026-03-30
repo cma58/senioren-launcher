@@ -3,7 +3,7 @@ import androidx.room.*
 import com.seniorenlauncher.data.model.*
 import kotlinx.coroutines.flow.Flow
 
-@Database(entities = [QuickContact::class, Medication::class, MedicationLog::class, Note::class, CalendarEvent::class, EmergencyInfo::class, AlarmEntry::class], version = 1, exportSchema = false)
+@Database(entities = [QuickContact::class, Medication::class, MedicationLog::class, Note::class, CalendarEvent::class, EmergencyInfo::class, AlarmEntry::class, RadioStation::class], version = 3, exportSchema = false)
 abstract class LauncherDatabase : RoomDatabase() {
     abstract fun contactDao(): ContactDao
     abstract fun medicationDao(): MedicationDao
@@ -11,6 +11,7 @@ abstract class LauncherDatabase : RoomDatabase() {
     abstract fun calendarDao(): CalendarDao
     abstract fun emergencyDao(): EmergencyDao
     abstract fun alarmDao(): AlarmDao
+    abstract fun radioDao(): RadioDao
 }
 
 @Dao interface ContactDao {
@@ -21,7 +22,11 @@ abstract class LauncherDatabase : RoomDatabase() {
 }
 @Dao interface MedicationDao {
     @Query("SELECT * FROM medications WHERE active = 1") fun getActive(): Flow<List<Medication>>
-    @Insert(onConflict = OnConflictStrategy.REPLACE) suspend fun insert(m: Medication)
+    @Query("SELECT * FROM medications WHERE active = 1 AND isPending = 1") fun getPending(): Flow<List<Medication>>
+    @Query("SELECT * FROM medications") suspend fun getAllSync(): List<Medication>
+    @Query("SELECT * FROM medications WHERE id = :id") suspend fun getById(id: Long): Medication?
+    @Insert(onConflict = OnConflictStrategy.REPLACE) suspend fun insert(m: Medication): Long
+    @Update suspend fun update(m: Medication)
     @Delete suspend fun delete(m: Medication)
 }
 @Dao interface NoteDao {
@@ -42,4 +47,9 @@ abstract class LauncherDatabase : RoomDatabase() {
     @Query("SELECT * FROM alarms ORDER BY hour, minute") fun getAll(): Flow<List<AlarmEntry>>
     @Insert(onConflict = OnConflictStrategy.REPLACE) suspend fun insert(a: AlarmEntry)
     @Update suspend fun update(a: AlarmEntry)
+}
+@Dao interface RadioDao {
+    @Query("SELECT * FROM radio_stations ORDER BY category, name") fun getAll(): Flow<List<RadioStation>>
+    @Insert(onConflict = OnConflictStrategy.REPLACE) suspend fun insert(s: RadioStation)
+    @Delete suspend fun delete(s: RadioStation)
 }

@@ -2,6 +2,10 @@
 <resources>
     <string name="app_name">Senioren Launcher</string>
     <string name="sos_emergency">SOS NOODGEVAL</string>
-    <string name="save">Opslaan</string>
-    <string name="cancel">Annuleren</string>
+    <string name="call">Bellen</string>
+    <string name="messages">Berichten</string>
+    <string name="settings">Instellingen</string>
+    <string name="flashlight">Zaklamp</string>
+    <string name="contacts">Contacten</string>
+    <string name="back">Terug</string>
 </resources>
