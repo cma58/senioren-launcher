@@ -19,6 +19,14 @@ Alle senioren-launchers op de markt zijn **duur** of zitten vol met **advertenti
 
 ---
 
+## ☕ Steun het project
+
+Senioren Launcher is en blijft 100% gratis. Wil je helpen om de ontwikkeling te versnellen en nieuwe functies mogelijk te maken? Een donatie wordt enorm gewaardeerd!
+
+[![Doneer via PayPal](https://img.shields.io/badge/Doneer-PayPal-blue.svg)](https://www.paypal.com/donate/?business=amine.chtaiti@gmail.com&no_recurring=0&currency_code=EUR)
+
+---
+
 ## ✨ Functies
 
 ### Kern
@@ -76,7 +84,7 @@ Of open in **Android Studio** → Run.
 | UI | Jetpack Compose + Material 3 |
 | Architectuur | MVVM + Clean Architecture |
 | Database | Room + DataStore |
-| Achtergrond | WorkManager |
+| Architectuur | WorkManager |
 | Sensoren | Accelerometer (valdetectie) |
 | Min SDK | API 26 (Android 8.0) |
 | Target SDK | API 35 |
