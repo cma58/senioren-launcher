@@ -1,9 +1,5 @@
 package com.seniorenlauncher.ui.screens
 
-import android.content.Context
-import android.net.Uri
-import android.provider.Telephony
-import android.telephony.SmsManager
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -26,6 +22,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.seniorenlauncher.LauncherApp
+import com.seniorenlauncher.data.model.QuickContact
 import com.seniorenlauncher.ui.components.ScreenHeader
 import androidx.lifecycle.viewmodel.compose.viewModel
 
@@ -51,9 +49,11 @@ fun MessagesScreen(
     initialAddress: String? = null,
     initialName: String? = null
 ) {
-    val context = LocalContext.current
     val settings by settingsVm.settings.collectAsState()
     val fontSizeMultiplier = settings.fontSize / 16f
+    
+    val dao = LauncherApp.instance.database.contactDao()
+    val favorieten by dao.getAll().collectAsState(initial = emptyList())
     
     var selectedAddress by remember { mutableStateOf<String?>(initialAddress) }
     var selectedName by remember { mutableStateOf<String?>(initialName) }
@@ -85,22 +85,27 @@ fun MessagesScreen(
         
         Box(Modifier.weight(1f)) {
             if (showNewMessagePicker) {
-                Column(Modifier.fillMaxSize()) {
-                    ContactsPicker(
-                        fontSizeMultiplier = fontSizeMultiplier,
-                        localContacts = emptyList(),
-                        onContactSelected = { contact ->
-                            selectedAddress = contact.number
-                            selectedName = contact.name
-                            showNewMessagePicker = false
-                        },
-                        onAddToFavorites = {},
-                        onSmsSelected = { contact ->
-                            selectedAddress = contact.number
-                            selectedName = contact.name
-                            showNewMessagePicker = false
+                LazyColumn(Modifier.fillMaxSize(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    items(favorieten) { contact ->
+                        Card(
+                            modifier = Modifier.fillMaxWidth().clickable {
+                                selectedAddress = contact.phoneNumber
+                                selectedName = contact.name
+                                showNewMessagePicker = false
+                            },
+                            shape = RoundedCornerShape(12.dp),
+                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+                        ) {
+                            Row(Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
+                                Text(contact.emoji, fontSize = 28.sp)
+                                Spacer(Modifier.width(16.dp))
+                                Column {
+                                    Text(contact.name, fontSize = 20.sp * fontSizeMultiplier, fontWeight = FontWeight.Bold)
+                                    Text(contact.phoneNumber, fontSize = 16.sp * fontSizeMultiplier)
+                                }
+                            }
                         }
-                    )
+                    }
                 }
             } else if (selectedAddress == null) {
                 ConversationList(messagesVm, fontSizeMultiplier) { conv ->
