@@ -31,6 +31,8 @@ import kotlinx.coroutines.withContext
 import org.json.JSONArray
 import java.net.URL
 
+data class RadioSearchResult(val name: String, val url: String, val country: String)
+
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun RadioScreen(onBack: () -> Unit, radioVm: RadioViewModel = viewModel()) {
@@ -105,23 +107,53 @@ fun RadioScreen(onBack: () -> Unit, radioVm: RadioViewModel = viewModel()) {
         // --- VASTE PLAYER ONDERAAN ---
         if (currentStation != null) {
             Card(
-                modifier = Modifier.align(Alignment.BottomCenter).fillMaxWidth().padding(12.dp).clickable { /* Ga naar speler detail indien nodig */ },
+                modifier = Modifier.align(Alignment.BottomCenter).fillMaxWidth().padding(12.dp),
                 elevation = CardDefaults.cardElevation(8.dp),
                 shape = RoundedCornerShape(24.dp),
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer)
             ) {
-                Row(Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
-                    Box(contentAlignment = Alignment.Center) {
-                        Text(if (hasError) "⚠️" else currentStation?.emoji ?: "📻", fontSize = 32.sp)
-                        if (isLoading) CircularProgressIndicator(modifier = Modifier.size(48.dp))
+                Column(Modifier.padding(16.dp)) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Box(contentAlignment = Alignment.Center) {
+                            Text(if (hasError) "⚠️" else currentStation?.emoji ?: "📻", fontSize = 32.sp)
+                            if (isLoading) CircularProgressIndicator(modifier = Modifier.size(48.dp))
+                        }
+                        Spacer(Modifier.width(16.dp))
+                        Column(Modifier.weight(1f)) {
+                            Text(if (hasError) "Fout!" else if (isLoading) "Laden..." else "Nu bezig:", fontSize = 12.sp)
+                            Text(currentStation?.name ?: "Zender", fontSize = 18.sp, fontWeight = FontWeight.Bold, maxLines = 1)
+                        }
+                        // Grote Volume Knoppen onderaan voor Senior
+                        Row {
+                            IconButton(onClick = { radioVm.volumeDown() }, modifier = Modifier.size(48.dp)) {
+                                Icon(Icons.Default.Remove, null, modifier = Modifier.size(32.dp))
+                            }
+                            IconButton(onClick = { radioVm.volumeUp() }, modifier = Modifier.size(48.dp)) {
+                                Icon(Icons.Default.Add, null, modifier = Modifier.size(32.dp))
+                            }
+                        }
                     }
-                    Spacer(Modifier.width(16.dp))
-                    Column(Modifier.weight(1f)) {
-                        Text(if (hasError) "Fout!" else if (isLoading) "Laden..." else "Nu bezig:", fontSize = 12.sp)
-                        Text(currentStation?.name ?: "Zender", fontSize = 18.sp, fontWeight = FontWeight.Bold, maxLines = 1)
-                    }
-                    IconButton(onClick = { if (isPlaying) radioVm.pause() else radioVm.resume() }, modifier = Modifier.size(64.dp)) {
-                        Icon(if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow, null, modifier = Modifier.size(40.dp))
+                    Spacer(Modifier.height(8.dp))
+                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Button(
+                            onClick = { if (isPlaying) radioVm.pause() else radioVm.resume() },
+                            modifier = Modifier.weight(1f).height(56.dp),
+                            shape = RoundedCornerShape(12.dp)
+                        ) {
+                            Icon(if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow, null)
+                            Spacer(Modifier.width(8.dp))
+                            Text(if (isPlaying) "Pauze" else "Speel")
+                        }
+                        Button(
+                            onClick = { radioVm.stop() },
+                            modifier = Modifier.weight(0.6f).height(56.dp),
+                            shape = RoundedCornerShape(12.dp),
+                            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
+                        ) {
+                            Icon(Icons.Default.Stop, null)
+                            Spacer(Modifier.width(8.dp))
+                            Text("Stop")
+                        }
                     }
                 }
             }
@@ -129,7 +161,7 @@ fun RadioScreen(onBack: () -> Unit, radioVm: RadioViewModel = viewModel()) {
 
         FloatingActionButton(
             onClick = { showAddDialog = true },
-            modifier = Modifier.align(Alignment.BottomEnd).padding(bottom = if (currentStation != null) 110.dp else 24.dp, end = 24.dp),
+            modifier = Modifier.align(Alignment.BottomEnd).padding(bottom = if (currentStation != null) 160.dp else 24.dp, end = 24.dp),
             containerColor = MaterialTheme.colorScheme.primary
         ) {
             Icon(Icons.Default.Add, null, modifier = Modifier.size(32.dp))
@@ -176,7 +208,6 @@ fun AddRadioDialog(onDismiss: () -> Unit, onSave: (String, String, String, Strin
                 )
 
                 if (isUrl) {
-                    // Directe Link Modus (bijv. van FMStream)
                     Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)) {
                         Column(Modifier.padding(16.dp)) {
                             Text("Gevonden: Directe Stream", fontWeight = FontWeight.Bold)
@@ -187,7 +218,6 @@ fun AddRadioDialog(onDismiss: () -> Unit, onSave: (String, String, String, Strin
                     }
                     url = input
                 } else if (input.length > 2) {
-                    // Zoekmodus
                     Button(
                         onClick = {
                             isSearching = true
@@ -218,7 +248,7 @@ fun AddRadioDialog(onDismiss: () -> Unit, onSave: (String, String, String, Strin
                                 Modifier.fillMaxWidth().padding(vertical = 4.dp).clickable {
                                     name = res.name
                                     url = res.url
-                                    input = "" // Stop zoeken
+                                    input = ""
                                 },
                                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
                             ) {

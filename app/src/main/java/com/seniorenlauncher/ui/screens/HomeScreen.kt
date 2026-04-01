@@ -9,12 +9,17 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.grid.*
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.Remove
+import androidx.compose.material.icons.filled.Stop
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -89,24 +94,69 @@ fun HomeScreen(onNavigate: (String) -> Unit, settingsVm: SettingsViewModel, radi
     Column(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background).padding(horizontal = 12.dp, vertical = 8.dp)) {
         ClockWidget(fontSizeMultiplier)
         
-        // --- Radio Mini Player ---
+        // --- Radio Mini Player (Senior-Proof met Volume & Stop) ---
         AnimatedVisibility(visible = currentStation != null) {
             Column {
                 Spacer(Modifier.height(8.dp))
                 Card(
-                    modifier = Modifier.fillMaxWidth().clickable { onNavigate("radio") },
+                    modifier = Modifier.fillMaxWidth(),
                     colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer),
-                    shape = RoundedCornerShape(16.dp)
+                    shape = RoundedCornerShape(24.dp)
                 ) {
-                    Row(Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
-                        Text(currentStation?.emoji ?: "📻", fontSize = 32.sp)
-                        Spacer(Modifier.width(12.dp))
-                        Column(Modifier.weight(1f)) {
-                            Text("Radio aan:", fontSize = 12.sp * fontSizeMultiplier)
-                            Text(currentStation?.name ?: "", fontSize = 18.sp * fontSizeMultiplier, fontWeight = FontWeight.Bold, maxLines = 1)
+                    Column(Modifier.padding(12.dp)) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text(currentStation?.emoji ?: "📻", fontSize = 36.sp, modifier = Modifier.clickable { onNavigate("radio") })
+                            Spacer(Modifier.width(12.dp))
+                            Column(Modifier.weight(1f).clickable { onNavigate("radio") }) {
+                                Text("Radio staat aan:", fontSize = 12.sp * fontSizeMultiplier)
+                                Text(currentStation?.name ?: "", fontSize = 18.sp * fontSizeMultiplier, fontWeight = FontWeight.Bold, maxLines = 1)
+                            }
+                            // Grote Volume Knoppen
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                FilledIconButton(
+                                    onClick = { radioVm.volumeDown() },
+                                    modifier = Modifier.size(54.dp),
+                                    colors = IconButtonDefaults.filledIconButtonColors(containerColor = MaterialTheme.colorScheme.surface)
+                                ) {
+                                    Icon(Icons.Default.Remove, "Zachter", modifier = Modifier.size(30.dp))
+                                }
+                                Spacer(Modifier.width(8.dp))
+                                FilledIconButton(
+                                    onClick = { radioVm.volumeUp() },
+                                    modifier = Modifier.size(54.dp),
+                                    colors = IconButtonDefaults.filledIconButtonColors(containerColor = MaterialTheme.colorScheme.surface)
+                                ) {
+                                    Icon(Icons.Default.Add, "Harder", modifier = Modifier.size(30.dp))
+                                }
+                            }
                         }
-                        IconButton(onClick = { if (isPlaying) radioVm.pause() else radioVm.resume() }, modifier = Modifier.size(64.dp)) {
-                            Icon(if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow, null, modifier = Modifier.size(40.dp))
+                        
+                        Spacer(Modifier.height(12.dp))
+                        
+                        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            // Grote Pauze/Speel Knop
+                            Button(
+                                onClick = { if (isPlaying) radioVm.pause() else radioVm.resume() },
+                                modifier = Modifier.weight(1f).height(60.dp),
+                                shape = RoundedCornerShape(16.dp),
+                                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
+                            ) {
+                                Icon(if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow, null)
+                                Spacer(Modifier.width(8.dp))
+                                Text(if (isPlaying) "Pauze" else "Speel", fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                            }
+                            
+                            // Grote STOP Knop (Klaar)
+                            Button(
+                                onClick = { radioVm.stop() },
+                                modifier = Modifier.weight(0.7f).height(60.dp),
+                                shape = RoundedCornerShape(16.dp),
+                                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
+                            ) {
+                                Icon(Icons.Default.Stop, null)
+                                Spacer(Modifier.width(8.dp))
+                                Text("Stop", fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                            }
                         }
                     }
                 }

@@ -2,6 +2,7 @@ package com.seniorenlauncher.ui.screens
 
 import android.content.ComponentName
 import android.content.Context
+import android.media.AudioManager
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.media3.common.MediaItem
@@ -21,6 +22,7 @@ import kotlinx.coroutines.launch
 class RadioViewModel : ViewModel() {
     private var controllerFuture: ListenableFuture<MediaController>? = null
     private val controller: MediaController? get() = if (controllerFuture?.isDone == true) controllerFuture?.get() else null
+    private val audioManager = LauncherApp.instance.getSystemService(Context.AUDIO_SERVICE) as AudioManager
 
     private val _currentStation = MutableStateFlow<RadioStation?>(null)
     val currentStation: StateFlow<RadioStation?> = _currentStation
@@ -47,18 +49,16 @@ class RadioViewModel : ViewModel() {
             controller.addListener(object : Player.Listener {
                 override fun onIsPlayingChanged(isPlaying: Boolean) {
                     _isPlaying.value = isPlaying
+                    if (!isPlaying && controller.playbackState == Player.STATE_IDLE) {
+                        _currentStation.value = null
+                    }
                 }
 
                 override fun onPlaybackStateChanged(playbackState: Int) {
                     _isLoading.value = playbackState == Player.STATE_BUFFERING
                     _hasError.value = playbackState == Player.STATE_IDLE && _currentStation.value != null
                 }
-
-                override fun onMediaMetadataChanged(mediaMetadata: MediaMetadata) {
-                    // Update current station based on metadata if needed
-                }
             })
-            // Sync initial state
             _isPlaying.value = controller.isPlaying
         }, MoreExecutors.directExecutor())
     }
@@ -95,6 +95,20 @@ class RadioViewModel : ViewModel() {
 
     fun resume() {
         controller?.play()
+    }
+
+    fun stop() {
+        controller?.stop()
+        _currentStation.value = null
+        _isPlaying.value = false
+    }
+
+    fun volumeUp() {
+        audioManager.adjustStreamVolume(AudioManager.STREAM_MUSIC, AudioManager.ADJUST_RAISE, AudioManager.FLAG_SHOW_UI)
+    }
+
+    fun volumeDown() {
+        audioManager.adjustStreamVolume(AudioManager.STREAM_MUSIC, AudioManager.ADJUST_LOWER, AudioManager.FLAG_SHOW_UI)
     }
 
     override fun onCleared() {
