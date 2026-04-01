@@ -29,7 +29,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.json.JSONArray
-import org.json.JSONObject
 import java.net.URL
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -104,9 +103,9 @@ fun RadioScreen(onBack: () -> Unit, radioVm: RadioViewModel = viewModel()) {
         }
 
         // --- VASTE PLAYER ONDERAAN ---
-        if (currentStation != null || isPlaying || isLoading) {
+        if (currentStation != null) {
             Card(
-                modifier = Modifier.align(Alignment.BottomCenter).fillMaxWidth().padding(12.dp),
+                modifier = Modifier.align(Alignment.BottomCenter).fillMaxWidth().padding(12.dp).clickable { /* Ga naar speler detail indien nodig */ },
                 elevation = CardDefaults.cardElevation(8.dp),
                 shape = RoundedCornerShape(24.dp),
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer)
@@ -121,11 +120,8 @@ fun RadioScreen(onBack: () -> Unit, radioVm: RadioViewModel = viewModel()) {
                         Text(if (hasError) "Fout!" else if (isLoading) "Laden..." else "Nu bezig:", fontSize = 12.sp)
                         Text(currentStation?.name ?: "Zender", fontSize = 18.sp, fontWeight = FontWeight.Bold, maxLines = 1)
                     }
-                    IconButton(onClick = { if (isPlaying) radioVm.pause() else radioVm.resume() }, modifier = Modifier.size(56.dp)) {
+                    IconButton(onClick = { if (isPlaying) radioVm.pause() else radioVm.resume() }, modifier = Modifier.size(64.dp)) {
                         Icon(if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow, null, modifier = Modifier.size(40.dp))
-                    }
-                    IconButton(onClick = { radioVm.playStation(currentStation!!) }, modifier = Modifier.size(56.dp)) {
-                        Icon(Icons.Default.Stop, null, modifier = Modifier.size(32.dp))
                     }
                 }
             }
@@ -136,7 +132,7 @@ fun RadioScreen(onBack: () -> Unit, radioVm: RadioViewModel = viewModel()) {
             modifier = Modifier.align(Alignment.BottomEnd).padding(bottom = if (currentStation != null) 110.dp else 24.dp, end = 24.dp),
             containerColor = MaterialTheme.colorScheme.primary
         ) {
-            Icon(Icons.Default.Add, null)
+            Icon(Icons.Default.Add, null, modifier = Modifier.size(32.dp))
         }
     }
 
@@ -153,127 +149,104 @@ fun RadioScreen(onBack: () -> Unit, radioVm: RadioViewModel = viewModel()) {
     }
 }
 
-data class RadioSearchResult(val name: String, val url: String, val country: String)
-
 @Composable
 fun AddRadioDialog(onDismiss: () -> Unit, onSave: (String, String, String, String) -> Unit) {
     val scope = rememberCoroutineScope()
-    var query by remember { mutableStateOf("") }
+    var input by remember { mutableStateOf("") }
     var name by remember { mutableStateOf("") }
     var url by remember { mutableStateOf("") }
     var emoji by remember { mutableStateOf("📻") }
-    var category by remember { mutableStateOf("⭐ Mijn Zenders") }
     
     var searchResults by remember { mutableStateOf<List<RadioSearchResult>>(emptyList()) }
     var isSearching by remember { mutableStateOf(false) }
 
+    val isUrl = input.startsWith("http")
+
     Dialog(onDismissRequest = onDismiss) {
         Card(Modifier.fillMaxWidth().fillMaxHeight(0.85f).padding(16.dp), shape = RoundedCornerShape(24.dp)) {
-            Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                Text("Zender Zoeken", fontSize = 24.sp, fontWeight = FontWeight.Black)
-                Text("Typ een naam om te zoeken op FMstream", fontSize = 14.sp)
+            Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                Text("Zender Toevoegen", fontSize = 24.sp, fontWeight = FontWeight.Black)
                 
-                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    OutlinedTextField(
-                        value = query, 
-                        onValueChange = { query = it }, 
-                        label = { Text("Naam zender...") }, 
-                        modifier = Modifier.weight(1f),
-                        shape = RoundedCornerShape(12.dp)
-                    )
-                    Button(
-                        onClick = {
-                            if (query.length > 2) {
-                                isSearching = true
-                                scope.launch {
-                                    try {
-                                        val results = withContext(Dispatchers.IO) {
-                                            // FMStream Search API (via radio-browser compat layer of fmstream direct)
-                                            // Opmerking: fmstream.org biedt vaak een json endpoint of we gebruiken een proxy
-                                            // Voor nu gebruiken we de meest betrouwbare directe methode
-                                            val response = URL("https://de1.api.radio-browser.info/json/stations/byname/${query.trim().replace(" ", "%20")}").readText()
-                                            val json = JSONArray(response)
-                                            val list = mutableListOf<RadioSearchResult>()
-                                            for (i in 0 until minOf(json.length(), 20)) {
-                                                val obj = json.getJSONObject(i)
-                                                list.add(RadioSearchResult(
-                                                    obj.getString("name").trim(),
-                                                    obj.getString("url_resolved"),
-                                                    obj.optString("country", "Onbekend")
-                                                ))
-                                            }
-                                            list
-                                        }
-                                        searchResults = results
-                                    } catch (e: Exception) {
-                                        e.printStackTrace()
-                                    } finally {
-                                        isSearching = false
-                                    }
-                                }
-                            }
-                        },
-                        modifier = Modifier.size(64.dp),
-                        shape = RoundedCornerShape(12.dp),
-                        contentPadding = PaddingValues(0.dp)
-                    ) {
-                        if (isSearching) CircularProgressIndicator(Modifier.size(24.dp), color = Color.White)
-                        else Icon(Icons.Default.Search, null, modifier = Modifier.size(32.dp))
-                    }
-                }
+                OutlinedTextField(
+                    value = input, 
+                    onValueChange = { input = it }, 
+                    label = { Text(if (isUrl) "Link gedetecteerd!" else "Typ naam of plak link...") }, 
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(12.dp)
+                )
 
-                if (searchResults.isNotEmpty()) {
-                    Text("Kies een zender:", fontWeight = FontWeight.Bold)
-                    LazyColumn(Modifier.weight(1f).background(MaterialTheme.colorScheme.surfaceVariant, RoundedCornerShape(12.dp))) {
-                        items(searchResults) { res ->
-                            Column(Modifier.fillMaxWidth().clickable { 
-                                name = res.name
-                                url = res.url
-                                searchResults = emptyList() 
-                            }.padding(16.dp)) {
-                                Text(res.name, fontWeight = FontWeight.ExtraBold, fontSize = 20.sp)
-                                Text(res.country, fontSize = 16.sp, color = MaterialTheme.colorScheme.secondary)
-                            }
-                            HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp), color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.3f))
-                        }
-                    }
-                } else if (!isSearching && name.isNotBlank()) {
+                if (isUrl) {
+                    // Directe Link Modus (bijv. van FMStream)
                     Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)) {
                         Column(Modifier.padding(16.dp)) {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Icon(Icons.Default.CheckCircle, null, tint = MaterialTheme.colorScheme.primary)
-                                Spacer(Modifier.width(8.dp))
-                                Text("Gekozen: $name", fontWeight = FontWeight.Bold, fontSize = 18.sp)
-                            }
+                            Text("Gevonden: Directe Stream", fontWeight = FontWeight.Bold)
+                            Text("Geef deze zender een naam:", fontSize = 14.sp)
+                            Spacer(Modifier.height(8.dp))
+                            OutlinedTextField(value = name, onValueChange = { name = it }, placeholder = { Text("Bijv. Radio Extra") }, modifier = Modifier.fillMaxWidth())
                         }
                     }
-                    
-                    OutlinedTextField(value = emoji, onValueChange = { emoji = it }, label = { Text("Kies een icoontje (emoji)") }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp))
-                    
-                    Text("In welke groep?", fontWeight = FontWeight.Bold)
-                    val cats = listOf("⭐ Favorieten", "🇳🇱 Nederland", "🇧🇪 België")
-                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        cats.forEach { c ->
-                            FilterChip(
-                                selected = category == c, 
-                                onClick = { category = c }, 
-                                label = { Text(c, fontSize = 16.sp) },
-                                modifier = Modifier.height(48.dp)
-                            )
+                    url = input
+                } else if (input.length > 2) {
+                    // Zoekmodus
+                    Button(
+                        onClick = {
+                            isSearching = true
+                            scope.launch {
+                                try {
+                                    val response = withContext(Dispatchers.IO) {
+                                        URL("https://de1.api.radio-browser.info/json/stations/byname/${input.trim().replace(" ", "%20")}").readText()
+                                    }
+                                    val json = JSONArray(response)
+                                    val list = mutableListOf<RadioSearchResult>()
+                                    for (i in 0 until minOf(json.length(), 10)) {
+                                        val obj = json.getJSONObject(i)
+                                        list.add(RadioSearchResult(obj.getString("name"), obj.getString("url_resolved"), obj.optString("country", "")))
+                                    }
+                                    searchResults = list
+                                } catch (e: Exception) { } finally { isSearching = false }
+                            }
+                        },
+                        modifier = Modifier.fillMaxWidth().height(56.dp)
+                    ) {
+                        if (isSearching) CircularProgressIndicator(color = Color.White)
+                        else Text("🔍 Zoek op internet")
+                    }
+
+                    LazyColumn(Modifier.weight(1f)) {
+                        items(searchResults) { res ->
+                            Card(
+                                Modifier.fillMaxWidth().padding(vertical = 4.dp).clickable {
+                                    name = res.name
+                                    url = res.url
+                                    input = "" // Stop zoeken
+                                },
+                                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+                            ) {
+                                Column(Modifier.padding(12.dp)) {
+                                    Text(res.name, fontWeight = FontWeight.Bold, fontSize = 18.sp)
+                                    Text(res.country, fontSize = 14.sp)
+                                }
+                            }
                         }
                     }
                 }
 
-                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                    TextButton(onClick = onDismiss) { Text("Annuleren", fontSize = 18.sp) }
+                if (name.isNotBlank() && url.isNotBlank()) {
+                    Text("Icoontje:", fontWeight = FontWeight.Bold)
+                    OutlinedTextField(value = emoji, onValueChange = { emoji = it }, modifier = Modifier.width(100.dp))
+                    
+                    Spacer(Modifier.weight(1f))
                     Button(
-                        onClick = { if (name.isNotBlank() && url.isNotBlank()) onSave(name, url, emoji, category) },
-                        enabled = name.isNotBlank() && url.isNotBlank(),
-                        shape = RoundedCornerShape(12.dp),
-                        modifier = Modifier.height(60.dp).padding(horizontal = 8.dp)
+                        onClick = { onSave(name, url, emoji, "⭐ Mijn Zenders") },
+                        modifier = Modifier.fillMaxWidth().height(70.dp),
+                        shape = RoundedCornerShape(16.dp)
                     ) {
-                        Text("Toevoegen", fontSize = 20.sp, fontWeight = FontWeight.Bold)
+                        Text("Opslaan & Spelen", fontSize = 20.sp, fontWeight = FontWeight.Bold)
                     }
+                }
+
+                TextButton(onClick = onDismiss, modifier = Modifier.align(Alignment.CenterHorizontally)) {
+                    Text("Annuleren", fontSize = 18.sp)
                 }
             }
         }
