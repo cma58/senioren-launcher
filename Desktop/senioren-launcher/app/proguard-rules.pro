@@ -1,0 +1,4 @@
+-keep class com.seniorenlauncher.data.model.** { *; }
+-keep class com.seniorenlauncher.data.db.** { *; }
+-keep class * extends androidx.room.RoomDatabase
+-keep @androidx.room.Entity class *
