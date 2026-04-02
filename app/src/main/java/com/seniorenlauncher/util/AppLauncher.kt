@@ -9,62 +9,53 @@ import android.net.Uri
 import android.provider.AlarmClock
 import android.provider.CalendarContract
 import android.provider.MediaStore
+import android.util.Log
 import android.widget.Toast
 
 data class InstalledApp(val name: String, val packageName: String, val icon: Drawable? = null)
 
 object AppLauncher {
-    fun launchApp(context: Context, appId: String, customPackage: String? = null): Boolean {
-        try {
-            if (customPackage != null && customPackage.isNotEmpty()) {
-                val intent = context.packageManager.getLaunchIntentForPackage(customPackage)
-                if (intent != null) {
-                    context.startActivity(intent)
-                    return true
-                }
-            }
-
-            val intent: Intent? = when (appId) {
-                "phone" -> Intent(Intent.ACTION_DIAL)
-                "sms" -> Intent(Intent.ACTION_MAIN).apply {
-                    addCategory(Intent.CATEGORY_APP_MESSAGING)
-                }
-                "whatsapp" -> context.packageManager.getLaunchIntentForPackage("com.whatsapp")
-                "video" -> context.packageManager.getLaunchIntentForPackage("com.google.android.apps.tachyon") // Meet
-                    ?: context.packageManager.getLaunchIntentForPackage("com.whatsapp")
-                "camera" -> Intent(MediaStore.INTENT_ACTION_STILL_IMAGE_CAMERA)
-                "photos" -> Intent(Intent.ACTION_VIEW).apply {
-                    type = "image/*"
-                    flags = Intent.FLAG_ACTIVITY_NEW_TASK
-                }
-                "alarm" -> Intent(AlarmClock.ACTION_SET_ALARM)
-                "calendar" -> {
-                    val builder = CalendarContract.CONTENT_URI.buildUpon().appendPath("time")
-                    Intent(Intent.ACTION_VIEW).setData(builder.build())
-                }
-                "weather" -> Intent(Intent.ACTION_VIEW, Uri.parse("https://www.buienradar.nl"))
-                "notes" -> context.packageManager.getLaunchIntentForPackage("com.google.android.apps.notes") // Google Keep
-                    ?: context.packageManager.getLaunchIntentForPackage("com.samsung.android.app.notes")
-                "radio" -> context.packageManager.getLaunchIntentForPackage("com.google.android.apps.youtube.music")
-                    ?: context.packageManager.getLaunchIntentForPackage("com.spotify.music")
-                else -> null
-            }
-
+    fun launchApp(context: Context, packageName: String): Boolean {
+        return try {
+            val intent = context.packageManager.getLaunchIntentForPackage(packageName)
             if (intent != null) {
+                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                 context.startActivity(intent)
-                return true
+                true
+            } else {
+                false
             }
         } catch (e: Exception) {
-            Toast.makeText(context, "Kon app niet openen", Toast.LENGTH_SHORT).show()
+            Log.e("AppLauncher", "Error launching app: $packageName", e)
+            false
         }
-        return false
+    }
+
+    fun openSystemCamera(context: Context) {
+        try {
+            val intent = Intent(MediaStore.INTENT_ACTION_STILL_IMAGE_CAMERA).apply {
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            }
+            if (intent.resolveActivity(context.packageManager) != null) {
+                context.startActivity(intent)
+            } else {
+                // Fallback for some devices
+                val cameraIntent = Intent(MediaStore.ACTION_IMAGE_CAPTURE).apply {
+                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                }
+                context.startActivity(cameraIntent)
+            }
+        } catch (e: Exception) {
+            Log.e("AppLauncher", "Error opening camera", e)
+            Toast.makeText(context, "Kan camera niet openen", Toast.LENGTH_SHORT).show()
+        }
     }
 
     fun getInstalledApps(context: Context, includeIcons: Boolean = false): List<InstalledApp> {
         val pm = context.packageManager
         val apps = pm.getInstalledApplications(PackageManager.GET_META_DATA)
         return apps.filter { 
-            (it.flags and ApplicationInfo.FLAG_SYSTEM == 0) || (pm.getLaunchIntentForPackage(it.packageName) != null)
+            (pm.getLaunchIntentForPackage(it.packageName) != null)
         }
         .map { 
             InstalledApp(
@@ -85,25 +76,6 @@ object AppLauncher {
                 packageName,
                 appInfo.loadIcon(pm)
             )
-        } catch (e: PackageManager.NameNotFoundException) {
-            null
-        }
-    }
-
-    fun getAppName(context: Context, packageName: String): String? {
-        val pm = context.packageManager
-        return try {
-            val appInfo = pm.getApplicationInfo(packageName, 0)
-            appInfo.loadLabel(pm).toString()
-        } catch (e: PackageManager.NameNotFoundException) {
-            null
-        }
-    }
-
-    fun getAppIcon(context: Context, packageName: String): Drawable? {
-        val pm = context.packageManager
-        return try {
-            pm.getApplicationIcon(packageName)
         } catch (e: PackageManager.NameNotFoundException) {
             null
         }

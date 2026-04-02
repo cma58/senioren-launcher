@@ -12,6 +12,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.AccessTime
+import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.outlined.Circle
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -56,6 +58,46 @@ fun MedicationScreen(onBack: () -> Unit) {
                         Text("Geen medicijnen toegevoegd", color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                 } else {
+                    // Sectie voor herinneringen die nog open staan
+                    val pendingMeds = medications.filter { it.isPending }
+                    if (pendingMeds.isNotEmpty()) {
+                        Card(
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = CardDefaults.cardColors(containerColor = Color(0xFFFFEBEE)),
+                            shape = RoundedCornerShape(14.dp)
+                        ) {
+                            Column(Modifier.padding(16.dp)) {
+                                Text("⚠️ Nu innemen:", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color(0xFFC62828))
+                                Spacer(Modifier.height(8.dp))
+                                pendingMeds.forEach { med ->
+                                    Row(
+                                        Modifier.fillMaxWidth().padding(vertical = 8.dp),
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Column(Modifier.weight(1f)) {
+                                            Text(med.name, fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                                            Text(med.dose, fontSize = 16.sp)
+                                        }
+                                        Button(
+                                            onClick = {
+                                                scope.launch {
+                                                    dao.update(med.copy(isPending = false))
+                                                }
+                                            },
+                                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2E7D32)),
+                                            shape = RoundedCornerShape(12.dp)
+                                        ) {
+                                            Icon(Icons.Default.CheckCircle, null)
+                                            Spacer(Modifier.width(4.dp))
+                                            Text("INGENOMEN")
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        Spacer(Modifier.height(16.dp))
+                    }
+
                     Card(
                         modifier = Modifier.fillMaxWidth(),
                         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)),

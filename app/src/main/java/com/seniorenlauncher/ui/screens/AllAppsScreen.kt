@@ -18,6 +18,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil.compose.AsyncImage
 import com.seniorenlauncher.ui.components.ScreenHeader
 import com.seniorenlauncher.util.AppLauncher
 import com.seniorenlauncher.util.InstalledApp
@@ -25,7 +26,8 @@ import com.seniorenlauncher.util.InstalledApp
 @Composable
 fun AllAppsScreen(onBack: () -> Unit) {
     val context = LocalContext.current
-    val installedApps = remember { AppLauncher.getInstalledApps(context) }
+    // We request icons now
+    val installedApps = remember { AppLauncher.getInstalledApps(context, includeIcons = true) }
     
     Column(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background).padding(horizontal = 12.dp, vertical = 8.dp)) {
         ScreenHeader(title = "Alle Apps", onBack = onBack)
@@ -39,10 +41,7 @@ fun AllAppsScreen(onBack: () -> Unit) {
         ) {
             items(installedApps) { app ->
                 AppItem(app) {
-                    val intent = context.packageManager.getLaunchIntentForPackage(app.packageName)
-                    if (intent != null) {
-                        context.startActivity(intent)
-                    }
+                    AppLauncher.launchApp(context, app.packageName)
                 }
             }
         }
@@ -59,31 +58,40 @@ fun AppItem(app: InstalledApp, onClick: () -> Unit) {
             .padding(8.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        // We use a placeholder for the icon since we don't have an easy way to show Drawable in Compose here without a wrapper
-        // but for a senior launcher, maybe just the name and a generic icon or the first letter is fine, 
-        // however, let's just use the name for now as the user asked for a way to see and open them.
-        Box(
-            modifier = Modifier
-                .size(60.dp)
-                .clip(RoundedCornerShape(12.dp))
-                .background(MaterialTheme.colorScheme.primaryContainer),
-            contentAlignment = Alignment.Center
-        ) {
-            Text(
-                text = app.name.take(1).uppercase(),
-                fontSize = 24.sp,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onPrimaryContainer
+        if (app.icon != null) {
+            AsyncImage(
+                model = app.icon,
+                contentDescription = null,
+                modifier = Modifier
+                    .size(64.dp)
+                    .clip(RoundedCornerShape(12.dp))
             )
+        } else {
+            Box(
+                modifier = Modifier
+                    .size(64.dp)
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(MaterialTheme.colorScheme.primaryContainer),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = app.name.take(1).uppercase(),
+                    fontSize = 28.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer
+                )
+            }
         }
+        
         Spacer(Modifier.height(8.dp))
+        
         Text(
             text = app.name,
-            fontSize = 14.sp,
-            fontWeight = FontWeight.Medium,
+            fontSize = 16.sp,
+            fontWeight = FontWeight.Bold,
             textAlign = TextAlign.Center,
             maxLines = 2,
-            lineHeight = 16.sp,
+            lineHeight = 18.sp,
             color = MaterialTheme.colorScheme.onBackground
         )
     }

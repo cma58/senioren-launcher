@@ -18,7 +18,6 @@ object MedicationAlarmScheduler {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             if (!alarmManager.canScheduleExactAlarms()) {
                 Log.e("MedMads", "Cannot schedule exact alarms - permission missing")
-                // Fallback to non-exact if critical, or skip
                 scheduleNonExactAlarm(context, medication, alarmManager)
                 return
             }
@@ -45,42 +44,62 @@ object MedicationAlarmScheduler {
                     }
                 }
                 
-                val intent = Intent(context, MedicationAlarmReceiver::class.java).apply {
-                    putExtra("label", "${medication.name} (${medication.dose})")
-                    putExtra("medication_id", medication.id)
-                    putExtra("alarm_index", index)
-                }
-                
-                val pendingIntent = PendingIntent.getBroadcast(
-                    context,
-                    (medication.id * 100 + index).toInt(),
-                    intent,
-                    PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-                )
-                
-                try {
-                    alarmManager.setExactAndAllowWhileIdle(
-                        AlarmManager.RTC_WAKEUP,
-                        calendar.timeInMillis,
-                        pendingIntent
-                    )
-                } catch (e: SecurityException) {
-                    Log.e("MedMads", "SecurityException scheduling exact alarm", e)
-                    alarmManager.setAndAllowWhileIdle(
-                        AlarmManager.RTC_WAKEUP,
-                        calendar.timeInMillis,
-                        pendingIntent
-                    )
-                }
-                Log.d("MedMads", "Scheduled alarm for ${medication.name} at ${calendar.time}")
+                scheduleExact(context, medication, index, calendar.timeInMillis, alarmManager)
             } catch (e: Exception) {
                 Log.e("MedMads", "Error scheduling alarm", e)
             }
         }
     }
 
+    fun scheduleSnooze(context: Context, medicationId: Long, label: String) {
+        val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+        val snoozeTime = Calendar.getInstance().apply {
+            add(Calendar.MINUTE, 15)
+        }.timeInMillis
+
+        val intent = Intent(context, MedicationAlarmReceiver::class.java).apply {
+            putExtra("label", label)
+            putExtra("medication_id", medicationId)
+            putExtra("is_snooze", true)
+        }
+
+        val pendingIntent = PendingIntent.getBroadcast(
+            context,
+            (medicationId * 1000 + 999).toInt(), // Unique ID for snooze
+            intent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+
+        alarmManager.setExactAndAllowWhileIdle(
+            AlarmManager.RTC_WAKEUP,
+            snoozeTime,
+            pendingIntent
+        )
+        Log.d("MedMads", "Snooze scheduled for 15 mins for med $medicationId")
+    }
+
+    private fun scheduleExact(context: Context, medication: Medication, index: Int, time: Long, alarmManager: AlarmManager) {
+        val intent = Intent(context, MedicationAlarmReceiver::class.java).apply {
+            putExtra("label", "${medication.name} (${medication.dose})")
+            putExtra("medication_id", medication.id)
+            putExtra("alarm_index", index)
+        }
+        
+        val pendingIntent = PendingIntent.getBroadcast(
+            context,
+            (medication.id * 100 + index).toInt(),
+            intent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+        
+        try {
+            alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, time, pendingIntent)
+        } catch (e: SecurityException) {
+            alarmManager.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, time, pendingIntent)
+        }
+    }
+
     private fun scheduleNonExactAlarm(context: Context, medication: Medication, alarmManager: AlarmManager) {
-        // Fallback implementation for when exact alarms are not allowed
         val times = medication.times.split(",").map { it.trim() }.filter { it.isNotEmpty() }
         times.forEachIndexed { index, timeStr ->
             try {
@@ -116,5 +135,12 @@ object MedicationAlarmScheduler {
             )
             alarmManager.cancel(pendingIntent)
         }
+        // Also cancel snooze
+        val snoozeIntent = Intent(context, MedicationAlarmReceiver::class.java)
+        val snoozePendingIntent = PendingIntent.getBroadcast(
+            context, (medication.id * 1000 + 999).toInt(), snoozeIntent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+        alarmManager.cancel(snoozePendingIntent)
     }
 }

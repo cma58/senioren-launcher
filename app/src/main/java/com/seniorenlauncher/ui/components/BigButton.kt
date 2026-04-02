@@ -10,8 +10,10 @@ import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
@@ -22,18 +24,12 @@ import androidx.compose.ui.draw.scale
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.asImageBitmap
-import androidx.compose.ui.graphics.painter.BitmapPainter
-import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.core.graphics.drawable.toBitmap
-import coil.compose.AsyncImage
 import coil.compose.rememberAsyncImagePainter
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -54,15 +50,14 @@ fun BigButton(
     val pressed by interactionSource.collectIsPressedAsState()
     val scale by animateFloatAsState(if (pressed) 0.95f else 1f, label = "s")
     
-    // Adjust height and padding based on font size multiplier to prevent clipping
-    val adjustedModifier = if (fontSizeMultiplier > 1.2f) {
-        modifier.heightIn(min = (if (small) 120.dp else 160.dp) * (fontSizeMultiplier / 1.2f))
-    } else {
-        modifier.heightIn(min = if (small) 85.dp else 100.dp)
-    }
+    // Dynamic height calculation to prevent text overlap
+    val minHeight = if (small) 90.dp else 120.dp
+    val adjustedHeight = (minHeight * fontSizeMultiplier).coerceIn(minHeight, 300.dp)
 
     Box(
-        modifier = adjustedModifier
+        modifier = modifier
+            .fillMaxWidth()
+            .heightIn(min = adjustedHeight)
             .scale(scale)
             .shadow(if (pressed) 2.dp else 6.dp, RoundedCornerShape(14.dp))
             .clip(RoundedCornerShape(14.dp))
@@ -73,54 +68,56 @@ fun BigButton(
                 onClick = onClick,
                 onLongClick = onLongClick
             )
-            .padding(if (small) 2.dp else 4.dp), 
+            .padding(8.dp), 
         contentAlignment = Alignment.Center
     ) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center,
-            modifier = Modifier.fillMaxSize().padding(horizontal = 4.dp)
+            modifier = Modifier.fillMaxWidth()
         ) {
             if (icon != null) {
                 Image(
                     painter = rememberAsyncImagePainter(icon),
                     contentDescription = null,
-                    modifier = Modifier.size(if (small) 40.dp else 56.dp),
+                    modifier = Modifier.size((if (small) 36.dp else 48.dp) * fontSizeMultiplier.coerceIn(1f, 1.5f)),
                     contentScale = ContentScale.Fit
                 )
             } else if (emoji != null) {
                 Text(
                     emoji, 
-                    fontSize = (if (small) 22.sp else 32.sp) * fontSizeMultiplier,
-                    lineHeight = (if (small) 24.sp else 34.sp) * fontSizeMultiplier
+                    fontSize = (if (small) 24.sp else 36.sp) * fontSizeMultiplier.coerceIn(1f, 1.5f),
+                    lineHeight = (if (small) 28.sp else 40.sp) * fontSizeMultiplier.coerceIn(1f, 1.5f)
                 )
             }
             
-            Spacer(Modifier.height(if (small) 2.dp else 4.dp))
+            Spacer(Modifier.height(4.dp))
+            
             Text(
                 label, 
-                fontSize = (if (small) 12.sp else 14.sp) * fontSizeMultiplier, 
+                fontSize = (if (small) 14.sp else 18.sp) * fontSizeMultiplier, 
                 fontWeight = FontWeight.Bold,
                 color = Color.White, 
                 textAlign = TextAlign.Center, 
-                maxLines = if (fontSizeMultiplier > 1.5f) 1 else 2,
+                maxLines = 2,
                 overflow = TextOverflow.Ellipsis,
-                lineHeight = (if (small) 14.sp else 16.sp) * fontSizeMultiplier
+                lineHeight = (if (small) 16.sp else 22.sp) * fontSizeMultiplier
             )
         }
+        
         if (badge != null && badge > 0) {
             Box(
                 Modifier
                     .align(Alignment.TopEnd)
                     .offset(x = (-2).dp, y = 2.dp)
-                    .size((24 * fontSizeMultiplier).coerceIn(24f, 44f).dp)
+                    .size((28 * fontSizeMultiplier).coerceIn(28f, 50f).dp)
                     .clip(CircleShape)
                     .background(Color(0xFFEF4444)), 
                 contentAlignment = Alignment.Center
             ) {
                 Text(
                     badge.toString(), 
-                    fontSize = (12 * fontSizeMultiplier).coerceIn(12f, 22f).sp,
+                    fontSize = (14 * fontSizeMultiplier).coerceIn(14f, 24f).sp,
                     fontWeight = FontWeight.Bold, 
                     color = Color.White
                 )
@@ -134,22 +131,25 @@ fun SOSButton(onClick: () -> Unit, modifier: Modifier = Modifier) {
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .heightIn(min = 80.dp)
-            .clip(RoundedCornerShape(14.dp))
+            .heightIn(min = 100.dp)
+            .clip(RoundedCornerShape(16.dp))
             .background(Brush.linearGradient(listOf(Color(0xFFEF4444), Color(0xFFDC2626))))
             .clickable { onClick() }
-            .padding(12.dp),
+            .padding(16.dp),
         contentAlignment = Alignment.Center
     ) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Text("\uD83C\uDD98", fontSize = 32.sp)
-            Spacer(Modifier.width(10.dp))
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Center,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text("🆘", fontSize = 40.sp)
+            Spacer(Modifier.width(16.dp))
             Text(
-                "SOS NOODGEVAL", 
-                fontSize = 22.sp, 
+                "SOS NOOD", 
+                fontSize = 28.sp, 
                 fontWeight = FontWeight.ExtraBold,
                 color = Color.White, 
-                letterSpacing = 2.sp,
                 textAlign = TextAlign.Center
             )
         }
@@ -158,32 +158,31 @@ fun SOSButton(onClick: () -> Unit, modifier: Modifier = Modifier) {
 
 @Composable
 fun ScreenHeader(title: String, onBack: () -> Unit) {
-    val fontSizeMultiplier = 1.0f // Normally you'd pass this, but let's keep headers readable
-    
     Row(
         Modifier
             .fillMaxWidth()
-            .padding(vertical = 12.dp), 
+            .padding(vertical = 16.dp), 
         verticalAlignment = Alignment.CenterVertically
     ) {
         Box(
             Modifier
-                .size(64.dp)
-                .clip(RoundedCornerShape(14.dp))
+                .size(72.dp)
+                .clip(RoundedCornerShape(16.dp))
                 .background(MaterialTheme.colorScheme.surfaceVariant)
                 .clickable { onBack() },
             contentAlignment = Alignment.Center
         ) {
-            Text("←", fontSize = 32.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
+            Text("←", fontSize = 40.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
         }
         Spacer(Modifier.width(16.dp))
         Text(
             title, 
-            fontSize = 26.sp, 
+            fontSize = 30.sp, 
             fontWeight = FontWeight.ExtraBold, 
             color = MaterialTheme.colorScheme.onBackground,
             maxLines = 1,
-            overflow = TextOverflow.Ellipsis
+            overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.weight(1f)
         )
     }
 }

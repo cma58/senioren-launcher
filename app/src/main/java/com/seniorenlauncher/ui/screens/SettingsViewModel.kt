@@ -55,6 +55,18 @@ class SettingsViewModel : ViewModel() {
         }
     }
 
+    fun addAppMappingsBulk(newMappings: Map<String, String>) {
+        viewModelScope.launch {
+            val m = settings.value.appMappings.toMutableMap()
+            m.putAll(newMappings)
+            repository.setAppMappings(m)
+            
+            val s = settings.value.visibleApps.toMutableSet()
+            s.addAll(newMappings.keys)
+            repository.setVisibleApps(s)
+        }
+    }
+
     fun updateVisibleApps(apps: Set<String>) {
         viewModelScope.launch {
             repository.setVisibleApps(apps)

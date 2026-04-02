@@ -131,8 +131,8 @@ fun ColumnScope.DialerContent(
                         Text(matchedContact.emoji, fontSize = 40.sp)
                     }
                     Text(
-                        matchedContact.name, 
-                        fontSize = 32.sp * fontSizeMultiplier, 
+                        matchedContact.name,
+                        fontSize = 32.sp * fontSizeMultiplier,
                         fontWeight = FontWeight.Black,
                         textAlign = TextAlign.Center,
                         color = MaterialTheme.colorScheme.onPrimaryContainer
@@ -155,13 +155,13 @@ fun ColumnScope.DialerContent(
                         .size(64.dp)
                         .clip(CircleShape)
                         .combinedClickable(
-                            onClick = { 
+                            onClick = {
                                 vibratePhone(context, 50)
-                                onNumberChange(phoneNumber.dropLast(1)) 
+                                onNumberChange(phoneNumber.dropLast(1))
                             },
-                            onLongClick = { 
+                            onLongClick = {
                                 vibratePhone(context, 100)
-                                onNumberChange("") 
+                                onNumberChange("")
                             }
                         ),
                     contentAlignment = Alignment.Center
@@ -211,7 +211,7 @@ fun ColumnScope.DialerContent(
                     }
                     Text(
                         contact.name, 
-                        fontSize = 14.sp, 
+                        fontSize = 14.sp,
                         fontWeight = FontWeight.Bold, 
                         maxLines = 1, 
                         overflow = TextOverflow.Ellipsis

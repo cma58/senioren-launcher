@@ -1,6 +1,7 @@
 package com.seniorenlauncher.ui.screens
 
 import android.content.Context
+import android.graphics.drawable.Drawable
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.shrinkVertically
@@ -32,6 +33,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
+import coil.compose.AsyncImage
 import coil.compose.rememberAsyncImagePainter
 import com.seniorenlauncher.LauncherApp
 import com.seniorenlauncher.data.model.LayoutType
@@ -42,26 +44,32 @@ import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.*
 
-data class HomeApp(val id: String, val name: String, val emoji: String, val color: Color)
+data class HomeApp(
+    val id: String, 
+    val name: String, 
+    val emoji: String? = null, 
+    val icon: Drawable? = null,
+    val color: Color
+)
 
 val ALL_APPS_LIST = listOf(
-    HomeApp("phone","Bellen","📞",Color(0xFF38A169)),
-    HomeApp("sms","Berichten","💬",Color(0xFF3B82F6)),
-    HomeApp("camera","Camera","📷",Color(0xFFEC4899)),
-    HomeApp("photos","Foto's","🖼️",Color(0xFFF59E0B)),
-    HomeApp("alarm","Wekker","⏰",Color(0xFFEA580C)),
-    HomeApp("calendar","Agenda","📅",Color(0xFF0D9488)),
-    HomeApp("meds","Medicijnen","💊",Color(0xFFDC2626)),
-    HomeApp("weather","Weer","🌤️",Color(0xFF0EA5E9)),
-    HomeApp("flashlight","Zaklamp","🔦",Color(0xFFFBBF24)),
-    HomeApp("magnifier","Vergrootglas","🔍",Color(0xFF6366F1)),
-    HomeApp("notes","Notities","📝",Color(0xFF84CC16)),
-    HomeApp("radio","Radio","📻",Color(0xFFA855F7)),
-    HomeApp("steps","Stappen","🚶",Color(0xFF14B8A6)),
-    HomeApp("emergency","Noodinfo","🏥",Color(0xFFEF4444)),
-    HomeApp("sos","SOS","🆘",Color(0xFFDC2626)),
-    HomeApp("all_apps","Alle Apps","📱",Color(0xFF718096)),
-    HomeApp("settings","Instellingen","⚙️",Color(0xFF718096)),
+    HomeApp("phone","Bellen","📞", null, Color(0xFF38A169)),
+    HomeApp("sms","Berichten","💬", null, Color(0xFF3B82F6)),
+    HomeApp("camera","Camera","📷", null, Color(0xFFEC4899)),
+    HomeApp("photos","Foto's","🖼️", null, Color(0xFFF59E0B)),
+    HomeApp("alarm","Wekker","⏰", null, Color(0xFFEA580C)),
+    HomeApp("calendar","Agenda","📅", null, Color(0xFF0D9488)),
+    HomeApp("meds","Medicijnen","💊", null, Color(0xFFDC2626)),
+    HomeApp("weather","Weer","🌤️", null, Color(0xFF0EA5E9)),
+    HomeApp("flashlight","Zaklamp","🔦", null, Color(0xFFFBBF24)),
+    HomeApp("magnifier","Vergrootglas","🔍", null, Color(0xFF6366F1)),
+    HomeApp("notes","Notities","📝", null, Color(0xFF84CC16)),
+    HomeApp("radio","Radio","📻", null, Color(0xFFA855F7)),
+    HomeApp("steps","Stappen","🚶", null, Color(0xFF14B8A6)),
+    HomeApp("emergency","Noodinfo","🏥", null, Color(0xFFEF4444)),
+    HomeApp("sos","SOS","🆘", null, Color(0xFFDC2626)),
+    HomeApp("all_apps","Alle Apps","📱", null, Color(0xFF718096)),
+    HomeApp("settings","Instellingen","⚙️", null, Color(0xFF718096)),
 )
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -93,13 +101,13 @@ fun HomeScreen(onNavigate: (String) -> Unit, settingsVm: SettingsViewModel, radi
         LayoutType.GRID_3x4 -> 12
     }
 
-    // Filter visible apps and include dynamically mapped apps
+    // Filter visible apps and include dynamically mapped apps with correct icons
     val mappedApps = settings.appMappings.keys
         .filter { it.startsWith("mapped_") && it in settings.visibleApps }
         .map { id ->
             val pkg = settings.appMappings[id] ?: ""
             val info = AppLauncher.getAppInfo(context, pkg)
-            HomeApp(id, info?.name ?: "App", "📱", Color(0xFF718096))
+            HomeApp(id, info?.name ?: "App", null, info?.icon, Color(0xFF718096))
         }
 
     val visibleStandardApps = ALL_APPS_LIST.filter { it.id in settings.visibleApps }
@@ -148,17 +156,20 @@ fun HomeScreen(onNavigate: (String) -> Unit, settingsVm: SettingsViewModel, radi
                 items(pageApps) { app ->
                     BigButton(
                         emoji = app.emoji,
+                        icon = app.icon,
                         label = app.name,
                         color = app.color,
                         small = settings.layout == LayoutType.GRID_3x4,
                         fontSizeMultiplier = fontSizeMultiplier,
                         badge = if (app.id == "sms") notifications.size else 0,
                         onClick = {
-                            if (app.id.startsWith("mapped_")) {
-                                val pkg = settings.appMappings[app.id]
-                                if (pkg != null) AppLauncher.launchApp(context, pkg)
-                            } else {
-                                onNavigate(app.id)
+                            when {
+                                app.id == "camera" -> AppLauncher.openSystemCamera(context)
+                                app.id.startsWith("mapped_") -> {
+                                    val pkg = settings.appMappings[app.id]
+                                    if (pkg != null) AppLauncher.launchApp(context, pkg)
+                                }
+                                else -> onNavigate(app.id)
                             }
                         },
                         onLongClick = {
@@ -200,12 +211,13 @@ fun HomeScreen(onNavigate: (String) -> Unit, settingsVm: SettingsViewModel, radi
         AppPickerDialog(
             appId = pickerAppId,
             onDismiss = { showAppPickerFor = null },
-            onAppSelected = { pkg: String ->
-                val newId = if (pickerAppId == "new") "mapped_${System.currentTimeMillis()}" else pickerAppId
-                settingsVm.setAppMapping(newId, pkg)
-                if (pickerAppId == "new") {
-                    settingsVm.updateVisibleApps(settings.visibleApps + newId)
+            onAppsSelected = { pkgs: List<String> ->
+                val newMappings = mutableMapOf<String, String>()
+                pkgs.forEach { pkg ->
+                    val newId = "mapped_${System.currentTimeMillis()}_${pkg.hashCode()}"
+                    newMappings[newId] = pkg
                 }
+                settingsVm.addAppMappingsBulk(newMappings)
                 showAppPickerFor = null
             },
             onRemove = {
@@ -300,52 +312,95 @@ fun PinDialog(correctPin: String, onDismiss: () -> Unit, onSuccess: () -> Unit) 
 fun AppPickerDialog(
     appId: String,
     onDismiss: () -> Unit,
-    onAppSelected: (String) -> Unit,
+    onAppsSelected: (List<String>) -> Unit,
     onRemove: () -> Unit
 ) {
     val context = LocalContext.current
-    val installedApps = remember { AppLauncher.getInstalledApps(context) }
+    val installedApps = remember { AppLauncher.getInstalledApps(context, includeIcons = true) }
+    var searchQuery by remember { mutableStateOf("") }
+    val selectedPackages = remember { mutableStateListOf<String>() }
+
+    val filteredApps = remember(searchQuery, installedApps) {
+        if (searchQuery.isEmpty()) installedApps
+        else installedApps.filter { it.name.contains(searchQuery, ignoreCase = true) }
+    }
     
     Dialog(onDismissRequest = onDismiss) {
         Card(
             shape = RoundedCornerShape(24.dp),
-            modifier = Modifier.fillMaxWidth().fillMaxHeight(0.8f).padding(16.dp)
+            modifier = Modifier.fillMaxWidth().fillMaxHeight(0.9f).padding(16.dp)
         ) {
             Column(Modifier.padding(16.dp)) {
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                    Text("Kies een App", fontSize = 20.sp, fontWeight = FontWeight.Bold)
-                    if (!appId.startsWith("mapped_") && appId != "new") {
-                        // Standard app, maybe don't allow removing?
-                    } else if (appId != "new") {
+                    Text("Kies Apps", fontSize = 20.sp, fontWeight = FontWeight.Bold)
+                    if (appId.startsWith("mapped_")) {
                         TextButton(onClick = onRemove) {
                             Text("Verwijderen", color = Color.Red)
                         }
                     }
                 }
                 
-                Spacer(Modifier.height(16.dp))
+                Spacer(Modifier.height(8.dp))
+
+                OutlinedTextField(
+                    value = searchQuery,
+                    onValueChange = { searchQuery = it },
+                    modifier = Modifier.fillMaxWidth(),
+                    placeholder = { Text("Zoek app...") },
+                    leadingIcon = { Icon(Icons.Default.Search, null) },
+                    shape = RoundedCornerShape(12.dp)
+                )
+
+                Spacer(Modifier.height(12.dp))
                 
                 LazyColumn(Modifier.weight(1f)) {
-                    items(installedApps) { app ->
+                    items(filteredApps) { app ->
+                        val isSelected = selectedPackages.contains(app.packageName)
                         Row(
                             Modifier
                                 .fillMaxWidth()
-                                .clickable { onAppSelected(app.packageName) }
+                                .clickable { 
+                                    if (isSelected) selectedPackages.remove(app.packageName)
+                                    else selectedPackages.add(app.packageName)
+                                }
                                 .padding(vertical = 12.dp, horizontal = 8.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            // Icon placeholder
-                            Box(Modifier.size(40.dp).background(MaterialTheme.colorScheme.surfaceVariant, RoundedCornerShape(8.dp)), contentAlignment = Alignment.Center) {
-                                Text(app.name.take(1))
+                            Checkbox(
+                                checked = isSelected,
+                                onCheckedChange = null // Handled by row click
+                            )
+                            Spacer(Modifier.width(8.dp))
+                            if (app.icon != null) {
+                                AsyncImage(
+                                    model = app.icon,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(48.dp).clip(RoundedCornerShape(8.dp))
+                                )
                             }
                             Spacer(Modifier.width(16.dp))
-                            Text(app.name, fontSize = 18.sp)
+                            Text(app.name, fontSize = 18.sp, fontWeight = FontWeight.Bold)
                         }
+                        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
                     }
                 }
                 
-                Button(onClick = onDismiss, modifier = Modifier.fillMaxWidth().padding(top = 16.dp)) {
-                    Text("Annuleren")
+                Row(Modifier.fillMaxWidth().padding(top = 16.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                    OutlinedButton(
+                        onClick = onDismiss, 
+                        modifier = Modifier.weight(1f).height(60.dp),
+                        shape = RoundedCornerShape(12.dp)
+                    ) {
+                        Text("ANNULEREN")
+                    }
+                    Button(
+                        onClick = { onAppsSelected(selectedPackages.toList()) }, 
+                        modifier = Modifier.weight(1f).height(60.dp),
+                        enabled = selectedPackages.isNotEmpty(),
+                        shape = RoundedCornerShape(12.dp)
+                    ) {
+                        Text("VOEG TOE (${selectedPackages.size})")
+                    }
                 }
             }
         }
