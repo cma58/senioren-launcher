@@ -196,9 +196,11 @@ fun SettingsScreen(vm: SettingsViewModel, onNavigate: (String) -> Unit, onBack: 
 
             // Veiligheid
             SettSection("🛡️ Veiligheid", fontSizeMultiplier) {
-                SettRow("📍 Locatie delen", fontSizeMultiplier) { /* Navigate */ }
+                SettRow("📍 Locatie delen", fontSizeMultiplier) { /* Optioneel: later implementeren */ }
                 HorizontalDivider(thickness = 0.5.dp, color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
-                SettRow("🏥 Noodinfo bewerken", fontSizeMultiplier) { /* Navigate */ }
+                SettRow("🏥 Noodinfo bewerken", fontSizeMultiplier) { 
+                    onNavigate("emergency") // Gaat naar EmergencyInfoScreen
+                }
                 HorizontalDivider(thickness = 0.5.dp, color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
                 SettRow("🆘 SOS contacten instellen", fontSizeMultiplier) { 
                     onNavigate("sos_settings")

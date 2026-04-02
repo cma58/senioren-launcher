@@ -1,30 +1,30 @@
 package com.seniorenlauncher.ui.screens
 
+import android.content.Context
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.shrinkVertically
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.grid.*
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.Lock
-import androidx.compose.material.icons.filled.Pause
-import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material.icons.filled.Remove
-import androidx.compose.material.icons.filled.Stop
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -32,6 +32,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
+import coil.compose.rememberAsyncImagePainter
 import com.seniorenlauncher.LauncherApp
 import com.seniorenlauncher.data.model.LayoutType
 import com.seniorenlauncher.ui.components.*
@@ -43,11 +44,9 @@ import java.util.*
 
 data class HomeApp(val id: String, val name: String, val emoji: String, val color: Color)
 
-val ALL_APPS = listOf(
+val ALL_APPS_LIST = listOf(
     HomeApp("phone","Bellen","📞",Color(0xFF38A169)),
     HomeApp("sms","Berichten","💬",Color(0xFF3B82F6)),
-    HomeApp("whatsapp","WhatsApp","🟢",Color(0xFF25D366)),
-    HomeApp("video","Videobellen","🎥",Color(0xFF8B5CF6)),
     HomeApp("camera","Camera","📷",Color(0xFFEC4899)),
     HomeApp("photos","Foto's","🖼️",Color(0xFFF59E0B)),
     HomeApp("alarm","Wekker","⏰",Color(0xFFEA580C)),
@@ -65,6 +64,7 @@ val ALL_APPS = listOf(
     HomeApp("settings","Instellingen","⚙️",Color(0xFF718096)),
 )
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun HomeScreen(onNavigate: (String) -> Unit, settingsVm: SettingsViewModel, radioVm: RadioViewModel) {
     val context = LocalContext.current
@@ -78,367 +78,274 @@ fun HomeScreen(onNavigate: (String) -> Unit, settingsVm: SettingsViewModel, radi
     val dao = LauncherApp.instance.database.medicationDao()
     val pendingMeds by dao.getPending().collectAsState(initial = emptyList())
     
-    val visible = ALL_APPS.filter { it.id in settings.visibleApps || it.id == "all_apps" }
-    
-    var showAppPickerFor by remember { mutableStateOf<HomeApp?>(null) }
-    var showPinDialogForSettings by remember { mutableStateOf(false) }
-    
-    val cols = when (settings.layout) { 
+    val fontSizeMultiplier = settings.fontSize / 16f
+
+    // --- Dynamic Layout Logic ---
+    val cols = when (settings.layout) {
+        LayoutType.GRID_1x1 -> 1
         LayoutType.GRID_2x3 -> 2
         LayoutType.GRID_3x4 -> 3
-        LayoutType.GRID_1x1 -> 1 
     }
     
-    val fontSizeMultiplier = settings.fontSize / 16f
+    val appsPerPage = when (settings.layout) {
+        LayoutType.GRID_1x1 -> 1
+        LayoutType.GRID_2x3 -> 6
+        LayoutType.GRID_3x4 -> 12
+    }
+
+    // Filter visible apps and include dynamically mapped apps
+    val mappedApps = settings.appMappings.keys
+        .filter { it.startsWith("mapped_") && it in settings.visibleApps }
+        .map { id ->
+            val pkg = settings.appMappings[id] ?: ""
+            val info = AppLauncher.getAppInfo(context, pkg)
+            HomeApp(id, info?.name ?: "App", "📱", Color(0xFF718096))
+        }
+
+    val visibleStandardApps = ALL_APPS_LIST.filter { it.id in settings.visibleApps }
+    val allVisibleApps = (visibleStandardApps + mappedApps).distinctBy { it.id }
     
-    Column(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background).padding(horizontal = 12.dp, vertical = 8.dp)) {
-        ClockWidget(fontSizeMultiplier)
-        
-        // --- Radio Mini Player (Senior-Proof met Volume & Stop) ---
-        AnimatedVisibility(visible = currentStation != null) {
-            Column {
-                Spacer(Modifier.height(8.dp))
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer),
-                    shape = RoundedCornerShape(24.dp)
-                ) {
-                    Column(Modifier.padding(12.dp)) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Text(currentStation?.emoji ?: "📻", fontSize = 36.sp, modifier = Modifier.clickable { onNavigate("radio") })
-                            Spacer(Modifier.width(12.dp))
-                            Column(Modifier.weight(1f).clickable { onNavigate("radio") }) {
-                                Text("Radio staat aan:", fontSize = 12.sp * fontSizeMultiplier)
-                                Text(currentStation?.name ?: "", fontSize = 18.sp * fontSizeMultiplier, fontWeight = FontWeight.Bold, maxLines = 1)
+    val pageCount = Math.max(1, Math.ceil(allVisibleApps.size.toDouble() / appsPerPage).toInt())
+    val pagerState = rememberPagerState(pageCount = { pageCount })
+
+    var showAppPickerFor by remember { mutableStateOf<String?>(null) }
+    var showPinDialogForSettings by remember { mutableStateOf(false) }
+
+    Column(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
+        // Top Bar: Clock & Notifications
+        HomeTopBar(fontSizeMultiplier)
+
+        // Status Card: Radio & Meds
+        HomeStatusCard(
+            currentStation = currentStation?.name,
+            isPlaying = isPlaying,
+            pendingMedsCount = pendingMeds.size,
+            fontSizeMultiplier = fontSizeMultiplier,
+            onRadioClick = { onNavigate("radio") },
+            onMedsClick = { onNavigate("meds") },
+            onPlayPause = { if (isPlaying) radioVm.pause() else radioVm.resume() },
+            onStop = { radioVm.stop() }
+        )
+
+        // App Grid Pager
+        HorizontalPager(
+            state = pagerState,
+            modifier = Modifier.weight(1f).fillMaxWidth(),
+            contentPadding = PaddingValues(16.dp),
+            pageSpacing = 16.dp
+        ) { pageIndex ->
+            val startIdx = pageIndex * appsPerPage
+            val endIdx = Math.min(startIdx + appsPerPage, allVisibleApps.size)
+            val pageApps = allVisibleApps.subList(startIdx, endIdx)
+
+            LazyVerticalGrid(
+                columns = GridCells.Fixed(cols),
+                modifier = Modifier.fillMaxSize(),
+                verticalArrangement = Arrangement.spacedBy(16.dp),
+                horizontalArrangement = Arrangement.spacedBy(16.dp),
+                userScrollEnabled = false
+            ) {
+                items(pageApps) { app ->
+                    BigButton(
+                        emoji = app.emoji,
+                        label = app.name,
+                        color = app.color,
+                        small = settings.layout == LayoutType.GRID_3x4,
+                        fontSizeMultiplier = fontSizeMultiplier,
+                        badge = if (app.id == "sms") notifications.size else 0,
+                        onClick = {
+                            if (app.id.startsWith("mapped_")) {
+                                val pkg = settings.appMappings[app.id]
+                                if (pkg != null) AppLauncher.launchApp(context, pkg)
+                            } else {
+                                onNavigate(app.id)
                             }
-                            // Grote Volume Knoppen
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                FilledIconButton(
-                                    onClick = { radioVm.volumeDown() },
-                                    modifier = Modifier.size(54.dp),
-                                    colors = IconButtonDefaults.filledIconButtonColors(containerColor = MaterialTheme.colorScheme.surface)
-                                ) {
-                                    Icon(Icons.Default.Remove, "Zachter", modifier = Modifier.size(30.dp))
-                                }
-                                Spacer(Modifier.width(8.dp))
-                                FilledIconButton(
-                                    onClick = { radioVm.volumeUp() },
-                                    modifier = Modifier.size(54.dp),
-                                    colors = IconButtonDefaults.filledIconButtonColors(containerColor = MaterialTheme.colorScheme.surface)
-                                ) {
-                                    Icon(Icons.Default.Add, "Harder", modifier = Modifier.size(30.dp))
-                                }
-                            }
+                        },
+                        onLongClick = {
+                            showAppPickerFor = app.id
                         }
-                        
-                        Spacer(Modifier.height(12.dp))
-                        
-                        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            // Grote Pauze/Speel Knop
-                            Button(
-                                onClick = { if (isPlaying) radioVm.pause() else radioVm.resume() },
-                                modifier = Modifier.weight(1f).height(60.dp),
-                                shape = RoundedCornerShape(16.dp),
-                                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
-                            ) {
-                                Icon(if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow, null)
-                                Spacer(Modifier.width(8.dp))
-                                Text(if (isPlaying) "Pauze" else "Speel", fontSize = 18.sp, fontWeight = FontWeight.Bold)
-                            }
-                            
-                            // Grote STOP Knop (Klaar)
-                            Button(
-                                onClick = { radioVm.stop() },
-                                modifier = Modifier.weight(0.7f).height(60.dp),
-                                shape = RoundedCornerShape(16.dp),
-                                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
-                            ) {
-                                Icon(Icons.Default.Stop, null)
-                                Spacer(Modifier.width(8.dp))
-                                Text("Stop", fontSize = 18.sp, fontWeight = FontWeight.Bold)
-                            }
-                        }
+                    )
+                }
+                
+                // Add "New App" button if there's space on the last page or on a new page
+                if (pageIndex == pageCount - 1) {
+                    item {
+                        BigButton(
+                            emoji = "➕",
+                            label = "Toevoegen",
+                            color = Color(0xFF718096),
+                            small = settings.layout == LayoutType.GRID_3x4,
+                            fontSizeMultiplier = fontSizeMultiplier,
+                            onClick = { showAppPickerFor = "new" }
+                        )
                     }
                 }
             }
         }
 
-        // --- Medication Reminder Banner ---
-        AnimatedVisibility(
-            visible = pendingMeds.isNotEmpty(),
-            enter = expandVertically(),
-            exit = shrinkVertically()
-        ) {
-            Column {
-                Spacer(Modifier.height(8.dp))
-                Card(
-                    modifier = Modifier.fillMaxWidth().clickable { onNavigate("meds") },
-                    colors = CardDefaults.cardColors(containerColor = Color(0xFFFEE2E2)),
-                    border = androidx.compose.foundation.BorderStroke(2.dp, Color(0xFFDC2626)),
-                    shape = RoundedCornerShape(16.dp)
-                ) {
-                    Column(Modifier.padding(12.dp)) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Text("💊", fontSize = 28.sp)
-                            Spacer(Modifier.width(12.dp))
-                            Column(Modifier.weight(1f)) {
-                                Text(
-                                    if (pendingMeds.size == 1) "Medicijn Innemen!" else "Medicijnen Innemen!",
-                                    fontWeight = FontWeight.ExtraBold, 
-                                    color = Color(0xFF991B1B), 
-                                    fontSize = 18.sp * fontSizeMultiplier
-                                )
-                                Text(
-                                    pendingMeds.joinToString { it.name }, 
-                                    color = Color(0xFF991B1B),
-                                    fontSize = 16.sp * fontSizeMultiplier,
-                                    maxLines = 2,
-                                    overflow = TextOverflow.Ellipsis
-                                )
-                            }
-                            Button(
-                                onClick = { 
-                                    scope.launch {
-                                        pendingMeds.forEach { med ->
-                                            dao.insert(med.copy(isPending = false))
-                                        }
-                                    }
-                                },
-                                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFDC2626)),
-                                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp)
-                            ) {
-                                Icon(Icons.Default.Check, null, modifier = Modifier.size(20.dp))
-                                Spacer(Modifier.width(4.dp))
-                                Text("Klaar", fontWeight = FontWeight.Bold)
-                            }
-                        }
-                    }
-                }
+        // Settings Button at bottom
+        Row(Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 8.dp), horizontalArrangement = Arrangement.End) {
+            FilledIconButton(
+                onClick = { showPinDialogForSettings = true },
+                modifier = Modifier.size(64.dp),
+                colors = IconButtonDefaults.filledIconButtonColors(containerColor = MaterialTheme.colorScheme.secondaryContainer)
+            ) {
+                Icon(Icons.Default.Settings, "Instellingen", modifier = Modifier.size(32.dp))
             }
         }
-
-        Spacer(Modifier.height(12.dp))
-        
-        LazyVerticalGrid(
-            columns = GridCells.Fixed(cols), 
-            modifier = Modifier.weight(1f),
-            horizontalArrangement = Arrangement.spacedBy(10.dp), 
-            verticalArrangement = Arrangement.spacedBy(10.dp),
-            contentPadding = PaddingValues(bottom = 8.dp)
-        ) {
-            items(visible) { app -> 
-                val itemMinHeight = when(settings.layout) {
-                    LayoutType.GRID_1x1 -> 120.dp
-                    LayoutType.GRID_2x3 -> 100.dp
-                    LayoutType.GRID_3x4 -> 85.dp
-                }
-                
-                val badgeCount = NotificationListener.getBadgeCountByAppId(app.id, settings.appMappings, notifications)
-                
-                BigButton(
-                    emoji = app.emoji, 
-                    label = app.name, 
-                    color = app.color, 
-                    badge = if (badgeCount > 0) badgeCount else null,
-                    small = settings.layout == LayoutType.GRID_3x4,
-                    fontSizeMultiplier = fontSizeMultiplier,
-                    onClick = { 
-                        when (app.id) {
-                            "phone" -> onNavigate("phone")
-                            "sms" -> onNavigate("sms")
-                            "settings" -> {
-                                if (settings.settingsLocked) {
-                                    showPinDialogForSettings = true
-                                } else {
-                                    onNavigate("settings")
-                                }
-                            }
-                            "all_apps" -> onNavigate("all_apps")
-                            "meds" -> onNavigate("meds")
-                            "emergency" -> onNavigate("emergency")
-                            "sos" -> onNavigate("sos")
-                            "calendar" -> onNavigate("calendar")
-                            "weather" -> onNavigate("weather")
-                            "alarm" -> onNavigate("alarm")
-                            "flashlight" -> onNavigate("flashlight")
-                            "magnifier" -> onNavigate("magnifier")
-                            "photos" -> onNavigate("photos")
-                            "notes" -> onNavigate("notes")
-                            "radio" -> onNavigate("radio")
-                            "steps" -> onNavigate("steps")
-                            else -> {
-                                val customPackage = settings.appMappings[app.id]
-                                val launched = AppLauncher.launchApp(context, app.id, customPackage)
-                                if (!launched && !settings.settingsLocked) {
-                                    showAppPickerFor = app
-                                }
-                            }
-                        }
-                    },
-                    onLongClick = {
-                        if (!settings.settingsLocked) {
-                            val internalApps = listOf("phone", "sms", "settings", "sos", "emergency", "all_apps", "meds", "calendar", "weather", "alarm", "flashlight", "magnifier", "photos", "notes", "radio", "steps")
-                            if (app.id !in internalApps) {
-                                showAppPickerFor = app
-                            }
-                        }
-                    },
-                    modifier = Modifier.fillMaxWidth().heightIn(min = itemMinHeight)
-                ) 
-            }
-        }
-        
-        Spacer(Modifier.height(8.dp))
-        SOSButton(onClick = { onNavigate("sos") })
     }
 
     if (showAppPickerFor != null) {
+        val pickerAppId = showAppPickerFor!!
         AppPickerDialog(
-            app = showAppPickerFor!!,
+            appId = pickerAppId,
             onDismiss = { showAppPickerFor = null },
-            onAppSelected = { pkg ->
-                settingsVm.setAppMapping(showAppPickerFor!!.id, pkg)
-                AppLauncher.launchApp(context, showAppPickerFor?.id ?: "", pkg)
+            onAppSelected = { pkg: String ->
+                val newId = if (pickerAppId == "new") "mapped_${System.currentTimeMillis()}" else pickerAppId
+                settingsVm.setAppMapping(newId, pkg)
+                if (pickerAppId == "new") {
+                    settingsVm.updateVisibleApps(settings.visibleApps + newId)
+                }
+                showAppPickerFor = null
+            },
+            onRemove = {
+                settingsVm.updateVisibleApps(settings.visibleApps - pickerAppId)
                 showAppPickerFor = null
             }
         )
     }
-
+    
     if (showPinDialogForSettings) {
-        PinEntryDialog(
+        PinDialog(
             correctPin = settings.pinCode ?: "1234",
-            onSuccess = {
+            onDismiss = { showPinDialogForSettings = false },
+            onSuccess = { 
                 showPinDialogForSettings = false
                 onNavigate("settings")
-            },
-            onDismiss = { showPinDialogForSettings = false }
+            }
         )
     }
 }
 
 @Composable
-fun PinEntryDialog(correctPin: String, onSuccess: () -> Unit, onDismiss: () -> Unit) {
-    var enteredPin by remember { mutableStateOf("") }
+fun PinDialog(correctPin: String, onDismiss: () -> Unit, onSuccess: () -> Unit) {
+    var input by remember { mutableStateOf("") }
     var error by remember { mutableStateOf(false) }
 
     Dialog(onDismissRequest = onDismiss) {
         Card(
-            modifier = Modifier.fillMaxWidth().padding(16.dp),
-            shape = RoundedCornerShape(16.dp)
+            shape = RoundedCornerShape(24.dp),
+            modifier = Modifier.fillMaxWidth().padding(16.dp)
         ) {
-            Column(Modifier.padding(24.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-                Icon(Icons.Default.Lock, null, modifier = Modifier.size(48.dp), tint = MaterialTheme.colorScheme.primary)
-                Spacer(Modifier.height(16.dp))
-                Text("Beveiligde toegang", fontSize = 22.sp, fontWeight = FontWeight.Bold)
-                Text("Voer de pincode in om de instellingen te wijzigen.", textAlign = TextAlign.Center, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Column(
+                Modifier.padding(24.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text("Beveiligde Instellingen", fontSize = 22.sp, fontWeight = FontWeight.Bold)
+                Spacer(Modifier.height(8.dp))
+                Text("Voer de pincode in om verder te gaan.", textAlign = TextAlign.Center)
                 
                 Spacer(Modifier.height(24.dp))
                 
                 Text(
-                    enteredPin.replace(Regex("."), "*").ifEmpty { " " },
-                    fontSize = 36.sp,
-                    fontWeight = FontWeight.ExtraBold,
+                    input.replace(Regex("."), "●").ifEmpty { " " },
+                    fontSize = 32.sp,
                     letterSpacing = 8.sp,
-                    modifier = Modifier.background(MaterialTheme.colorScheme.surfaceVariant, RoundedCornerShape(8.dp)).padding(horizontal = 24.dp, vertical = 8.dp)
+                    color = if (error) Color.Red else MaterialTheme.colorScheme.primary
                 )
                 
-                if (error) {
-                    Text("Onjuiste pincode!", color = Color.Red, fontWeight = FontWeight.Bold, modifier = Modifier.padding(top = 8.dp))
-                }
-
                 Spacer(Modifier.height(24.dp))
-
-                // Number Pad
+                
+                // Numpad
                 val keys = listOf("1", "2", "3", "4", "5", "6", "7", "8", "9", "C", "0", "OK")
                 LazyVerticalGrid(
                     columns = GridCells.Fixed(3),
                     modifier = Modifier.height(280.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     items(keys) { key ->
                         Button(
                             onClick = {
                                 when (key) {
-                                    "C" -> enteredPin = ""
+                                    "C" -> if (input.isNotEmpty()) input = input.dropLast(1)
                                     "OK" -> {
-                                        if (enteredPin == correctPin) onSuccess()
-                                        else {
+                                        if (input == correctPin) onSuccess() else {
                                             error = true
-                                            enteredPin = ""
+                                            input = ""
                                         }
                                     }
                                     else -> {
-                                        if (enteredPin.length < 4) {
-                                            enteredPin += key
+                                        if (input.length < 8) {
                                             error = false
+                                            input += key
                                         }
                                     }
                                 }
                             },
-                            modifier = Modifier.fillMaxSize().aspectRatio(1f),
-                            shape = RoundedCornerShape(12.dp),
-                            colors = if (key == "OK") ButtonDefaults.buttonColors(containerColor = Color(0xFF38A169)) else ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondaryContainer, contentColor = MaterialTheme.colorScheme.onSecondaryContainer)
+                            modifier = Modifier.aspectRatio(1f),
+                            shape = CircleShape,
+                            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.surfaceVariant, contentColor = MaterialTheme.colorScheme.onSurfaceVariant)
                         ) {
-                            Text(key, fontSize = 24.sp, fontWeight = FontWeight.Bold)
+                            Text(key, fontSize = 20.sp, fontWeight = FontWeight.Bold)
                         }
                     }
-                }
-                
-                TextButton(onClick = onDismiss, modifier = Modifier.padding(top = 16.dp)) {
-                    Text("Annuleren", fontSize = 18.sp)
                 }
             }
         }
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AppPickerDialog(app: HomeApp, onDismiss: () -> Unit, onAppSelected: (String) -> Unit) {
+fun AppPickerDialog(
+    appId: String,
+    onDismiss: () -> Unit,
+    onAppSelected: (String) -> Unit,
+    onRemove: () -> Unit
+) {
     val context = LocalContext.current
     val installedApps = remember { AppLauncher.getInstalledApps(context) }
     
     Dialog(onDismissRequest = onDismiss) {
         Card(
-            modifier = Modifier.fillMaxWidth().fillMaxHeight(0.8f).padding(16.dp),
-            shape = RoundedCornerShape(16.dp)
+            shape = RoundedCornerShape(24.dp),
+            modifier = Modifier.fillMaxWidth().fillMaxHeight(0.8f).padding(16.dp)
         ) {
             Column(Modifier.padding(16.dp)) {
-                Text(
-                    "Kies een app voor '${app.name}'",
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.padding(bottom = 16.dp)
-                )
-                
-                LazyColumn(modifier = Modifier.weight(1f)) {
-                    items(installedApps) { installed ->
-                        Row(
-                            Modifier
-                                .fillMaxWidth()
-                                .clickable { onAppSelected(installed.packageName) }
-                                .padding(vertical = 12.dp, horizontal = 8.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text(installed.name, fontSize = 18.sp)
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                    Text("Kies een App", fontSize = 20.sp, fontWeight = FontWeight.Bold)
+                    if (!appId.startsWith("mapped_") && appId != "new") {
+                        // Standard app, maybe don't allow removing?
+                    } else if (appId != "new") {
+                        TextButton(onClick = onRemove) {
+                            Text("Verwijderen", color = Color.Red)
                         }
-                        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
                     }
                 }
                 
-                TextButton(
-                    onClick = { onAppSelected(""); onDismiss() },
-                    modifier = Modifier.align(Alignment.Start).padding(top = 8.dp)
-                ) {
-                    Text("Zet terug naar standaard", color = MaterialTheme.colorScheme.error)
+                Spacer(Modifier.height(16.dp))
+                
+                LazyColumn(Modifier.weight(1f)) {
+                    items(installedApps) { app ->
+                        Row(
+                            Modifier
+                                .fillMaxWidth()
+                                .clickable { onAppSelected(app.packageName) }
+                                .padding(vertical = 12.dp, horizontal = 8.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            // Icon placeholder
+                            Box(Modifier.size(40.dp).background(MaterialTheme.colorScheme.surfaceVariant, RoundedCornerShape(8.dp)), contentAlignment = Alignment.Center) {
+                                Text(app.name.take(1))
+                            }
+                            Spacer(Modifier.width(16.dp))
+                            Text(app.name, fontSize = 18.sp)
+                        }
+                    }
                 }
                 
-                TextButton(
-                    onClick = onDismiss,
-                    modifier = Modifier.align(Alignment.End).padding(top = 8.dp)
-                ) {
-                    Text("Annuleren", fontSize = 16.sp)
+                Button(onClick = onDismiss, modifier = Modifier.fillMaxWidth().padding(top = 16.dp)) {
+                    Text("Annuleren")
                 }
             }
         }
@@ -446,23 +353,107 @@ fun AppPickerDialog(app: HomeApp, onDismiss: () -> Unit, onAppSelected: (String)
 }
 
 @Composable
-fun ClockWidget(fontSizeMultiplier: Float = 1f) {
-    var time by remember { mutableLongStateOf(System.currentTimeMillis()) }
-    LaunchedEffect(Unit) { while (true) { time = System.currentTimeMillis(); kotlinx.coroutines.delay(1000) } }
-    val cal = Calendar.getInstance().apply { timeInMillis = time }
-    Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
+fun HomeTopBar(fontSizeMultiplier: Float) {
+    var currentTime by remember { mutableStateOf(SimpleDateFormat("HH:mm", Locale.getDefault()).format(Date())) }
+    var currentDate by remember { mutableStateOf(SimpleDateFormat("EEEE d MMMM", Locale.getDefault()).format(Date())) }
+    
+    LaunchedEffect(Unit) {
+        while (true) {
+            currentTime = SimpleDateFormat("HH:mm", Locale.getDefault()).format(Date())
+            currentDate = SimpleDateFormat("EEEE d MMMM", Locale.getDefault()).format(Date())
+            kotlinx.coroutines.delay(1000)
+        }
+    }
+
+    Column(
+        Modifier
+            .fillMaxWidth()
+            .padding(24.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
         Text(
-            SimpleDateFormat("HH:mm", Locale.getDefault()).format(cal.time),
-            fontSize = 54.sp * fontSizeMultiplier, 
-            fontWeight = FontWeight.ExtraBold, 
-            color = MaterialTheme.colorScheme.onBackground, 
-            letterSpacing = 2.sp
+            currentTime, 
+            fontSize = (64 * fontSizeMultiplier).sp, 
+            fontWeight = FontWeight.ExtraBold,
+            color = MaterialTheme.colorScheme.primary
         )
         Text(
-            SimpleDateFormat("EEEE d MMMM", Locale("nl")).format(cal.time).replaceFirstChar { it.uppercase() },
-            fontSize = 18.sp * fontSizeMultiplier, 
-            fontWeight = FontWeight.Medium, 
-            color = MaterialTheme.colorScheme.onSurfaceVariant
+            currentDate.replaceFirstChar { it.uppercase() }, 
+            fontSize = (20 * fontSizeMultiplier).sp, 
+            fontWeight = FontWeight.Medium,
+            color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f)
         )
+    }
+}
+
+@Composable
+fun HomeStatusCard(
+    currentStation: String?,
+    isPlaying: Boolean,
+    pendingMedsCount: Int,
+    fontSizeMultiplier: Float,
+    onRadioClick: () -> Unit,
+    onMedsClick: () -> Unit,
+    onPlayPause: () -> Unit,
+    onStop: () -> Unit
+) {
+    if (currentStation == null && pendingMedsCount == 0) return
+
+    Card(
+        Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 8.dp),
+        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
+    ) {
+        Column(Modifier.padding(16.dp)) {
+            if (currentStation != null) {
+                Row(
+                    Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Row(
+                        Modifier.weight(1f).clickable { onRadioClick() },
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text("📻", fontSize = 24.sp)
+                        Spacer(Modifier.width(12.dp))
+                        Column {
+                            Text("Nu op de radio:", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            Text(currentStation, fontSize = 18.sp, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                        }
+                    }
+                    
+                    Row {
+                        IconButton(onClick = onPlayPause) {
+                            Icon(if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow, null)
+                        }
+                        IconButton(onClick = onStop) {
+                            Icon(Icons.Default.Stop, null)
+                        }
+                    }
+                }
+            }
+            
+            if (currentStation != null && pendingMedsCount > 0) {
+                HorizontalDivider(Modifier.padding(vertical = 12.dp), color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.1f))
+            }
+            
+            if (pendingMedsCount > 0) {
+                Row(
+                    Modifier.fillMaxWidth().clickable { onMedsClick() },
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text("💊", fontSize = 24.sp)
+                    Spacer(Modifier.width(12.dp))
+                    Text(
+                        "Je hebt nog $pendingMedsCount medicijnen in te nemen", 
+                        fontSize = 16.sp, 
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.error
+                    )
+                }
+            }
+        }
     }
 }

@@ -1,38 +1,81 @@
 package com.seniorenlauncher.ui.screens
-import android.app.Application
-import androidx.lifecycle.AndroidViewModel
+
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.seniorenlauncher.LauncherApp
 import com.seniorenlauncher.data.model.*
-import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
 
-class SettingsViewModel(app: Application) : AndroidViewModel(app) {
-    private val _settings = MutableStateFlow(AppSettings())
-    val settings: StateFlow<AppSettings> = _settings.asStateFlow()
+class SettingsViewModel : ViewModel() {
+    private val repository = LauncherApp.instance.settingsRepository
 
-    fun updateTheme(t: AppTheme) { _settings.value = _settings.value.copy(theme = t) }
-    fun updateLayout(l: LayoutType) { _settings.value = _settings.value.copy(layout = l) }
-    fun updateFontSize(s: Int) { _settings.value = _settings.value.copy(fontSize = s) }
-    fun updateLanguage(l: String) { _settings.value = _settings.value.copy(language = l) }
-    fun toggleNightMode() { _settings.value = _settings.value.copy(nightModeAuto = !_settings.value.nightModeAuto) }
-    fun toggleFallDetection() { _settings.value = _settings.value.copy(fallDetectionEnabled = !_settings.value.fallDetectionEnabled) }
-    fun toggleBatteryAlert() { _settings.value = _settings.value.copy(batteryAlertEnabled = !_settings.value.batteryAlertEnabled) }
-    fun toggleLocationSharing() { _settings.value = _settings.value.copy(locationSharingEnabled = !_settings.value.locationSharingEnabled) }
-    fun toggleChargingReminder() { _settings.value = _settings.value.copy(chargingReminderEnabled = !_settings.value.chargingReminderEnabled) }
+    val settings: StateFlow<AppSettings> = repository.settingsFlow
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), AppSettings())
+
+    fun updateTheme(t: AppTheme) {
+        viewModelScope.launch { repository.setTheme(t) }
+    }
+
+    fun updateLayout(l: LayoutType) {
+        viewModelScope.launch { repository.setLayout(l) }
+    }
+
+    fun updateFontSize(s: Int) {
+        viewModelScope.launch { repository.setFontSize(s) }
+    }
+
+    fun updateLanguage(l: String) {
+        viewModelScope.launch { repository.setLanguage(l) }
+    }
+
+    fun toggleNightMode() {
+        viewModelScope.launch { repository.setNightModeAuto(!settings.value.nightModeAuto) }
+    }
+
+    fun toggleFallDetection() {
+        viewModelScope.launch { repository.setFallDetection(!settings.value.fallDetectionEnabled) }
+    }
+
+    fun toggleBatteryAlert() {
+        viewModelScope.launch { repository.setBatteryAlert(!settings.value.batteryAlertEnabled) }
+    }
+
+    fun toggleChargingReminder() {
+        viewModelScope.launch { repository.setChargingReminder(!settings.value.chargingReminderEnabled) }
+    }
     
     fun setAppMapping(appId: String, packageName: String) {
-        val m = _settings.value.appMappings.toMutableMap()
-        m[appId] = packageName
-        _settings.value = _settings.value.copy(appMappings = m)
+        viewModelScope.launch {
+            val m = settings.value.appMappings.toMutableMap()
+            m[appId] = packageName
+            repository.setAppMappings(m)
+        }
+    }
+
+    fun updateVisibleApps(apps: Set<String>) {
+        viewModelScope.launch {
+            repository.setVisibleApps(apps)
+        }
     }
 
     fun toggleAppVisibility(id: String) {
-        val s = _settings.value.visibleApps.toMutableSet()
-        if (s.contains(id)) s.remove(id) else s.add(id)
-        _settings.value = _settings.value.copy(visibleApps = s)
+        viewModelScope.launch {
+            val s = settings.value.visibleApps.toMutableSet()
+            if (s.contains(id)) s.remove(id) else s.add(id)
+            repository.setVisibleApps(s)
+        }
     }
 
-    fun lockSettings() { _settings.value = _settings.value.copy(settingsLocked = true) }
-    fun unlockSettings() { _settings.value = _settings.value.copy(settingsLocked = false) }
-    fun verifyPin(pin: String): Boolean = pin == (_settings.value.pinCode ?: "1234")
+    fun lockSettings() {
+        viewModelScope.launch { repository.setSettingsLocked(true) }
+    }
+
+    fun unlockSettings() {
+        viewModelScope.launch { repository.setSettingsLocked(false) }
+    }
+
+    fun verifyPin(pin: String): Boolean = pin == (settings.value.pinCode ?: "1234")
 }

@@ -1,7 +1,9 @@
 package com.seniorenlauncher.ui.components
 
+import android.graphics.drawable.Drawable
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
@@ -20,16 +22,25 @@ import androidx.compose.ui.draw.scale
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.graphics.painter.BitmapPainter
+import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.graphics.drawable.toBitmap
+import coil.compose.AsyncImage
+import coil.compose.rememberAsyncImagePainter
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun BigButton(
-    emoji: String, 
+    emoji: String? = null,
+    icon: Drawable? = null,
     label: String, 
     color: Color, 
     onClick: () -> Unit,
@@ -70,12 +81,22 @@ fun BigButton(
             verticalArrangement = Arrangement.Center,
             modifier = Modifier.fillMaxSize().padding(horizontal = 4.dp)
         ) {
-            Text(
-                emoji, 
-                fontSize = (if (small) 22.sp else 32.sp) * fontSizeMultiplier,
-                lineHeight = (if (small) 24.sp else 34.sp) * fontSizeMultiplier
-            )
-            Spacer(Modifier.height(if (small) 1.dp else 2.dp))
+            if (icon != null) {
+                Image(
+                    painter = rememberAsyncImagePainter(icon),
+                    contentDescription = null,
+                    modifier = Modifier.size(if (small) 40.dp else 56.dp),
+                    contentScale = ContentScale.Fit
+                )
+            } else if (emoji != null) {
+                Text(
+                    emoji, 
+                    fontSize = (if (small) 22.sp else 32.sp) * fontSizeMultiplier,
+                    lineHeight = (if (small) 24.sp else 34.sp) * fontSizeMultiplier
+                )
+            }
+            
+            Spacer(Modifier.height(if (small) 2.dp else 4.dp))
             Text(
                 label, 
                 fontSize = (if (small) 12.sp else 14.sp) * fontSizeMultiplier, 

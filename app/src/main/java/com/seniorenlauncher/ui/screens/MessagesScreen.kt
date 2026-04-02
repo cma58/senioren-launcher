@@ -32,7 +32,8 @@ data class Conversation(
     val snippet: String,
     val date: Long,
     val contactName: String? = null,
-    val threadId: Long = 0
+    val threadId: Long = 0,
+    val isRead: Boolean = true
 )
 
 data class SmsMessage(
@@ -136,38 +137,87 @@ fun ConversationList(
     val context = LocalContext.current
     val conversations by messagesVm.conversations.collectAsState()
     val isLoading by messagesVm.isLoading.collectAsState()
+    val searchQuery by messagesVm.searchQuery.collectAsState()
 
     LaunchedEffect(Unit) {
         messagesVm.loadConversations(context)
     }
 
-    if (isLoading && conversations.isEmpty()) {
-        Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            CircularProgressIndicator()
-        }
-    } else if (conversations.isEmpty()) {
-        Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            Text("Geen berichten gevonden", fontSize = 18.sp * fontSizeMultiplier)
-        }
-    } else {
-        LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            items(conversations) { conv ->
-                Card(
-                    modifier = Modifier.fillMaxWidth().clickable { onConversationClick(conv) },
-                    shape = RoundedCornerShape(12.dp),
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
-                ) {
-                    Row(Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
-                        Box(
-                            Modifier.size(50.dp).clip(CircleShape).background(MaterialTheme.colorScheme.primaryContainer),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text((conv.contactName ?: conv.address).take(1).uppercase(), fontWeight = FontWeight.Bold, fontSize = 22.sp * fontSizeMultiplier)
-                        }
-                        Spacer(Modifier.width(16.dp))
-                        Column(Modifier.weight(1f)) {
-                            Text(conv.contactName ?: conv.address, fontSize = 18.sp * fontSizeMultiplier, fontWeight = FontWeight.Bold)
-                            Text(conv.snippet, fontSize = 16.sp * fontSizeMultiplier, maxLines = 1, overflow = TextOverflow.Ellipsis, color = MaterialTheme.colorScheme.onSurfaceVariant)
+    Column {
+        // --- Zoekbalk ---
+        OutlinedTextField(
+            value = searchQuery,
+            onValueChange = { messagesVm.setSearchQuery(it) },
+            modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp),
+            placeholder = { Text("Zoek in berichten...", fontSize = 18.sp * fontSizeMultiplier) },
+            leadingIcon = { Icon(Icons.Default.Search, null) },
+            trailingIcon = if (searchQuery.isNotEmpty()) {
+                { IconButton(onClick = { messagesVm.setSearchQuery("") }) { Icon(Icons.Default.Clear, null) } }
+            } else null,
+            shape = RoundedCornerShape(16.dp),
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedContainerColor = MaterialTheme.colorScheme.surface,
+                unfocusedContainerColor = MaterialTheme.colorScheme.surface
+            )
+        )
+
+        if (isLoading && conversations.isEmpty()) {
+            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                CircularProgressIndicator()
+            }
+        } else if (conversations.isEmpty()) {
+            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                Text(if (searchQuery.isEmpty()) "Geen berichten gevonden" else "Niets gevonden voor '$searchQuery'", fontSize = 18.sp * fontSizeMultiplier)
+            }
+        } else {
+            LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                items(conversations) { conv ->
+                    Card(
+                        modifier = Modifier.fillMaxWidth().clickable { onConversationClick(conv) },
+                        shape = RoundedCornerShape(12.dp),
+                        colors = CardDefaults.cardColors(
+                            containerColor = if (conv.isRead) MaterialTheme.colorScheme.surfaceVariant 
+                                            else MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f)
+                        ),
+                        border = if (!conv.isRead) androidx.compose.foundation.BorderStroke(2.dp, MaterialTheme.colorScheme.primary) else null
+                    ) {
+                        Row(Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
+                            Box(
+                                Modifier.size(50.dp).clip(CircleShape).background(
+                                    if (conv.isRead) MaterialTheme.colorScheme.secondaryContainer 
+                                    else MaterialTheme.colorScheme.primary
+                                ),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    text = (conv.contactName ?: conv.address).take(1).uppercase(), 
+                                    fontWeight = FontWeight.Bold, 
+                                    fontSize = 22.sp * fontSizeMultiplier,
+                                    color = if (conv.isRead) MaterialTheme.colorScheme.onSecondaryContainer else Color.White
+                                )
+                            }
+                            Spacer(Modifier.width(16.dp))
+                            Column(Modifier.weight(1f)) {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Text(
+                                        text = conv.contactName ?: conv.address, 
+                                        fontSize = 18.sp * fontSizeMultiplier, 
+                                        fontWeight = if (conv.isRead) FontWeight.Bold else FontWeight.ExtraBold
+                                    )
+                                    if (!conv.isRead) {
+                                        Spacer(Modifier.width(8.dp))
+                                        Box(Modifier.size(10.dp).clip(CircleShape).background(MaterialTheme.colorScheme.primary))
+                                    }
+                                }
+                                Text(
+                                    text = conv.snippet, 
+                                    fontSize = 16.sp * fontSizeMultiplier, 
+                                    maxLines = 1, 
+                                    overflow = TextOverflow.Ellipsis, 
+                                    color = if (conv.isRead) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.onSurface,
+                                    fontWeight = if (conv.isRead) FontWeight.Normal else FontWeight.Medium
+                                )
+                            }
                         }
                     }
                 }
@@ -180,6 +230,7 @@ fun ConversationList(
 fun ChatScreen(address: String, messagesVm: MessagesViewModel, fontSizeMultiplier: Float) {
     val context = LocalContext.current
     val messages by messagesVm.messages.collectAsState()
+    val msgFontSizeScale by messagesVm.messageFontSizeMultiplier.collectAsState()
     var newMessage by remember { mutableStateOf("") }
     val scrollState = rememberLazyListState()
 
@@ -188,6 +239,27 @@ fun ChatScreen(address: String, messagesVm: MessagesViewModel, fontSizeMultiplie
     }
 
     Column(Modifier.fillMaxSize()) {
+        // --- Tekstgrootte Knoppen ---
+        Row(
+            Modifier.fillMaxWidth().padding(bottom = 8.dp),
+            horizontalArrangement = Arrangement.End,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text("Tekstgrootte:", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Spacer(Modifier.width(8.dp))
+            FilledIconButton(
+                onClick = { messagesVm.adjustFontSize(-0.2f) },
+                modifier = Modifier.size(40.dp),
+                colors = IconButtonDefaults.filledIconButtonColors(containerColor = MaterialTheme.colorScheme.secondaryContainer)
+            ) { Icon(Icons.Default.Remove, "Kleiner") }
+            Spacer(Modifier.width(8.dp))
+            FilledIconButton(
+                onClick = { messagesVm.adjustFontSize(0.2f) },
+                modifier = Modifier.size(40.dp),
+                colors = IconButtonDefaults.filledIconButtonColors(containerColor = MaterialTheme.colorScheme.secondaryContainer)
+            ) { Icon(Icons.Default.Add, "Groter") }
+        }
+
         LazyColumn(
             modifier = Modifier.weight(1f),
             state = scrollState,
@@ -196,7 +268,7 @@ fun ChatScreen(address: String, messagesVm: MessagesViewModel, fontSizeMultiplie
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             items(messages) { msg ->
-                MessageBubble(msg, fontSizeMultiplier)
+                MessageBubble(msg, fontSizeMultiplier * msgFontSizeScale)
             }
         }
 
@@ -230,7 +302,7 @@ fun ChatScreen(address: String, messagesVm: MessagesViewModel, fontSizeMultiplie
 }
 
 @Composable
-fun MessageBubble(message: SmsMessage, fontSizeMultiplier: Float) {
+fun MessageBubble(message: SmsMessage, totalFontSizeMultiplier: Float) {
     val alignment = if (message.isMe) Alignment.End else Alignment.Start
     val color = if (message.isMe) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.secondaryContainer
     
@@ -243,13 +315,14 @@ fun MessageBubble(message: SmsMessage, fontSizeMultiplier: Float) {
                 bottomStart = if (message.isMe) 16.dp else 0.dp, 
                 bottomEnd = if (message.isMe) 0.dp else 16.dp
             ),
-            modifier = Modifier.padding(horizontal = 8.dp).widthIn(max = 280.dp)
+            modifier = Modifier.padding(horizontal = 8.dp).widthIn(max = 300.dp)
         ) {
             Text(
                 text = message.body,
                 modifier = Modifier.padding(12.dp),
-                fontSize = 18.sp * fontSizeMultiplier,
-                color = if (message.isMe) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSecondaryContainer
+                fontSize = 18.sp * totalFontSizeMultiplier,
+                color = if (message.isMe) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSecondaryContainer,
+                lineHeight = (24.sp * totalFontSizeMultiplier)
             )
         }
     }

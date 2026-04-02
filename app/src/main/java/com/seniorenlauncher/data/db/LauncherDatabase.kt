@@ -45,8 +45,10 @@ abstract class LauncherDatabase : RoomDatabase() {
 }
 @Dao interface AlarmDao {
     @Query("SELECT * FROM alarms ORDER BY hour, minute") fun getAll(): Flow<List<AlarmEntry>>
-    @Insert(onConflict = OnConflictStrategy.REPLACE) suspend fun insert(a: AlarmEntry)
+    @Query("SELECT * FROM alarms") suspend fun getAllSync(): List<AlarmEntry>
+    @Insert(onConflict = OnConflictStrategy.REPLACE) suspend fun insert(a: AlarmEntry): Long
     @Update suspend fun update(a: AlarmEntry)
+    @Delete suspend fun delete(a: AlarmEntry)
 }
 @Dao interface RadioDao {
     @Query("SELECT * FROM radio_stations ORDER BY category, name") fun getAll(): Flow<List<RadioStation>>

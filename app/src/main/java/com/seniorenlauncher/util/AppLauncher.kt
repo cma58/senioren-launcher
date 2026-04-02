@@ -4,18 +4,19 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.ApplicationInfo
 import android.content.pm.PackageManager
+import android.graphics.drawable.Drawable
 import android.net.Uri
 import android.provider.AlarmClock
 import android.provider.CalendarContract
 import android.provider.MediaStore
 import android.widget.Toast
 
-data class InstalledApp(val name: String, val packageName: String)
+data class InstalledApp(val name: String, val packageName: String, val icon: Drawable? = null)
 
 object AppLauncher {
     fun launchApp(context: Context, appId: String, customPackage: String? = null): Boolean {
         try {
-            if (customPackage != null) {
+            if (customPackage != null && customPackage.isNotEmpty()) {
                 val intent = context.packageManager.getLaunchIntentForPackage(customPackage)
                 if (intent != null) {
                     context.startActivity(intent)
@@ -59,11 +60,52 @@ object AppLauncher {
         return false
     }
 
-    fun getInstalledApps(context: Context): List<InstalledApp> {
+    fun getInstalledApps(context: Context, includeIcons: Boolean = false): List<InstalledApp> {
         val pm = context.packageManager
         val apps = pm.getInstalledApplications(PackageManager.GET_META_DATA)
-        return apps.filter { it.flags and ApplicationInfo.FLAG_SYSTEM == 0 || pm.getLaunchIntentForPackage(it.packageName) != null }
-            .map { InstalledApp(it.loadLabel(pm).toString(), it.packageName) }
-            .sortedBy { it.name.lowercase() }
+        return apps.filter { 
+            (it.flags and ApplicationInfo.FLAG_SYSTEM == 0) || (pm.getLaunchIntentForPackage(it.packageName) != null)
+        }
+        .map { 
+            InstalledApp(
+                it.loadLabel(pm).toString(), 
+                it.packageName,
+                if (includeIcons) it.loadIcon(pm) else null
+            ) 
+        }
+        .sortedBy { it.name.lowercase() }
+    }
+
+    fun getAppInfo(context: Context, packageName: String): InstalledApp? {
+        val pm = context.packageManager
+        return try {
+            val appInfo = pm.getApplicationInfo(packageName, 0)
+            InstalledApp(
+                appInfo.loadLabel(pm).toString(),
+                packageName,
+                appInfo.loadIcon(pm)
+            )
+        } catch (e: PackageManager.NameNotFoundException) {
+            null
+        }
+    }
+
+    fun getAppName(context: Context, packageName: String): String? {
+        val pm = context.packageManager
+        return try {
+            val appInfo = pm.getApplicationInfo(packageName, 0)
+            appInfo.loadLabel(pm).toString()
+        } catch (e: PackageManager.NameNotFoundException) {
+            null
+        }
+    }
+
+    fun getAppIcon(context: Context, packageName: String): Drawable? {
+        val pm = context.packageManager
+        return try {
+            pm.getApplicationIcon(packageName)
+        } catch (e: PackageManager.NameNotFoundException) {
+            null
+        }
     }
 }

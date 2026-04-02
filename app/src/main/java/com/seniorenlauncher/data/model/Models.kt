@@ -24,7 +24,7 @@ data class Medication(
     val color: Long = 0xFF3B82F6, 
     val active: Boolean = true,
     val lastReminderTime: Long = 0,
-    val isPending: Boolean = false // New field to track if a reminder is currently active
+    val isPending: Boolean = false 
 )
 
 @Entity(tableName = "medication_logs")
@@ -77,8 +77,8 @@ data class AppSettings(
     val chargingReminderEnabled: Boolean = true,
     val pinCode: String? = "1234", 
     val settingsLocked: Boolean = false,
-    val visibleApps: Set<String> = setOf("phone","sms","whatsapp","video","camera","photos",
-        "alarm","calendar","meds","weather","flashlight","magnifier","notes","radio","steps","emergency","sos", "settings"),
+    val visibleApps: Set<String> = setOf("phone","sms","camera","photos",
+        "alarm","calendar","meds","weather","flashlight","magnifier","notes","radio","steps","emergency","sos", "settings", "all_apps"),
     val appMappings: Map<String, String> = emptyMap() // appId -> packageName
 )
 
@@ -93,8 +93,6 @@ data class AppInfo(
 val ALL_APPS = listOf(
     AppInfo("phone", "Bellen", "📞", "📞", 0xFF38A169),
     AppInfo("sms", "Berichten", "💬", "💬", 0xFF3B82F6),
-    AppInfo("whatsapp", "WhatsApp", "🟢", "🟢", 0xFF25D366),
-    AppInfo("video", "Videobellen", "🎥", "🎥", 0xFF8B5CF6),
     AppInfo("camera", "Camera", "📷", "📷", 0xFFEC4899),
     AppInfo("photos", "Foto's", "🖼️", "🖼️", 0xFFF59E0B),
     AppInfo("alarm", "Wekker", "⏰", "⏰", 0xFFEA580C),
@@ -108,5 +106,6 @@ val ALL_APPS = listOf(
     AppInfo("steps", "Stappen", "🚶", "🚶", 0xFF14B8A6),
     AppInfo("emergency", "Noodinfo", "🏥", "🏥", 0xFFEF4444),
     AppInfo("sos", "SOS", "🆘", "🆘", 0xFFDC2626),
-    AppInfo("settings", "Instellingen", "⚙️", "⚙️", 0xFF718096)
+    AppInfo("all_apps", "Alle Apps", "📱", "📱", 0xFF718096),
+    AppInfo("settings", "Instellingen", "⚙️", "⚙️", 0xFF718096),
 )
