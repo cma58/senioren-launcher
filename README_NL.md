@@ -11,17 +11,17 @@
 ## 📸 Screenshots
 
 <p align="center">
-  <img src="screenshots/screenshot_home.jpg" width="250" title="Startscherm">
-  <img src="screenshots/screenshot_phone.jpg" width="250" title="Telefoon">
-  <img src="screenshots/screenshot_weather.jpg" width="250" title="Weer & Advies">
+  <img src="screenshots/screenshot_homescreenshot_home.jpeg" width="250" title="Startscherm">
+  <img src="screenshots/screenshot_phone.jpeg" width="250" title="Telefoon">
+  <img src="screenshots/screenshot_weather.jpeg" width="250" title="Weer & Advies">
 </p>
 <p align="center">
-  <img src="screenshots/screenshot_medication.jpg" width="250" title="Medicijnen">
-  <img src="screenshots/screenshot_emergency.jpg" width="250" title="Noodinfo">
-  <img src="screenshots/screenshot_remote_support.jpg" width="250" title="Hulp op Afstand">
+  <img src="screenshots/screenshot_medication.jpeg" width="250" title="Medicijnen">
+  <img src="screenshots/screenshot_emergency..jpeg" width="250" title="Noodinfo">
+  <img src="screenshots/screenshot_remote_support..jpeg" width="250" title="Hulp op Afstand">
 </p>
 <p align="center">
-  <img src="screenshots/screenshot_sos.jpg" width="250" title="SOS Noodhulp">
+  <img src="screenshots/screenshot_sos.jpeg" width="250" title="SOS Noodhulp">
 </p>
 
 ---
@@ -78,7 +78,7 @@ Een versimpelde agenda en een plek voor korte notities, zodat u nooit meer een a
 
 ## 🛠️ Status van Ontwikkeling
 
-Omdat we transparant willen zijn over wat wel en niet werkt in deze bèta:
+Omdat we transparant willen zijn over what wel en niet werkt in deze bèta:
 
 - **🛡️ Valdetectie**: Momenteel **experimenteel**. De gevoeligheid wordt nog getest om valse alarmen te voorkomen.
 - **🪫 Batterijwaarschuwing**: Deze functie is momenteel **in ontwikkeling** en werkt nog niet. 
