@@ -128,9 +128,9 @@ fun MedicationScreen(onBack: () -> Unit) {
                                         Text(daysSummary, fontSize = 14.sp, color = Color(0xFF3B82F6), fontWeight = FontWeight.Medium)
                                     }
                                     IconButton(onClick = {
-                                        scope.launch { 
+                                        scope.launch {
                                             MedicationAlarmScheduler.cancelAlarms(context, med)
-                                            dao.delete(med) 
+                                            dao.delete(med)
                                         }
                                     }) {
                                         Icon(Icons.Default.Delete, contentDescription = "Verwijder", tint = Color.Red)

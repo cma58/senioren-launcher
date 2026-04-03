@@ -66,9 +66,9 @@ fun NotesScreen(onBack: () -> Unit) {
 
     Box(Modifier.fillMaxSize()) {
         LargeFloatingActionButton(
-            onClick = { 
+            onClick = {
                 noteToEdit = null
-                showAddDialog = true 
+                showAddDialog = true
             },
             modifier = Modifier.align(Alignment.BottomEnd).padding(24.dp),
             containerColor = MaterialTheme.colorScheme.primaryContainer,

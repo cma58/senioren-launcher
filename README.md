@@ -1,6 +1,6 @@
-# 📱 Senioren Launcher (Beta)
+# 📱 Senior Launcher (Beta)
 
-**De eerlijke, open-source Android launcher voor onze ouderen. Gemaakt om technologie weer toegankelijk en veilig te maken.**
+**The honest, open-source Android launcher for our elders. Created to make technology accessible and safe again.**
 
 [![License: GPL-3.0](https://img.shields.io/badge/License-GPL%20v3-blue.svg)](LICENSE)
 [![Privacy](https://img.shields.io/badge/Privacy-100%25-brightgreen.svg)](PRIVACY.md)
@@ -8,103 +8,125 @@
 
 ---
 
-## Waarom Senioren Launcher?
+## 📸 Screenshots
 
-Veel bestaande launchers voor senioren zijn onnodig duur, zitten vol advertenties of verzamelen stiekem data. Wij geloven dat onze ouders en grootouders beter verdienen. 
-
-Dit is een **passieproject waar ik alleen in mijn vrije tijd aan werk**, met als doel een launcher te bouwen die:
-
-- **Echt Simpel is** — Grote knoppen, duidelijke teksten en geen overbodige menu's.
-- **Privacy voorop stelt** — Uw gegevens blijven op uw telefoon. Nul analytics, nul advertenties.
-- **100% Gratis & Open Source** — Voor iedereen beschikbaar zonder winstoogmerk.
-
-> **Let op:** Dit project is momenteel in **Bèta-fase**. Omdat ik dit naast mijn dagelijkse werk doe, kan de ontwikkeling soms iets langzamer gaan, maar ik werk er met veel liefde aan.
-
----
-
-## ☕ Steun mijn werk
-
-Senioren Launcher is een project dat ik volledig gratis aanbied. Jouw steun helpt enorm om de kosten te dekken (zoals voor hosting of testapparatuur) en motiveert mij om in mijn vrije avonden en weekenden door te blijven bouwen aan nieuwe functies.
-
-**Vind je dit een mooi initiatief?** Elke bijdrage, hoe klein ook, wordt ontzettend gewaardeerd!
-
-[![Doneer via PayPal](https://img.shields.io/badge/Doneer-PayPal-blue.svg?style=for-the-badge)](https://www.paypal.com/donate/?business=amine.chtaiti@gmail.com&no_recurring=0&currency_code=EUR)
+<p align="center">
+  <img src="screenshots/screenshot_homescreenshot_home.jpeg" width="250" title="Home Screen">
+  <img src="screenshots/screenshot_phone.jpeg" width="250" title="Phone">
+  <img src="screenshots/screenshot_weather.jpeg" width="250" title="Weather & Advice">
+</p>
+<p align="center">
+  <img src="screenshots/screenshot_medication.jpeg" width="250" title="Medication">
+  <img src="screenshots/screenshot_emergency..jpeg" width="250" title="Emergency Info">
+  <img src="screenshots/screenshot_remote_support..jpeg" width="250" title="Remote Support">
+</p>
+<p align="center">
+  <img src="screenshots/screenshot_sos.jpeg" width="250" title="SOS Emergency">
+</p>
 
 ---
 
-## ✨ Functies in detail
-
-### 📞 Bellen & Contacten
-Grote nummertoetsen en een lijst van favorieten met foto's. Eén druk op de knop om direct te bellen naar familie of vrienden.
-
-### 🆘 SOS Noodknop
-Bij het 3 seconden indrukken van de SOS-knop worden noodcontacten direct ingelicht via SMS met de exacte GPS-locatie.
-
-### 👨‍🔧 Hulp op Afstand (RustDesk)
-Unieke functie waarmee een familielid op afstand kan meekijken om te helpen bij instellingen. Inclusief een duidelijk stappenplan voor de senior.
-
-### 🔍 Vergrootglas & Zaklamp
-Verander de telefoon in een digitale loep om kleine teksten op medicijnen of menukaarten makkelijk te kunnen lezen.
-
-### 🚶 Stappenteller
-Stimuleert beweging door het aantal stappen van vandaag groot en duidelijk te tonen.
-
-### 📅 Agenda & Notities
-Een versimpelde agenda en een plek voor korte notities, zodat u nooit meer een afspraak of boodschap vergeet.
+[Nederlandse versie hier](README_NL.md)
 
 ---
 
-## 🛠️ Status van Ontwikkeling
+## Why Senior Launcher?
 
-Omdat we transparant willen zijn over wat wel en niet werkt in deze bèta:
+Many existing launchers for seniors are unnecessarily expensive, full of ads, or secretly collect data. I believe our parents and grandparents deserve better.
 
-- **🛡️ Valdetectie**: Momenteel **experimenteel**. De gevoeligheid wordt nog getest om valse alarmen te voorkomen.
-- **🪫 Batterijwaarschuwing**: Deze functie is momenteel **in ontwikkeling** en werkt nog niet. 
-- **🌍 Talen**: De basis is Nederlands, andere talen volgen zodra ik daar tijd voor vind.
+This is a **passion project I work on in my spare time**, with the goal of building a launcher that is:
 
----
+- **Truly Simple** — Large buttons, clear text, and no redundant menus.
+- **Privacy First** — Your data stays on your phone. Zero analytics, zero ads.
+- **100% Free & Open Source** — Available to everyone without a profit motive.
 
-## 🎨 Aanpassing & Beveiliging
-
-De launcher kan worden aangepast aan de behoeften van de gebruiker:
-- **Layouts**: Kies uit 2x3, 3x4 of 1x1 grid.
-- **Lettergrootte**: Alles kan extra groot worden weergegeven.
-- **🔒 Instellingen vergrendelen**: Beveilig de instellingen met een PIN-code.
-  - **Standaard PIN-code**: `1234`
+> **Note:** This project is currently in **Beta phase**. Since I do this alongside my daily work, development can sometimes be a bit slow, but I work on it with a lot of love. **My goal is to eventually publish this app on F-Droid.**
 
 ---
 
-## 🏗️ Technologie
+## ☕ Support my work
 
-Ik gebruik moderne en veilige technologieën om de beste ervaring te bieden:
+Senior Launcher is a project I offer completely for free. Your support helps enormously to cover costs (such as hosting or testing equipment) and motivates me to keep building new features in my free evenings and weekends.
 
-| Component | Technologie |
+**Do you think this is a great initiative?** Any contribution, no matter how small, is greatly appreciated!
+
+[![Donate via PayPal](https://img.shields.io/badge/Donate-PayPal-blue.svg?style=for-the-badge)](https://www.paypal.com/donate/?business=amine.chtaiti@gmail.com&no_recurring=0&currency_code=EUR)
+
+---
+
+## ✨ Features in detail
+
+### 📞 Calling & Contacts
+Large number keys and a list of favorites with photos. One press of a button to call family or friends directly.
+
+### 🆘 SOS Emergency Button
+By pressing the SOS button for 3 seconds, emergency contacts are immediately informed via SMS with the exact GPS location.
+
+### 👨‍🔧 Remote Support (RustDesk)
+Unique feature that allows a family member to watch remotely to help with settings. Includes a clear step-by-step plan for the senior.
+
+### 🔍 Magnifier & Flashlight
+Turn the phone into a digital magnifying glass to easily read small texts on medication or menus.
+
+### 🚶 Step Counter
+Stimulates movement by displaying today's step count large and clearly.
+
+### 📅 Calendar & Notes
+A simplified calendar and a place for short notes, so you never forget an appointment or errand again.
+
+---
+
+## 🛠️ Development Status
+
+Because we want to be transparent about what does and doesn't work in this beta:
+
+- **🛡️ Fall Detection**: Currently **experimental**. Sensitivity is still being tested to prevent false alarms.
+- **🪫 Battery Warning**: This feature is currently **under development** and not yet functional.
+- **🌍 Languages**: The base is Dutch, other languages will follow as soon as I find time.
+
+---
+
+## 🎨 Customization & Security
+
+The launcher can be adjusted to the user's needs:
+- **Layouts**: Choose from 2x3, 3x4, or 1x1 grid.
+- **Font Size**: Everything can be displayed extra large.
+- **🔒 Lock Settings**: Secure settings with a PIN code.
+  - **Default PIN code**: `1234`
+
+---
+
+## 🏗️ Technology
+
+I use modern and secure technologies to provide the best experience:
+
+| Component | Technology |
 |-----------|-------------|
-| **Taal** | Kotlin 2.0 |
+| **Language** | Kotlin 2.0 |
 | **UI** | Jetpack Compose + Material 3 |
-| **Architectuur** | MVVM + Clean Architecture |
+| **Architecture** | MVVM + Clean Architecture |
 | **Database** | Room (SQLite) + DataStore |
-| **Achtergrond** | WorkManager |
-| **Camera** | CameraX (voor het Vergrootglas) |
-| **Sensoren** | Accelerometer (Valdetectie) & Step Counter |
-| **Media** | Media3 ExoPlayer (voor de Radio) |
+| **Background** | WorkManager |
+| **Camera** | CameraX (for the Magnifier) |
+| **Sensors** | Accelerometer (Fall Detection) & Step Counter |
+| **Media** | Media3 ExoPlayer (for the Radio) |
 | **Min SDK** | API 26 (Android 8.0) |
 | **Target SDK** | API 36 (Android 15) |
 
 ---
 
-## 🤝 Bijdragen
+## 🤝 Contributing
 
-Wil je helpen het project te verbeteren? Graag! Zie [CONTRIBUTING.md](CONTRIBUTING.md) voor de richtlijnen over het melden van bugs of het insturen van code.
+Want to help improve the project? Great! See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines on reporting bugs or submitting code.
 
 ## 🔒 Privacy
 
-Privacy is geen bijzaak, het is de kern van dit project. Wij verzamelen **geen data**. Alles blijft op de telefoon van de senior. Lees ons volledige [PRIVACY.md](PRIVACY.md).
+Privacy is not an afterthought; it is the core of this project. We **do not collect data**. Everything remains on the senior's phone. Read our full [PRIVACY.md](PRIVACY.md).
 
-## 📜 Licentie
+## 📜 License
 
-Dit project is gelicentieerd onder de **GNU General Public License v3.0**. Dit betekent dat de software altijd open en gratis zal blijven.
+This project is licensed under the **GNU General Public License v3.0**. This means the software will always remain open and free.
 
 ---
 
-*"Technologie moet mensen verbinden, niet uitsluiten."* ❤️
+*"Technology should connect people, not exclude them."* ❤️

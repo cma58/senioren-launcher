@@ -324,10 +324,7 @@ fun AppNavigation(settingsVm: SettingsViewModel, radioVm: RadioViewModel) {
         }
         composable("contacts") { 
             ContactsScreen(
-                onBack = { navController.popBackStack() },
-                onCall = { phone ->
-                    // Action handled inside screen or via intent
-                }
+                onBack = { navController.popBackStack() }
             ) 
         }
         composable("sms") { 
@@ -394,7 +391,7 @@ fun AppNavigation(settingsVm: SettingsViewModel, radioVm: RadioViewModel) {
             )
         }
         composable("magnifier") {
-            MagnifierScreen(
+            FlashlightScreen(
                 onBack = { navController.popBackStack() }
             )
         }

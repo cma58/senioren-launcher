@@ -18,19 +18,43 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.seniorenlauncher.LauncherApp
 import com.seniorenlauncher.data.model.EmergencyInfo
+import com.seniorenlauncher.data.model.Medication
 import com.seniorenlauncher.ui.components.ScreenHeader
 import kotlinx.coroutines.launch
 
 @Composable
 fun EmergencyInfoScreen(onBack: () -> Unit) {
+    // --- DEMO MODE TOGGLE ---
+    val isDemoMode = false
+
     val scope = rememberCoroutineScope()
     val db = LauncherApp.instance.database
     val emergencyDao = db.emergencyDao()
     val medDao = db.medicationDao()
     
-    val info by emergencyDao.get().collectAsState(initial = EmergencyInfo())
-    val medications by medDao.getActive().collectAsState(initial = emptyList())
-    val currentInfo = info ?: EmergencyInfo()
+    val realInfo by emergencyDao.get().collectAsState(initial = EmergencyInfo())
+    val realMedications by medDao.getActive().collectAsState(initial = emptyList())
+    
+    // --- DUMMY DATA ---
+    val dummyInfo = EmergencyInfo(
+        fullName = "Hendrik de Jong",
+        birthDate = "12-05-1945",
+        address = "Hoofdstraat 42, Amsterdam",
+        bloodType = "A+",
+        allergies = "Geen",
+        conditions = "Hoge bloeddruk",
+        doctorName = "Huisarts de Vries",
+        doctorPhone = "020 555 0123",
+        iceContactName = "Dochter Sofie",
+        iceContactPhone = "06 12345678",
+        hasPacemaker = false
+    )
+    val dummyMeds = listOf(
+        Medication(name = "Bloeddruk", dose = "1 pil", times = "08:00")
+    )
+
+    val currentInfo = if (isDemoMode) dummyInfo else realInfo ?: EmergencyInfo()
+    val medications = if (isDemoMode) dummyMeds else realMedications
     
     var showEditDialog by remember { mutableStateOf(false) }
 
@@ -56,7 +80,7 @@ fun EmergencyInfoScreen(onBack: () -> Unit) {
                     EmergencyRow("Pacemaker", if (currentInfo.hasPacemaker) "Ja" else "Nee")
                 }
 
-                // Medicijnen (Automatisch uit de medicijnen lijst)
+                // Medicijnen
                 EmergencySection(
                     title = "💊 Huidige medicijnen",
                     titleColor = Color(0xFF3B82F6),
@@ -70,7 +94,9 @@ fun EmergencyInfoScreen(onBack: () -> Unit) {
                                 Text(med.name, fontSize = 15.sp, fontWeight = FontWeight.Bold)
                                 Text("${med.dose} — ${med.times}", fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
                             }
-                            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
+                            if (med != medications.last()) {
+                                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
+                            }
                         }
                     }
                 }
@@ -100,21 +126,23 @@ fun EmergencyInfoScreen(onBack: () -> Unit) {
                 Spacer(Modifier.height(80.dp))
             }
 
-            LargeFloatingActionButton(
-                onClick = { showEditDialog = true },
-                modifier = Modifier
-                    .align(Alignment.BottomEnd)
-                    .padding(bottom = 16.dp, end = 8.dp),
-                containerColor = MaterialTheme.colorScheme.primaryContainer,
-                contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                shape = RoundedCornerShape(16.dp)
-            ) {
-                Icon(Icons.Default.Edit, contentDescription = "Bewerken", modifier = Modifier.size(36.dp))
+            if (!isDemoMode) {
+                LargeFloatingActionButton(
+                    onClick = { showEditDialog = true },
+                    modifier = Modifier
+                        .align(Alignment.BottomEnd)
+                        .padding(bottom = 16.dp, end = 8.dp),
+                    containerColor = MaterialTheme.colorScheme.primaryContainer,
+                    contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                    shape = RoundedCornerShape(16.dp)
+                ) {
+                    Icon(Icons.Default.Edit, contentDescription = "Bewerken", modifier = Modifier.size(36.dp))
+                }
             }
         }
     }
 
-    if (showEditDialog) {
+    if (showEditDialog && !isDemoMode) {
         var name by remember { mutableStateOf(currentInfo.fullName) }
         var birth by remember { mutableStateOf(currentInfo.birthDate) }
         var addr by remember { mutableStateOf(currentInfo.address) }

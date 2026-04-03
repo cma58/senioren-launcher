@@ -30,22 +30,36 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.seniorenlauncher.LauncherApp
 import com.seniorenlauncher.data.model.QuickContact
 import com.seniorenlauncher.ui.components.ScreenHeader
 import kotlinx.coroutines.launch
 
 @Composable
-fun ContactsScreen(onCall: (String) -> Unit, onBack: () -> Unit) {
+fun ContactsScreen(onBack: () -> Unit, settingsVm: SettingsViewModel = viewModel()) {
+    // --- DEMO MODE TOGGLE ---
+    val isDemoMode = false
+
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
-    val dao = LauncherApp.instance.database.contactDao()
-    val contacts by dao.getAll().collectAsState(initial = emptyList())
+    val dao = remember { LauncherApp.instance.database.contactDao() }
     
-    // We assume fontSize from settings should apply here too
-    // For simplicity, we use a default or fetch it if possible. 
-    // In a real app, pass the SettingsViewModel
-    val fontSizeMultiplier = 1.2f // Default increase for seniors
+    // Bestaande echte data
+    val realContacts by dao.getAll().collectAsState(initial = emptyList())
+    
+    // --- DUMMY DATA ---
+    val dummyContacts = listOf(
+        QuickContact(id = 1, name = "Dochter Sofie", phoneNumber = "06 12345678", emoji = "👧", color = 0xFFEC4899, isSosContact = true),
+        QuickContact(id = 2, name = "Huisarts de Vries", phoneNumber = "020 555 0123", emoji = "👨‍⚕️", color = 0xFF3B82F6, isSosContact = false),
+        QuickContact(id = 3, name = "Buurman Jan", phoneNumber = "06 87654321", emoji = "👴", color = 0xFFF59E0B, isSosContact = false)
+    )
+
+    // Gebruik dummy data als isDemoMode true is
+    val contacts = if (isDemoMode) dummyContacts else realContacts
+    
+    val settings by settingsVm.settings.collectAsState()
+    val fontSizeMultiplier = settings.fontSize / 16f
 
     var showAddDialog by remember { mutableStateOf(false) }
 
@@ -69,9 +83,10 @@ fun ContactsScreen(onCall: (String) -> Unit, onBack: () -> Unit) {
                 color = MaterialTheme.colorScheme.onBackground
             )
             Button(
-                onClick = { showAddDialog = true },
+                onClick = { if (!isDemoMode) showAddDialog = true },
                 shape = RoundedCornerShape(12.dp),
-                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)
+                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
+                enabled = !isDemoMode // Schakel uit in demo mode
             ) {
                 Icon(Icons.Default.Add, null)
                 Spacer(Modifier.width(4.dp))
@@ -82,10 +97,10 @@ fun ContactsScreen(onCall: (String) -> Unit, onBack: () -> Unit) {
         if (contacts.isEmpty()) {
             Box(Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.Center) {
                 Text(
-                    "Geen contacten gevonden.\nVoeg er een toe met de knop hierboven.",
+                    "Geen favoriete contacten.\nTik op 'Nieuw' om er een toe te voegen.",
                     textAlign = TextAlign.Center,
                     fontSize = 18.sp * fontSizeMultiplier,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = Color.Gray
                 )
             }
         } else {
@@ -98,14 +113,23 @@ fun ContactsScreen(onCall: (String) -> Unit, onBack: () -> Unit) {
                     ContactItem(
                         contact = contact,
                         fontSizeMultiplier = fontSizeMultiplier,
-                        onCall = { makeCall(context, contact.phoneNumber) },
+                        onCall = { 
+                            if (!isDemoMode) makeCall(context, contact.phoneNumber) 
+                            else Toast.makeText(context, "Demo Mode: Bellen naar ${contact.name}", Toast.LENGTH_SHORT).show()
+                        },
                         onToggleFavorite = {
-                            scope.launch {
-                                dao.insert(contact.copy(isSosContact = !contact.isSosContact))
+                            if (!isDemoMode) {
+                                scope.launch {
+                                    dao.insert(contact.copy(isSosContact = !contact.isSosContact))
+                                }
                             }
                         },
                         onDelete = {
-                            scope.launch { dao.delete(contact) }
+                            if (!isDemoMode) {
+                                scope.launch {
+                                    dao.delete(contact)
+                                }
+                            }
                         }
                     )
                 }
@@ -113,14 +137,14 @@ fun ContactsScreen(onCall: (String) -> Unit, onBack: () -> Unit) {
         }
     }
 
-    if (showAddDialog) {
+    if (showAddDialog && !isDemoMode) {
         AddContactDialog(
             onDismiss = { showAddDialog = false },
             onSave = { name, phone ->
                 scope.launch {
                     dao.insert(QuickContact(name = name, phoneNumber = phone))
+                    showAddDialog = false
                 }
-                showAddDialog = false
             }
         )
     }

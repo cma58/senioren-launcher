@@ -88,7 +88,7 @@ fun StepCounterContent() {
     DisposableEffect(Unit) {
         val sensorManager = context.getSystemService(Context.SENSOR_SERVICE) as SensorManager
         val stepSensor = sensorManager.getDefaultSensor(Sensor.TYPE_STEP_COUNTER)
-        
+
         val listener = object : SensorEventListener {
             override fun onSensorChanged(event: SensorEvent?) {
                 if (event != null && event.sensor.type == Sensor.TYPE_STEP_COUNTER) {
@@ -101,9 +101,9 @@ fun StepCounterContent() {
             }
             override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {}
         }
-        
+
         sensorManager.registerListener(listener, stepSensor, SensorManager.SENSOR_DELAY_UI)
-        
+
         onDispose {
             sensorManager.unregisterListener(listener)
         }

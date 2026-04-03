@@ -68,7 +68,7 @@ fun AlarmScreen(onBack: () -> Unit, viewModel: AlarmViewModel = viewModel()) {
         }
 
         FloatingActionButton(
-            onClick = { 
+            onClick = {
                 showDialogFor = AlarmEntry(hour = 8, minute = 0, label = "")
                 isNewAlarm = true
             },

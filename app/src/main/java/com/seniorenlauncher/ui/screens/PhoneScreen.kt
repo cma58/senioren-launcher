@@ -8,7 +8,6 @@ import android.os.VibrationEffect
 import android.os.Vibrator
 import android.os.VibratorManager
 import android.provider.ContactsContract
-import android.widget.Toast
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
@@ -23,6 +22,7 @@ import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Backspace
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -42,17 +42,16 @@ import com.seniorenlauncher.LauncherApp
 import com.seniorenlauncher.data.model.QuickContact
 import com.seniorenlauncher.ui.components.ScreenHeader
 import androidx.lifecycle.viewmodel.compose.viewModel
-import kotlinx.coroutines.launch
 
 data class DeviceContact(val name: String, val number: String, val photoUri: String? = null)
 
 @Composable
 fun PhoneScreen(onNavigate: (String) -> Unit, onBack: () -> Unit, settingsVm: SettingsViewModel = viewModel()) {
-    val context = LocalContext.current
+    val localContext = LocalContext.current
     val settings by settingsVm.settings.collectAsState()
     val fontSizeMultiplier = settings.fontSize / 16f
     
-    val dao = LauncherApp.instance.database.contactDao()
+    val dao = remember { LauncherApp.instance.database.contactDao() }
     val favorieten by dao.getAll().collectAsState(initial = emptyList())
     
     var phoneNumber by remember { mutableStateOf("") }
@@ -85,7 +84,7 @@ fun PhoneScreen(onNavigate: (String) -> Unit, onBack: () -> Unit, settingsVm: Se
                 favorieten = favorieten,
                 onNumberChange = { phoneNumber = it },
                 onShowContacts = { showContacts = true },
-                onCall = { makeDirectCall(context, phoneNumber) }
+                onCall = { makeDirectCall(localContext, phoneNumber) }
             )
         }
     }
@@ -102,9 +101,7 @@ fun ColumnScope.DialerContent(
     onShowContacts: () -> Unit,
     onCall: () -> Unit
 ) {
-    val context = LocalContext.current
-    val scope = rememberCoroutineScope()
-    val dao = LauncherApp.instance.database.contactDao()
+    val localContext = LocalContext.current
 
     // --- DE "WIE BEL IK?" KAART ---
     Card(
@@ -156,17 +153,17 @@ fun ColumnScope.DialerContent(
                         .clip(CircleShape)
                         .combinedClickable(
                             onClick = {
-                                vibratePhone(context, 50)
+                                vibratePhone(localContext, 50)
                                 onNumberChange(phoneNumber.dropLast(1))
                             },
                             onLongClick = {
-                                vibratePhone(context, 100)
+                                vibratePhone(localContext, 100)
                                 onNumberChange("")
                             }
                         ),
                     contentAlignment = Alignment.Center
                 ) {
-                    Icon(Icons.Default.Backspace, "Wis", modifier = Modifier.size(36.dp), tint = MaterialTheme.colorScheme.error)
+                    Icon(Icons.AutoMirrored.Filled.Backspace, "Wis", modifier = Modifier.size(36.dp), tint = MaterialTheme.colorScheme.error)
                 }
             }
         }
@@ -183,19 +180,10 @@ fun ColumnScope.DialerContent(
                     Modifier
                         .width(100.dp * fontSizeMultiplier.coerceAtLeast(1f))
                         .clip(RoundedCornerShape(16.dp))
-                        .combinedClickable(
-                            onClick = { 
-                                vibratePhone(context, 50)
-                                makeDirectCall(context, contact.phoneNumber) 
-                            },
-                            onLongClick = {
-                                vibratePhone(context, 100)
-                                scope.launch {
-                                    dao.delete(contact)
-                                    Toast.makeText(context, "${contact.name} verwijderd", Toast.LENGTH_SHORT).show()
-                                }
-                            }
-                        )
+                        .clickable { 
+                            vibratePhone(localContext, 50)
+                            makeDirectCall(localContext, contact.phoneNumber)
+                        }
                         .background(MaterialTheme.colorScheme.surfaceVariant)
                         .padding(12.dp),
                     horizontalAlignment = Alignment.CenterHorizontally) {
@@ -233,7 +221,7 @@ fun ColumnScope.DialerContent(
         items(keys) { key ->
             Surface(
                 onClick = { 
-                    vibratePhone(context, 40)
+                    vibratePhone(localContext, 40)
                     if (phoneNumber.length < 15) onNumberChange(phoneNumber + key) 
                 },
                 modifier = Modifier.aspectRatio(1.3f),
@@ -250,7 +238,7 @@ fun ColumnScope.DialerContent(
     // --- BELKNOP ---
     Button(
         onClick = { 
-            vibratePhone(context, 60)
+            vibratePhone(localContext, 60)
             if (phoneNumber.isNotEmpty()) onCall()
             else onShowContacts()
         },
@@ -277,19 +265,17 @@ fun AllContactsList(
     favorieten: List<QuickContact>,
     onContactSelected: (String) -> Unit
 ) {
-    val context = LocalContext.current
-    val scope = rememberCoroutineScope()
-    val dao = LauncherApp.instance.database.contactDao()
-    var contacts by remember { mutableStateOf<List<DeviceContact>>(emptyList()) }
+    val localContext = LocalContext.current
+    var contacts by remember { mutableStateOf(emptyList<DeviceContact>()) }
     var searchQuery by remember { mutableStateOf("") }
-    
-    LaunchedEffect(Unit) {
-        contacts = fetchAllDeviceContacts(context)
-    }
 
-    val filteredContacts = remember(contacts, searchQuery) {
+    LaunchedEffect(Unit) {
+        contacts = fetchAllDeviceContacts(localContext)
+    }
+    
+    val filteredContacts = remember(searchQuery, contacts) {
         if (searchQuery.isEmpty()) contacts
-        else contacts.filter { 
+        else contacts.filter {
             it.name.contains(searchQuery, ignoreCase = true) || 
             it.number.contains(searchQuery) 
         }
@@ -321,61 +307,35 @@ fun AllContactsList(
         LazyColumn(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             items(filteredContacts) { contact ->
                 val normalizedNumber = contact.number.replace(" ", "")
-                val existingFavorites = favorieten.filter { it.phoneNumber.replace(" ", "") == normalizedNumber }
-                val isFavorite = existingFavorites.isNotEmpty()
+                val isFavorite = favorieten.any { it.phoneNumber.replace(" ", "") == normalizedNumber }
 
                 Card(
                     modifier = Modifier.fillMaxWidth().clickable { 
-                        vibratePhone(context, 40)
+                        vibratePhone(localContext, 40)
                         onContactSelected(contact.number) 
                     },
                     shape = RoundedCornerShape(16.dp),
                     colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
                 ) {
                     Row(Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
-                        if (contact.photoUri != null) {
-                            AsyncImage(
-                                model = contact.photoUri,
-                                contentDescription = null,
-                                modifier = Modifier.size(50.dp).clip(CircleShape),
-                                contentScale = ContentScale.Crop
-                            )
-                        } else {
-                            Box(
-                                Modifier.size(50.dp).clip(CircleShape).background(MaterialTheme.colorScheme.primaryContainer),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Text(contact.name.take(1).uppercase(), fontWeight = FontWeight.ExtraBold, fontSize = 22.sp)
-                            }
+                        Box(
+                            Modifier.size(50.dp).clip(CircleShape).background(MaterialTheme.colorScheme.primaryContainer),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(contact.name.take(1).uppercase(), fontWeight = FontWeight.ExtraBold, fontSize = 22.sp)
                         }
+                        
                         Spacer(Modifier.width(16.dp))
                         Column(Modifier.weight(1f)) {
                             Text(contact.name, fontSize = 20.sp * fontSizeMultiplier, fontWeight = FontWeight.Bold)
                             Text(contact.number, fontSize = 16.sp * fontSizeMultiplier, color = MaterialTheme.colorScheme.onSurfaceVariant)
                         }
                         
-                        IconButton(onClick = {
-                            vibratePhone(context, 60)
-                            scope.launch {
-                                if (isFavorite) {
-                                    existingFavorites.forEach { dao.delete(it) }
-                                    Toast.makeText(context, "${contact.name} verwijderd uit favorieten", Toast.LENGTH_SHORT).show()
-                                } else {
-                                    dao.insert(QuickContact(
-                                        name = contact.name, 
-                                        phoneNumber = contact.number, 
-                                        photoUri = contact.photoUri
-                                    ))
-                                    Toast.makeText(context, "${contact.name} toegevoegd aan favorieten", Toast.LENGTH_SHORT).show()
-                                }
-                            }
-                        }) {
-                            Icon(
-                                imageVector = if (isFavorite) Icons.Default.Star else Icons.Default.StarBorder, 
-                                contentDescription = "Favoriet", 
-                                tint = if (isFavorite) Color(0xFFF59E0B) else MaterialTheme.colorScheme.primary
-                            )
-                        }
+                        Icon(
+                            imageVector = if (isFavorite) Icons.Default.Star else Icons.Default.StarBorder, 
+                            contentDescription = "Favoriet", 
+                            tint = if (isFavorite) Color(0xFFF59E0B) else Color.Gray
+                        )
                     }
                 }
             }

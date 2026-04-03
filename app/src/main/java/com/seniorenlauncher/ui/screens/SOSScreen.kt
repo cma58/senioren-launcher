@@ -9,6 +9,7 @@ import android.content.pm.PackageManager
 import android.location.LocationManager
 import android.provider.Settings
 import android.util.Log
+import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.IntentSenderRequest
 import androidx.activity.result.contract.ActivityResultContracts
@@ -44,27 +45,39 @@ import androidx.core.content.ContextCompat
 import com.google.android.gms.common.api.ResolvableApiException
 import com.google.android.gms.location.*
 import com.seniorenlauncher.LauncherApp
+import com.seniorenlauncher.data.model.QuickContact
 import com.seniorenlauncher.service.SOSService
 import com.seniorenlauncher.ui.components.ScreenHeader
 import kotlinx.coroutines.delay
 
 @Composable
 fun SOSScreen(onBack: () -> Unit) {
+    // --- DEMO MODE TOGGLE ---
+    val isDemoMode = false
+
     val context = LocalContext.current
     val dao = LauncherApp.instance.database.contactDao()
-    val sosContacts by dao.getSosContacts().collectAsState(initial = emptyList())
+    val realSosContacts by dao.getSosContacts().collectAsState(initial = emptyList())
     
+    // --- DUMMY DATA ---
+    val dummySosContacts = listOf(
+        QuickContact(name = "Dochter Sofie", phoneNumber = "06 12345678", isSosContact = true),
+        QuickContact(name = "Buurman Jan", phoneNumber = "06 87654321", isSosContact = true)
+    )
+
+    val sosContacts = if (isDemoMode) dummySosContacts else realSosContacts
+
     var isHolding by remember { mutableStateOf(false) }
     var holdProgress by remember { mutableStateOf(0f) }
     var sosTriggered by remember { mutableStateOf(false) }
 
     // Check permissions and GPS status
     var hasLocationPermission by remember { mutableStateOf(
-        ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
+        if (isDemoMode) true else ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
     )}
     
     val locationManager = context.getSystemService(Context.LOCATION_SERVICE) as LocationManager
-    var isGpsEnabled by remember { mutableStateOf(locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) }
+    var isGpsEnabled by remember { mutableStateOf(if (isDemoMode) true else locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) }
 
     // Launcher for GPS resolution
     val gpsLauncher = rememberLauncherForActivityResult(
@@ -76,11 +89,13 @@ fun SOSScreen(onBack: () -> Unit) {
     }
 
     // Re-check periodically
-    LaunchedEffect(Unit) {
-        while (true) {
-            hasLocationPermission = ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
-            isGpsEnabled = locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)
-            delay(2000)
+    LaunchedEffect(isDemoMode) {
+        if (!isDemoMode) {
+            while (true) {
+                hasLocationPermission = ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
+                isGpsEnabled = locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)
+                delay(2000)
+            }
         }
     }
 
@@ -95,7 +110,8 @@ fun SOSScreen(onBack: () -> Unit) {
             }
             if (holdProgress >= 1f) {
                 sosTriggered = true
-                triggerSOS(context)
+                if (!isDemoMode) triggerSOS(context)
+                else Toast.makeText(context, "Demo Mode: SOS geactiveerd", Toast.LENGTH_SHORT).show()
             }
         } else {
             holdProgress = 0f
