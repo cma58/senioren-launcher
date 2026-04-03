@@ -1,111 +1,109 @@
-# 📱 Senioren Launcher
+# 📱 Senioren Launcher (Beta)
 
-**De gratis, open-source Android launcher voor ouderen en mensen met een visuele of motorische beperking.**
+**De eerlijke, open-source Android launcher voor onze ouderen. Gemaakt om technologie weer toegankelijk en veilig te maken.**
 
 [![License: GPL-3.0](https://img.shields.io/badge/License-GPL%20v3-blue.svg)](LICENSE)
-[![F-Droid](https://img.shields.io/badge/F--Droid-beschikbaar-green.svg)](https://f-droid.org)
-[![Geen Tracking](https://img.shields.io/badge/Tracking-Geen-brightgreen.svg)](#-privacy)
+[![Privacy](https://img.shields.io/badge/Privacy-100%25-brightgreen.svg)](PRIVACY.md)
+[![Status: Beta](https://img.shields.io/badge/Status-Beta-orange.svg)](#)
 
 ---
 
 ## Waarom Senioren Launcher?
 
-Alle senioren-launchers op de markt zijn **duur** of zitten vol met **advertenties en tracking**. Onze ouders verdienen beter.
+Veel bestaande launchers voor senioren zijn onnodig duur, zitten vol advertenties of verzamelen stiekem data. Wij geloven dat onze ouders en grootouders beter verdienen. 
 
-- **100% gratis** — geen in-app aankopen, geen abonnementen
-- **Open source** — iedereen kan meebouwen
-- **Geen tracking** — nul analytics, nul advertenties
-- **Beschikbaar op F-Droid** — geen Google Play nodig
+Dit is een **passieproject waar ik alleen in mijn vrije tijd aan werk**, met als doel een launcher te bouwen die:
 
----
+- **Echt Simpel is** — Grote knoppen, duidelijke teksten en geen overbodige menu's.
+- **Privacy voorop stelt** — Uw gegevens blijven op uw telefoon. Nul analytics, nul advertenties.
+- **100% Gratis & Open Source** — Voor iedereen beschikbaar zonder winstoogmerk.
 
-## ☕ Steun het project
-
-Senioren Launcher is en blijft 100% gratis. Wil je helpen om de ontwikkeling te versnellen en nieuwe functies mogelijk te maken? Een donatie wordt enorm gewaardeerd!
-
-[![Doneer via PayPal](https://img.shields.io/badge/Doneer-PayPal-blue.svg)](https://www.paypal.com/donate/?business=amine.chtaiti@gmail.com&no_recurring=0&currency_code=EUR)
+> **Let op:** Dit project is momenteel in **Bèta-fase**. Omdat ik dit naast mijn dagelijkse werk doe, kan de ontwikkeling soms iets langzamer gaan, maar ik werk er met veel liefde aan.
 
 ---
 
-## ✨ Functies
+## ☕ Steun mijn werk
 
-### Kern
-- 🔘 Grote knoppen — 3 layouts (2×3, 3×4, 1×1)
-- 📞 Bellen — Grote nummertoetsen + snelkeuze fotoknoppen
-- 💬 Berichten — Extra groot lettertype
-- 🆘 SOS noodknop — GPS-locatie via SMS naar noodcontacten
-- 🔔 Grote meldingen
-- 🌤️ Weer met kledingadvies
+Senioren Launcher is een project dat ik volledig gratis aanbied. Jouw steun helpt enorm om de kosten te dekken (zoals voor hosting of testapparatuur) en motiveert mij om in mijn vrije avonden en weekenden door te blijven bouwen aan nieuwe functies.
 
-### Gezondheid & Veiligheid
-- 💊 Medicijnherinnering met aftikken
-- 🛡️ Valdetectie — Automatisch SOS bij val
-- 🏥 Noodinfo — Bloedgroep, allergieën, ICE-contacten
-- 📍 Locatie delen met familie
-- 🪫 Batterijwaarschuwing — SMS bij < 15%
-- 🚶 Stappenteller
+**Vind je dit een mooi initiatief?** Elke bijdrage, hoe klein ook, wordt ontzettend gewaardeerd!
 
-### Dagelijks Gebruik
-- 📅 Agenda met herinneringen
-- 📝 Notities
-- 🔦 Zaklamp
-- 🔍 Vergrootglas (camera als loep)
-- 📻 Radio met grote knoppen
-- 🎥 Videobellen snelknop
-
-### Aanpassing
-- 🎨 3 Thema's (Klassiek, Hoog Contrast, Licht)
-- 🔤 Lettergrootte slider
-- 🔒 PIN-vergrendeling
-- 🌍 Meertalig (NL, FR, DE, EN, TR, AR)
-- 🌙 Automatische nachtmodus
-- 📱 Afstandsbediening via web-app
+[![Doneer via PayPal](https://img.shields.io/badge/Doneer-PayPal-blue.svg?style=for-the-badge)](https://www.paypal.com/donate/?business=amine.chtaiti@gmail.com&no_recurring=0&currency_code=EUR)
 
 ---
 
-## 📲 Installatie
+## ✨ Functies in detail
 
-### Zelf bouwen
-```bash
-git clone https://github.com/aminechtaiti-source/senioren-launcher.git
-cd senioren-launcher
-./gradlew assembleRelease
-```
+### 📞 Bellen & Contacten
+Grote nummertoetsen en een lijst van favorieten met foto's. Eén druk op de knop om direct te bellen naar familie of vrienden.
 
-Of open in **Android Studio** → Run.
+### 🆘 SOS Noodknop
+Bij het 3 seconden indrukken van de SOS-knop worden noodcontacten direct ingelicht via SMS met de exacte GPS-locatie.
+
+### 👨‍🔧 Hulp op Afstand (RustDesk)
+Unieke functie waarmee een familielid op afstand kan meekijken om te helpen bij instellingen. Inclusief een duidelijk stappenplan voor de senior.
+
+### 🔍 Vergrootglas & Zaklamp
+Verander de telefoon in een digitale loep om kleine teksten op medicijnen of menukaarten makkelijk te kunnen lezen.
+
+### 🚶 Stappenteller
+Stimuleert beweging door het aantal stappen van vandaag groot en duidelijk te tonen.
+
+### 📅 Agenda & Notities
+Een versimpelde agenda en een plek voor korte notities, zodat u nooit meer een afspraak of boodschap vergeet.
+
+---
+
+## 🛠️ Status van Ontwikkeling
+
+Omdat we transparant willen zijn over wat wel en niet werkt in deze bèta:
+
+- **🛡️ Valdetectie**: Momenteel **experimenteel**. De gevoeligheid wordt nog getest om valse alarmen te voorkomen.
+- **🪫 Batterijwaarschuwing**: Deze functie is momenteel **in ontwikkeling** en werkt nog niet. 
+- **🌍 Talen**: De basis is Nederlands, andere talen volgen zodra ik daar tijd voor vind.
+
+---
+
+## 🎨 Aanpassing & Beveiliging
+
+De launcher kan worden aangepast aan de behoeften van de gebruiker:
+- **Layouts**: Kies uit 2x3, 3x4 of 1x1 grid.
+- **Lettergrootte**: Alles kan extra groot worden weergegeven.
+- **🔒 Instellingen vergrendelen**: Beveilig de instellingen met een PIN-code.
+  - **Standaard PIN-code**: `1234`
 
 ---
 
 ## 🏗️ Technologie
 
+Ik gebruik moderne en veilige technologieën om de beste ervaring te bieden:
+
 | Component | Technologie |
 |-----------|-------------|
-| Taal | Kotlin 2.0 |
-| UI | Jetpack Compose + Material 3 |
-| Architectuur | MVVM + Clean Architecture |
-| Database | Room + DataStore |
-| Architectuur | WorkManager |
-| Sensoren | Accelerometer (valdetectie) |
-| Min SDK | API 26 (Android 8.0) |
-| Target SDK | API 35 |
+| **Taal** | Kotlin 2.0 |
+| **UI** | Jetpack Compose + Material 3 |
+| **Architectuur** | MVVM + Clean Architecture |
+| **Database** | Room (SQLite) + DataStore |
+| **Achtergrond** | WorkManager |
+| **Camera** | CameraX (voor het Vergrootglas) |
+| **Sensoren** | Accelerometer (Valdetectie) & Step Counter |
+| **Media** | Media3 ExoPlayer (voor de Radio) |
+| **Min SDK** | API 26 (Android 8.0) |
+| **Target SDK** | API 36 (Android 15) |
 
 ---
 
 ## 🤝 Bijdragen
 
-Zie [CONTRIBUTING.md](CONTRIBUTING.md) voor details.
-
----
+Wil je helpen het project te verbeteren? Graag! Zie [CONTRIBUTING.md](CONTRIBUTING.md) voor de richtlijnen over het melden van bugs of het insturen van code.
 
 ## 🔒 Privacy
 
-Nul data-verzameling. Zie [PRIVACY.md](PRIVACY.md).
-
----
+Privacy is geen bijzaak, het is de kern van dit project. Wij verzamelen **geen data**. Alles blijft op de telefoon van de senior. Lees ons volledige [PRIVACY.md](PRIVACY.md).
 
 ## 📜 Licentie
 
-[GNU General Public License v3.0](LICENSE)
+Dit project is gelicentieerd onder de **GNU General Public License v3.0**. Dit betekent dat de software altijd open en gratis zal blijven.
 
 ---
 

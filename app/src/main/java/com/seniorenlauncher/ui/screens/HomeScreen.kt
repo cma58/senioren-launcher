@@ -1,12 +1,7 @@
 package com.seniorenlauncher.ui.screens
 
-import android.content.Context
 import android.graphics.drawable.Drawable
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.expandVertically
-import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -25,7 +20,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -33,14 +27,13 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
+import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
-import coil.compose.rememberAsyncImagePainter
 import com.seniorenlauncher.LauncherApp
-import com.seniorenlauncher.data.model.LayoutType
+import com.seniorenlauncher.data.model.*
 import com.seniorenlauncher.ui.components.*
 import com.seniorenlauncher.util.AppLauncher
 import com.seniorenlauncher.service.NotificationListener
-import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -49,39 +42,22 @@ data class HomeApp(
     val name: String, 
     val emoji: String? = null, 
     val icon: Drawable? = null,
-    val color: Color
-)
-
-val ALL_APPS_LIST = listOf(
-    HomeApp("phone","Bellen","📞", null, Color(0xFF38A169)),
-    HomeApp("sms","Berichten","💬", null, Color(0xFF3B82F6)),
-    HomeApp("camera","Camera","📷", null, Color(0xFFEC4899)),
-    HomeApp("photos","Foto's","🖼️", null, Color(0xFFF59E0B)),
-    HomeApp("alarm","Wekker","⏰", null, Color(0xFFEA580C)),
-    HomeApp("calendar","Agenda","📅", null, Color(0xFF0D9488)),
-    HomeApp("meds","Medicijnen","💊", null, Color(0xFFDC2626)),
-    HomeApp("weather","Weer","🌤️", null, Color(0xFF0EA5E9)),
-    HomeApp("flashlight","Zaklamp","🔦", null, Color(0xFFFBBF24)),
-    HomeApp("magnifier","Vergrootglas","🔍", null, Color(0xFF6366F1)),
-    HomeApp("notes","Notities","📝", null, Color(0xFF84CC16)),
-    HomeApp("radio","Radio","📻", null, Color(0xFFA855F7)),
-    HomeApp("steps","Stappen","🚶", null, Color(0xFF14B8A6)),
-    HomeApp("emergency","Noodinfo","🏥", null, Color(0xFFEF4444)),
-    HomeApp("sos","SOS","🆘", null, Color(0xFFDC2626)),
-    HomeApp("all_apps","Alle Apps","📱", null, Color(0xFF718096)),
-    HomeApp("settings","Instellingen","⚙️", null, Color(0xFF718096)),
+    val color: Color,
+    val weatherOverlay: String? = null 
 )
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun HomeScreen(onNavigate: (String) -> Unit, settingsVm: SettingsViewModel, radioVm: RadioViewModel) {
     val context = LocalContext.current
-    val scope = rememberCoroutineScope()
     val settings by settingsVm.settings.collectAsState()
     val notifications by NotificationListener.notifications.collectAsState()
     
     val currentStation by radioVm.currentStation.collectAsState()
     val isPlaying by radioVm.isPlaying.collectAsState()
+    
+    val weatherVm: WeatherViewModel = viewModel()
+    val weatherData by weatherVm.currentWeather.collectAsState()
     
     val dao = LauncherApp.instance.database.medicationDao()
     val pendingMeds by dao.getPending().collectAsState(initial = emptyList())
@@ -110,10 +86,19 @@ fun HomeScreen(onNavigate: (String) -> Unit, settingsVm: SettingsViewModel, radi
             HomeApp(id, info?.name ?: "App", null, info?.icon, Color(0xFF718096))
         }
 
-    val visibleStandardApps = ALL_APPS_LIST.filter { it.id in settings.visibleApps }
+    val visibleStandardApps = ALL_APPS.filter { it.id in settings.visibleApps }.map { 
+        HomeApp(
+            id = it.id,
+            name = it.name,
+            emoji = if (it.id == "weather" && weatherData != null) getWeatherEmoji(weatherData!!.iconUrl) else it.emoji,
+            icon = null,
+            color = Color(it.color),
+            weatherOverlay = if (it.id == "weather" && weatherData != null) "${weatherData!!.temp.toInt()}°" else null
+        )
+    }
     val allVisibleApps = (visibleStandardApps + mappedApps).distinctBy { it.id }
     
-    val pageCount = Math.max(1, Math.ceil(allVisibleApps.size.toDouble() / appsPerPage).toInt())
+    val pageCount = Math.max(1, Math.ceil(allVisibleApps.size.toDouble() / appsPerPage.toDouble()).toInt())
     val pagerState = rememberPagerState(pageCount = { pageCount })
 
     var showAppPickerFor by remember { mutableStateOf<String?>(null) }
@@ -162,9 +147,11 @@ fun HomeScreen(onNavigate: (String) -> Unit, settingsVm: SettingsViewModel, radi
                         small = settings.layout == LayoutType.GRID_3x4,
                         fontSizeMultiplier = fontSizeMultiplier,
                         badge = if (app.id == "sms") notifications.size else 0,
+                        weatherText = app.weatherOverlay,
                         onClick = {
                             when {
                                 app.id == "camera" -> AppLauncher.openSystemCamera(context)
+                                app.id == "remote_support" -> onNavigate("remote_support")
                                 app.id.startsWith("mapped_") -> {
                                     val pkg = settings.appMappings[app.id]
                                     if (pkg != null) AppLauncher.launchApp(context, pkg)
@@ -364,8 +351,7 @@ fun AppPickerDialog(
                                     else selectedPackages.add(app.packageName)
                                 }
                                 .padding(vertical = 12.dp, horizontal = 8.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
+                            verticalAlignment = Alignment.CenterVertically) {
                             Checkbox(
                                 checked = isSelected,
                                 onCheckedChange = null // Handled by row click

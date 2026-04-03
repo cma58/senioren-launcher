@@ -3,7 +3,7 @@ import androidx.room.*
 import com.seniorenlauncher.data.model.*
 import kotlinx.coroutines.flow.Flow
 
-@Database(entities = [QuickContact::class, Medication::class, MedicationLog::class, Note::class, CalendarEvent::class, EmergencyInfo::class, AlarmEntry::class, RadioStation::class], version = 3, exportSchema = false)
+@Database(entities = [QuickContact::class, Medication::class, MedicationLog::class, Note::class, CalendarEvent::class, EmergencyInfo::class, AlarmEntry::class, RadioStation::class, WeatherLocation::class], version = 5, exportSchema = false)
 abstract class LauncherDatabase : RoomDatabase() {
     abstract fun contactDao(): ContactDao
     abstract fun medicationDao(): MedicationDao
@@ -12,6 +12,7 @@ abstract class LauncherDatabase : RoomDatabase() {
     abstract fun emergencyDao(): EmergencyDao
     abstract fun alarmDao(): AlarmDao
     abstract fun radioDao(): RadioDao
+    abstract fun weatherDao(): WeatherDao
 }
 
 @Dao interface ContactDao {
@@ -54,4 +55,9 @@ abstract class LauncherDatabase : RoomDatabase() {
     @Query("SELECT * FROM radio_stations ORDER BY category, name") fun getAll(): Flow<List<RadioStation>>
     @Insert(onConflict = OnConflictStrategy.REPLACE) suspend fun insert(s: RadioStation)
     @Delete suspend fun delete(s: RadioStation)
+}
+@Dao interface WeatherDao {
+    @Query("SELECT * FROM weather_locations") fun getAll(): Flow<List<WeatherLocation>>
+    @Insert(onConflict = OnConflictStrategy.REPLACE) suspend fun insert(l: WeatherLocation)
+    @Delete suspend fun delete(l: WeatherLocation)
 }

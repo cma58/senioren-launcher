@@ -44,7 +44,8 @@ fun BigButton(
     onLongClick: (() -> Unit)? = null,
     badge: Int? = null, 
     small: Boolean = false,
-    fontSizeMultiplier: Float = 1f
+    fontSizeMultiplier: Float = 1f,
+    weatherText: String? = null
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val pressed by interactionSource.collectIsPressedAsState()
@@ -76,19 +77,39 @@ fun BigButton(
             verticalArrangement = Arrangement.Center,
             modifier = Modifier.fillMaxWidth()
         ) {
-            if (icon != null) {
-                Image(
-                    painter = rememberAsyncImagePainter(icon),
-                    contentDescription = null,
-                    modifier = Modifier.size((if (small) 36.dp else 48.dp) * fontSizeMultiplier.coerceIn(1f, 1.5f)),
-                    contentScale = ContentScale.Fit
-                )
-            } else if (emoji != null) {
-                Text(
-                    emoji, 
-                    fontSize = (if (small) 24.sp else 36.sp) * fontSizeMultiplier.coerceIn(1f, 1.5f),
-                    lineHeight = (if (small) 28.sp else 40.sp) * fontSizeMultiplier.coerceIn(1f, 1.5f)
-                )
+            Box(contentAlignment = Alignment.Center) {
+                if (icon != null) {
+                    Image(
+                        painter = rememberAsyncImagePainter(icon),
+                        contentDescription = null,
+                        modifier = Modifier.size((if (small) 36.dp else 48.dp) * fontSizeMultiplier.coerceIn(1f, 1.5f)),
+                        contentScale = ContentScale.Fit
+                    )
+                } else if (emoji != null) {
+                    Text(
+                        emoji, 
+                        fontSize = (if (small) 24.sp else 36.sp) * fontSizeMultiplier.coerceIn(1f, 1.5f),
+                        lineHeight = (if (small) 28.sp else 40.sp) * fontSizeMultiplier.coerceIn(1f, 1.5f)
+                    )
+                }
+                
+                // Weather overlay (Temperature)
+                if (weatherText != null) {
+                    Box(
+                        Modifier
+                            .align(Alignment.BottomEnd)
+                            .offset(x = 8.dp, y = 8.dp)
+                            .background(Color.Black.copy(alpha = 0.4f), RoundedCornerShape(4.dp))
+                            .padding(horizontal = 2.dp)
+                    ) {
+                        Text(
+                            weatherText, 
+                            color = Color.White, 
+                            fontSize = 12.sp, 
+                            fontWeight = FontWeight.Black
+                        )
+                    }
+                }
             }
             
             Spacer(Modifier.height(4.dp))

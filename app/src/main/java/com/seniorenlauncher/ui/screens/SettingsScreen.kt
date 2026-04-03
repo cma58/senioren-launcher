@@ -228,6 +228,14 @@ fun SettingsScreen(vm: SettingsViewModel, onNavigate: (String) -> Unit, onBack: 
                     Text("Koppelingscode", fontSize = 12.sp * fontSizeMultiplier, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     Text("7 4 2 9", fontSize = 24.sp * fontSizeMultiplier, fontWeight = FontWeight.ExtraBold, color = MaterialTheme.colorScheme.primary, letterSpacing = 4.sp)
                 }
+                Spacer(Modifier.height(12.dp))
+                Button(
+                    onClick = { onNavigate("remote_support") },
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(10.dp)
+                ) {
+                    Text("Hulp op afstand openen", fontWeight = FontWeight.Bold, fontSize = 15.sp * fontSizeMultiplier)
+                }
             }
 
             // PIN Vergrendeling

@@ -61,6 +61,13 @@ dependencies {
     implementation("com.google.android.material:material:1.13.0")
     implementation("io.coil-kt:coil-compose:2.7.0")
 
+    // CameraX for Magnifier
+    val cameraxVersion = "1.4.1"
+    implementation("androidx.camera:camera-core:$cameraxVersion")
+    implementation("androidx.camera:camera-camera2:$cameraxVersion")
+    implementation("androidx.camera:camera-lifecycle:$cameraxVersion")
+    implementation("androidx.camera:camera-view:$cameraxVersion")
+
     // Media3 for Radio Playback
     val media3Version = "1.10.0"
     implementation("androidx.media3:media3-exoplayer:$media3Version")

@@ -23,12 +23,23 @@ class AlarmViewModel : ViewModel() {
     val alarms: StateFlow<List<AlarmEntry>> = dao.getAll()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
-    fun addAlarm(hour: Int, minute: Int, label: String, daysOfWeek: String) {
+    fun addAlarm(hour: Int, minute: Int, label: String, daysOfWeek: String, soundUri: String? = null) {
         viewModelScope.launch {
-            val alarm = AlarmEntry(hour = hour, minute = minute, label = label, daysOfWeek = daysOfWeek, enabled = true)
+            val alarm = AlarmEntry(hour = hour, minute = minute, label = label, daysOfWeek = daysOfWeek, enabled = true, soundUri = soundUri)
             val id = dao.insert(alarm)
             val insertedAlarm = alarm.copy(id = id)
             scheduleAlarm(insertedAlarm)
+        }
+    }
+
+    fun updateAlarm(alarm: AlarmEntry) {
+        viewModelScope.launch {
+            dao.update(alarm)
+            if (alarm.enabled) {
+                scheduleAlarm(alarm)
+            } else {
+                cancelAlarm(alarm)
+            }
         }
     }
 
@@ -56,8 +67,6 @@ class AlarmViewModel : ViewModel() {
         if (days.isEmpty()) return
 
         val now = Calendar.getInstance()
-        
-        // Find the next occurrence
         var minTime: Long = Long.MAX_VALUE
         
         for (day in days) {
@@ -66,8 +75,6 @@ class AlarmViewModel : ViewModel() {
                 set(Calendar.MINUTE, alarm.minute)
                 set(Calendar.SECOND, 0)
                 set(Calendar.MILLISECOND, 0)
-                
-                // Calendar.DAY_OF_WEEK uses 1=Sunday, 2=Monday, ..., 7=Saturday
                 set(Calendar.DAY_OF_WEEK, day)
             }
             
@@ -83,7 +90,7 @@ class AlarmViewModel : ViewModel() {
         val intent = Intent(context, AlarmReceiver::class.java).apply {
             putExtra("ALARM_ID", alarm.id)
             putExtra("ALARM_LABEL", alarm.label)
-            // Add action to ensure uniqueness if needed, though requestCode should handle it
+            putExtra("ALARM_SOUND", alarm.soundUri)
             action = "com.seniorenlauncher.ALARM_ACTION_${alarm.id}"
         }
 
@@ -97,32 +104,15 @@ class AlarmViewModel : ViewModel() {
         try {
             if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) {
                 if (alarmManager.canScheduleExactAlarms()) {
-                    alarmManager.setExactAndAllowWhileIdle(
-                        AlarmManager.RTC_WAKEUP,
-                        minTime,
-                        pendingIntent
-                    )
+                    alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, minTime, pendingIntent)
                 } else {
-                    alarmManager.setAndAllowWhileIdle(
-                        AlarmManager.RTC_WAKEUP,
-                        minTime,
-                        pendingIntent
-                    )
+                    alarmManager.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, minTime, pendingIntent)
                 }
             } else {
-                alarmManager.setExactAndAllowWhileIdle(
-                    AlarmManager.RTC_WAKEUP,
-                    minTime,
-                    pendingIntent
-                )
+                alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, minTime, pendingIntent)
             }
         } catch (e: SecurityException) {
-            // Fallback for missing permission
-            alarmManager.setAndAllowWhileIdle(
-                AlarmManager.RTC_WAKEUP,
-                minTime,
-                pendingIntent
-            )
+            alarmManager.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, minTime, pendingIntent)
         }
     }
 

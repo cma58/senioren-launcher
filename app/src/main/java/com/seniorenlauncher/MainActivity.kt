@@ -1,6 +1,7 @@
 package com.seniorenlauncher
 
 import android.Manifest
+import android.app.NotificationManager
 import android.app.role.RoleManager
 import android.content.Context
 import android.content.Intent
@@ -10,7 +11,9 @@ import android.os.Build
 import android.os.Bundle
 import android.os.PowerManager
 import android.provider.Settings
+import android.view.WindowManager
 import androidx.activity.ComponentActivity
+import androidx.activity.OnBackPressedCallback
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -33,29 +36,70 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import androidx.navigation.navArgument
 import com.seniorenlauncher.ui.screens.*
 import com.seniorenlauncher.ui.theme.SeniorenLauncherTheme
 
-@Suppress("DEPRECATION")
 class MainActivity : ComponentActivity() {
+    
+    private var currentAlarmId = mutableStateOf<Long?>(-1L)
+    private var alarmTriggered = mutableStateOf<String?>(null)
+    private var alarmSoundUri = mutableStateOf<String?>(null)
+
     override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState); enableEdgeToEdge()
+        super.onCreate(savedInstanceState)
+        enableEdgeToEdge()
+        
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1) {
+            setShowWhenLocked(true)
+            setTurnScreenOn(true)
+        } else {
+            @Suppress("DEPRECATION")
+            window.addFlags(WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED or WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON)
+        }
+
+        handleIntent(intent)
+
+        onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() {
+                if (alarmTriggered.value == null) {
+                    isEnabled = false
+                    onBackPressedDispatcher.onBackPressed()
+                    isEnabled = true
+                }
+            }
+        })
+
         setContent {
             val settingsVm: SettingsViewModel = viewModel()
             val radioVm: RadioViewModel = viewModel()
             val settings by settingsVm.settings.collectAsState()
             
             var showPermissionCheck by remember { mutableStateOf(true) }
+            
+            val triggerLabel by alarmTriggered
+            val alarmId by currentAlarmId
+            val soundUri by alarmSoundUri
 
             SeniorenLauncherTheme(appTheme = settings.theme) {
                 Surface(Modifier.fillMaxSize()) {
-                    if (showPermissionCheck) {
-                        PermissionScreen(onFinished = { showPermissionCheck = false })
+                    if (triggerLabel != null) {
+                        AlarmTriggerScreen(
+                            label = triggerLabel!!,
+                            soundName = soundUri,
+                            onDismiss = {
+                                val nm = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+                                nm.cancel(alarmId?.toInt() ?: -1)
+                                alarmTriggered.value = null
+                                alarmSoundUri.value = null
+                            }
+                        )
+                    } else if (showPermissionCheck) {
+                        PermissionScreen(onFinished = { showPermissionCheck = false }) {
+                             AppNavigation(settingsVm, radioVm)
+                        }
                     } else {
                         AppNavigation(settingsVm, radioVm)
                     }
@@ -63,13 +107,27 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
-    @Deprecated("Deprecated") override fun onBackPressed() {
-        super.onBackPressed()
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        handleIntent(intent)
+    }
+
+    private fun handleIntent(intent: Intent?) {
+        intent?.let {
+            val navigateTo = it.getStringExtra("NAVIGATE_TO")
+            if (navigateTo == "alarm_trigger") {
+                alarmTriggered.value = it.getStringExtra("ALARM_LABEL") ?: "Wekker"
+                currentAlarmId.value = it.getLongExtra("ALARM_ID", -1L)
+                alarmSoundUri.value = it.getStringExtra("ALARM_SOUND")
+            }
+        }
     }
 }
 
 @Composable
-fun PermissionScreen(onFinished: () -> Unit) {
+fun PermissionScreen(onFinished: () -> Unit, content: @Composable () -> Unit) {
     val context = LocalContext.current
     var permissionsState by remember { mutableStateOf(mapOf<String, Boolean>()) }
 
@@ -101,13 +159,12 @@ fun PermissionScreen(onFinished: () -> Unit) {
         
         state["exact_alarm"] = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             val alarmManager = context.getSystemService(android.app.AlarmManager::class.java)
-            alarmManager.canScheduleExactAlarms()
+            alarmManager?.canScheduleExactAlarms() ?: true
         } else true
 
         val powerManager = context.getSystemService(Context.POWER_SERVICE) as PowerManager
         state["battery"] = powerManager.isIgnoringBatteryOptimizations(context.packageName)
 
-        // Check if we are the default launcher
         state["launcher"] = isDefaultLauncher(context)
 
         permissionsState = state
@@ -142,7 +199,7 @@ fun PermissionScreen(onFinished: () -> Unit) {
         PermissionItem("1. Standaard App maken", permissionsState["launcher"] == true) {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                 val roleManager = context.getSystemService(RoleManager::class.java)
-                if (roleManager.isRoleAvailable(RoleManager.ROLE_HOME)) {
+                if (roleManager != null && roleManager.isRoleAvailable(RoleManager.ROLE_HOME)) {
                     roleLauncher.launch(roleManager.createRequestRoleIntent(RoleManager.ROLE_HOME))
                 }
             } else {
@@ -220,69 +277,139 @@ fun isDefaultLauncher(context: Context): Boolean {
 @Composable
 fun PermissionItem(label: String, granted: Boolean, onClick: () -> Unit) {
     Card(
-        modifier = Modifier.fillMaxWidth().padding(vertical = 6.dp).clickable { if (!granted) onClick() },
+        modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp).clickable { onClick() },
+        shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(
-            containerColor = if (granted) Color(0xFFE8F5E9) else MaterialTheme.colorScheme.surfaceVariant
-        ),
-        shape = RoundedCornerShape(12.dp)
+            containerColor = if (granted) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f) else MaterialTheme.colorScheme.surfaceVariant
+        )
     ) {
         Row(
             Modifier.padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Text(
-                text = label,
-                modifier = Modifier.weight(1f),
-                fontSize = 18.sp,
-                fontWeight = if (granted) FontWeight.Normal else FontWeight.Bold,
-                color = if (granted) Color(0xFF2E7D32) else Color.Unspecified
-            )
-            if (granted) {
-                Text("✅", fontSize = 24.sp)
-            } else {
-                Text("👉 Tik hier", color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
-            }
+            Text(label, modifier = Modifier.weight(1f), fontSize = 18.sp, fontWeight = FontWeight.Medium)
+            Text(if (granted) "✅" else "❌", fontSize = 24.sp)
         }
     }
 }
 
 @Composable
 fun AppNavigation(settingsVm: SettingsViewModel, radioVm: RadioViewModel) {
-    val nav = rememberNavController()
-    NavHost(nav, startDestination = "home") {
-        composable("home") { HomeScreen(onNavigate = { nav.navigate(it) }, settingsVm = settingsVm, radioVm = radioVm) }
-        composable("phone") { PhoneScreen(onNavigate = { nav.navigate(it) }, onBack = { nav.popBackStack() }, settingsVm = settingsVm) }
-        composable("contacts") { ContactsScreen(onCall = { nav.navigate("calling") }, onBack = { nav.popBackStack() }) }
-        composable("calling") { CallingScreen(onEnd = { nav.popBackStack("home", false) }) }
-        composable(
-            route = "sms?address={address}&name={name}",
-            arguments = listOf(
-                navArgument("address") { type = NavType.StringType; nullable = true },
-                navArgument("name") { type = NavType.StringType; nullable = true }
-            )
-        ) { backStackEntry ->
-            MessagesScreen(
-                onBack = { nav.popBackStack() },
+    val navController = rememberNavController()
+    NavHost(navController = navController, startDestination = "home") {
+        composable("home") { 
+            HomeScreen(
+                onNavigate = { navController.navigate(it) },
                 settingsVm = settingsVm,
-                initialAddress = backStackEntry.arguments?.getString("address"),
-                initialName = backStackEntry.arguments?.getString("name")
+                radioVm = radioVm
             )
         }
-        composable("calendar") { CalendarScreen(onBack = { nav.popBackStack() }) }
-        composable("meds") { MedicationScreen(onBack = { nav.popBackStack() }) }
-        composable("weather") { WeatherScreen(onBack = { nav.popBackStack() }) }
-        composable("alarm") { AlarmScreen(onBack = { nav.popBackStack() }) }
-        composable("flashlight") { FlashlightScreen(onBack = { nav.popBackStack() }) }
-        composable("magnifier") { MagnifierScreen(onBack = { nav.popBackStack() }) }
-        composable("photos") { PhotosScreen(onBack = { nav.popBackStack() }) }
-        composable("notes") { NotesScreen(onBack = { nav.popBackStack() }) }
-        composable("emergency") { EmergencyInfoScreen(onBack = { nav.popBackStack() }) }
-        composable("steps") { StepsScreen(onBack = { nav.popBackStack() }) }
-        composable("radio") { RadioScreen(onBack = { nav.popBackStack() }, radioVm = radioVm) }
-        composable("sos") { SOSScreen(onBack = { nav.popBackStack() }) }
-        composable("sos_settings") { SosContactSettingsScreen(onBack = { nav.popBackStack() }) }
-        composable("notifications") { NotificationsScreen(onBack = { nav.popBackStack() }) }
-        composable("settings") { SettingsScreen(vm = settingsVm, onNavigate = { nav.navigate(it) }, onBack = { nav.popBackStack() }) }
-        composable("all_apps") { AllAppsScreen(onBack = { nav.popBackStack() }) }
+        composable("settings") { 
+            SettingsScreen(
+                vm = settingsVm,
+                onBack = { navController.popBackStack() },
+                onNavigate = { navController.navigate(it) }
+            ) 
+        }
+        composable("radio") { 
+            RadioScreen(
+                onBack = { navController.popBackStack() },
+                radioVm = radioVm
+            ) 
+        }
+        composable("alarm") { 
+            AlarmScreen(
+                onBack = { navController.popBackStack() }
+            ) 
+        }
+        composable("contacts") { 
+            ContactsScreen(
+                onBack = { navController.popBackStack() },
+                onCall = { phone ->
+                    // Action handled inside screen or via intent
+                }
+            ) 
+        }
+        composable("sms") { 
+            MessagesScreen(
+                onBack = { navController.popBackStack() },
+                settingsVm = settingsVm
+            ) 
+        }
+        composable("phone") {
+            PhoneScreen(
+                onNavigate = { navController.navigate(it) },
+                onBack = { navController.popBackStack() },
+                settingsVm = settingsVm
+            )
+        }
+        composable("emergency") {
+            EmergencyInfoScreen(
+                onBack = { navController.popBackStack() }
+            )
+        }
+        composable("meds") {
+            MedicationScreen(
+                onBack = { navController.popBackStack() }
+            )
+        }
+        composable("sos") {
+            SOSScreen(
+                onBack = { navController.popBackStack() }
+            )
+        }
+        composable("sos_settings") {
+            SosContactSettingsScreen(
+                onBack = { navController.popBackStack() }
+            )
+        }
+        composable("all_apps") {
+            AllAppsScreen(
+                onBack = { navController.popBackStack() }
+            )
+        }
+        composable("photos") {
+            PhotosScreen(
+                onBack = { navController.popBackStack() }
+            )
+        }
+        composable("weather") {
+            WeatherScreen(
+                onBack = { navController.popBackStack() }
+            )
+        }
+        composable("remote_support") {
+            RemoteSupportScreen(
+                onBack = { navController.popBackStack() }
+            )
+        }
+        composable("calendar") {
+            CalendarScreen(
+                onBack = { navController.popBackStack() }
+            )
+        }
+        composable("flashlight") {
+            FlashlightScreen(
+                onBack = { navController.popBackStack() }
+            )
+        }
+        composable("magnifier") {
+            MagnifierScreen(
+                onBack = { navController.popBackStack() }
+            )
+        }
+        composable("notes") {
+            NotesScreen(
+                onBack = { navController.popBackStack() }
+            )
+        }
+        composable("steps") {
+            StepsScreen(
+                onBack = { navController.popBackStack() }
+            )
+        }
+        // Placeholder composables for screens that might be missing or under development
+        composable("apps") { Box(Modifier.fillMaxSize()) { Text("Apps Screen", Modifier.align(Alignment.Center)) } }
+        composable("gallery") { Box(Modifier.fillMaxSize()) { Text("Gallery Screen", Modifier.align(Alignment.Center)) } }
     }
 }
