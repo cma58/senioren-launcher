@@ -391,7 +391,7 @@ fun AppNavigation(settingsVm: SettingsViewModel, radioVm: RadioViewModel) {
             )
         }
         composable("magnifier") {
-            FlashlightScreen(
+            MagnifierScreen(
                 onBack = { navController.popBackStack() }
             )
         }
