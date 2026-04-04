@@ -52,7 +52,8 @@ data class HomeApp(
 fun HomeScreen(onNavigate: (String) -> Unit, settingsVm: SettingsViewModel, radioVm: RadioViewModel) {
     val context = LocalContext.current
     val settings by settingsVm.settings.collectAsState()
-    val notifications by NotificationListener.notifications.collectAsState()
+    val activeNotifications by NotificationListener.activeNotificationsFlow.collectAsState()
+    val badgeCounts by NotificationListener.notifications.collectAsState()
     
     val currentStation by radioVm.currentStation.collectAsState()
     val isPlaying by radioVm.isPlaying.collectAsState()
@@ -105,7 +106,10 @@ fun HomeScreen(onNavigate: (String) -> Unit, settingsVm: SettingsViewModel, radi
 
     Column(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
         // Top Bar: Clock & Notifications
-        HomeTopBar()
+        HomeTopBar(
+            notificationCount = activeNotifications.size,
+            onNotificationsClick = { onNavigate("notifications") }
+        )
 
         // Status Card: Radio & Meds
         HomeStatusCard(
@@ -143,7 +147,9 @@ fun HomeScreen(onNavigate: (String) -> Unit, settingsVm: SettingsViewModel, radi
                         label = app.name,
                         color = app.color,
                         small = settings.layout == LayoutType.GRID_3x4,
-                        badge = if (app.id == "sms") notifications.size else 0,
+                        badge = if (app.id == "sms" || app.id == "phone") {
+                           NotificationListener.getBadgeCountByAppId(app.id, settings.appMappings, badgeCounts)
+                        } else 0,
                         weatherText = app.weatherOverlay,
                         onClick = {
                             when {
@@ -392,7 +398,7 @@ fun AppPickerDialog(
 }
 
 @Composable
-fun HomeTopBar() {
+fun HomeTopBar(notificationCount: Int, onNotificationsClick: () -> Unit) {
     var currentTime by remember { mutableStateOf(SimpleDateFormat("HH:mm", Locale.getDefault()).format(Date())) }
     var currentDate by remember { mutableStateOf(SimpleDateFormat("EEEE d MMMM", Locale.getDefault()).format(Date())) }
     
@@ -404,24 +410,64 @@ fun HomeTopBar() {
         }
     }
 
-    Column(
+    Box(
         Modifier
             .fillMaxWidth()
-            .padding(24.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
+            .padding(24.dp)
     ) {
-        Text(
-            currentTime, 
-            fontSize = 64.sp, 
-            fontWeight = FontWeight.ExtraBold,
-            color = MaterialTheme.colorScheme.primary
-        )
-        Text(
-            currentDate.replaceFirstChar { it.uppercase() }, 
-            fontSize = 20.sp, 
-            fontWeight = FontWeight.Medium,
-            color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f)
-        )
+        Column(
+            modifier = Modifier.align(Alignment.Center),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text(
+                currentTime, 
+                fontSize = 64.sp, 
+                fontWeight = FontWeight.ExtraBold,
+                color = MaterialTheme.colorScheme.primary
+            )
+            Text(
+                currentDate.replaceFirstChar { it.uppercase() }, 
+                fontSize = 20.sp, 
+                fontWeight = FontWeight.Medium,
+                color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f)
+            )
+        }
+
+        // Notification Bell
+        Box(
+            modifier = Modifier
+                .align(Alignment.TopEnd)
+                .size(72.dp)
+                .clip(RoundedCornerShape(16.dp))
+                .background(MaterialTheme.colorScheme.surfaceVariant)
+                .clickable { onNotificationsClick() },
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                Icons.Default.Notifications, 
+                contentDescription = "Meldingen",
+                modifier = Modifier.size(40.dp),
+                tint = if (notificationCount > 0) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            if (notificationCount > 0) {
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.TopEnd)
+                        .padding(8.dp)
+                        .size(24.dp)
+                        .clip(CircleShape)
+                        .background(Color.Red),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        "$notificationCount",
+                        color = Color.White,
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            }
+        }
     }
 }
 

@@ -2,8 +2,10 @@ package com.seniorenlauncher.ui.screens
 
 import android.Manifest
 import android.content.Context
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.provider.ContactsContract
+import android.provider.Telephony
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.*
@@ -57,9 +59,10 @@ fun SetupWizardScreen(
             var caregiverStep by remember { mutableIntStateOf(1) }
             when (caregiverStep) {
                 1 -> PermissionsSetupScreen(onNext = { caregiverStep = 2 }, isSenior = false)
-                2 -> SosSetupScreen(onNext = { caregiverStep = 3 }, settingsVm = settingsVm)
-                3 -> SecuritySetupScreen(onNext = { caregiverStep = 4 }, settingsVm = settingsVm)
-                4 -> HandoverScreen(onNext = { flow = SetupFlow.SENIOR })
+                2 -> DefaultAppsSetupScreen(onNext = { caregiverStep = 3 })
+                3 -> SosSetupScreen(onNext = { caregiverStep = 4 }, settingsVm = settingsVm)
+                4 -> SecuritySetupScreen(onNext = { caregiverStep = 5 }, settingsVm = settingsVm)
+                5 -> HandoverScreen(onNext = { flow = SetupFlow.SENIOR })
             }
         }
         SetupFlow.SENIOR -> {
@@ -67,9 +70,10 @@ fun SetupWizardScreen(
             when (seniorStep) {
                 1 -> SeniorWelcomeStep(onNext = { seniorStep = 2 })
                 2 -> PermissionsSetupScreen(onNext = { seniorStep = 3 }, isSenior = true)
-                3 -> SeniorReadingStep(onNext = { seniorStep = 4 }, settingsVm = settingsVm)
-                4 -> SeniorColorsStep(onNext = { seniorStep = 5 }, settingsVm = settingsVm)
-                5 -> SeniorEmergencyStep(onNext = { 
+                3 -> DefaultAppsSetupScreen(onNext = { seniorStep = 4 })
+                4 -> SeniorReadingStep(onNext = { seniorStep = 5 }, settingsVm = settingsVm)
+                5 -> SeniorColorsStep(onNext = { seniorStep = 6 }, settingsVm = settingsVm)
+                6 -> SeniorEmergencyStep(onNext = { 
                     settingsVm.completeSetup()
                     onFinished()
                 })
@@ -144,6 +148,59 @@ fun SetupOptionCard(
                 Text(title, fontSize = 20.sp, fontWeight = FontWeight.Bold, color = color)
                 Text(description, fontSize = 16.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
+        }
+    }
+}
+
+@Composable
+fun DefaultAppsSetupScreen(onNext: () -> Unit) {
+    val context = LocalContext.current
+    
+    val roleLauncher = rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) {
+        // We don't strictly need to check results here as the UI reflects the state
+    }
+
+    Column(
+        modifier = Modifier.fillMaxSize().padding(24.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text("Standaard Apps", fontSize = 32.sp, fontWeight = FontWeight.ExtraBold)
+        Spacer(Modifier.height(16.dp))
+        Text(
+            "Maak de Senioren Launcher de standaard app voor bellen en berichten. Dit is nodig om meldingen goed te laten werken.",
+            fontSize = 18.sp, textAlign = TextAlign.Center
+        )
+        
+        Spacer(Modifier.height(48.dp))
+
+        val isDefaultSms = Telephony.Sms.getDefaultSmsPackage(context) == context.packageName
+        
+        Button(
+            onClick = {
+                val intent = Intent(Telephony.Sms.Intents.ACTION_CHANGE_DEFAULT).apply {
+                    putExtra(Telephony.Sms.Intents.EXTRA_PACKAGE_NAME, context.packageName)
+                }
+                roleLauncher.launch(intent)
+            },
+            modifier = Modifier.fillMaxWidth().height(80.dp),
+            shape = RoundedCornerShape(20.dp),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = if (isDefaultSms) Color(0xFF10B981) else MaterialTheme.colorScheme.primary
+            )
+        ) {
+            Icon(if (isDefaultSms) Icons.Default.CheckCircle else Icons.Default.Sms, null)
+            Spacer(Modifier.width(12.dp))
+            Text(if (isDefaultSms) "BERICHTEN APP IS INGESTELD" else "STEL IN ALS BERICHTEN APP", fontWeight = FontWeight.Bold)
+        }
+
+        Spacer(Modifier.height(32.dp))
+
+        Button(
+            onClick = onNext,
+            modifier = Modifier.fillMaxWidth().height(80.dp),
+            shape = RoundedCornerShape(20.dp)
+        ) {
+            Text("VOLGENDE", fontSize = 22.sp, fontWeight = FontWeight.Black)
         }
     }
 }

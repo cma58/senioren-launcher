@@ -16,6 +16,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
@@ -27,6 +28,7 @@ class MainActivity : ComponentActivity() {
     private var currentAlarmId = mutableStateOf<Long?>(-1L)
     private var alarmTriggered = mutableStateOf<String?>(null)
     private var alarmSoundUri = mutableStateOf<String?>(null)
+    private var navigateToSmsAddress = mutableStateOf<String?>(null)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -60,6 +62,7 @@ class MainActivity : ComponentActivity() {
             val triggerLabel by alarmTriggered
             val alarmId by currentAlarmId
             val soundUri by alarmSoundUri
+            val smsAddress by navigateToSmsAddress
 
             SeniorenLauncherTheme(appTheme = settings.theme, fontSize = settings.fontSize) {
                 Surface(Modifier.fillMaxSize()) {
@@ -80,7 +83,9 @@ class MainActivity : ComponentActivity() {
                             settingsVm = settingsVm
                         )
                     } else {
-                        AppNavigation(settingsVm, radioVm)
+                        AppNavigation(settingsVm, radioVm, smsAddress) {
+                            navigateToSmsAddress.value = null
+                        }
                     }
                 }
             }
@@ -100,14 +105,29 @@ class MainActivity : ComponentActivity() {
                 alarmTriggered.value = it.getStringExtra("ALARM_LABEL") ?: "Wekker"
                 currentAlarmId.value = it.getLongExtra("ALARM_ID", -1L)
                 alarmSoundUri.value = it.getStringExtra("ALARM_SOUND")
+            } else if (navigateTo == "sms") {
+                navigateToSmsAddress.value = it.getStringExtra("SMS_ADDRESS")
             }
         }
     }
 }
 
 @Composable
-fun AppNavigation(settingsVm: SettingsViewModel, radioVm: RadioViewModel) {
+fun AppNavigation(
+    settingsVm: SettingsViewModel, 
+    radioVm: RadioViewModel, 
+    initialSmsAddress: String?,
+    onNavigatedToSms: () -> Unit
+) {
     val navController = rememberNavController()
+    
+    LaunchedEffect(initialSmsAddress) {
+        if (initialSmsAddress != null) {
+            navController.navigate("sms")
+            onNavigatedToSms()
+        }
+    }
+
     NavHost(navController = navController, startDestination = "home") {
         composable("home") { 
             HomeScreen(
@@ -129,6 +149,12 @@ fun AppNavigation(settingsVm: SettingsViewModel, radioVm: RadioViewModel) {
                 radioVm = radioVm
             ) 
         }
+        composable("notifications") {
+            NotificationsScreen(
+                onBack = { navController.popBackStack() },
+                onNavigate = { navController.navigate(it) }
+            )
+        }
         composable("alarm") { 
             AlarmScreen(
                 onBack = { navController.popBackStack() }
@@ -142,7 +168,7 @@ fun AppNavigation(settingsVm: SettingsViewModel, radioVm: RadioViewModel) {
         composable("sms") { 
             MessagesScreen(
                 onBack = { navController.popBackStack() },
-                settingsVm = settingsVm
+                initialAddress = initialSmsAddress
             ) 
         }
         composable("phone") {
