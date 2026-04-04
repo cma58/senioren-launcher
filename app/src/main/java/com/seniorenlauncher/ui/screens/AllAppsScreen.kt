@@ -7,6 +7,8 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -26,22 +28,57 @@ import com.seniorenlauncher.util.InstalledApp
 @Composable
 fun AllAppsScreen(onBack: () -> Unit) {
     val context = LocalContext.current
-    // We request icons now
-    val installedApps = remember { AppLauncher.getInstalledApps(context, includeIcons = true) }
+    var installedApps by remember { mutableStateOf(emptyList<InstalledApp>()) }
+    var searchQuery by remember { mutableStateOf("") }
+    var isLoading by remember { mutableStateOf(true) }
+
+    LaunchedEffect(Unit) {
+        installedApps = AppLauncher.getInstalledApps(context, includeIcons = true)
+        isLoading = false
+    }
     
+    val filteredApps = remember(searchQuery, installedApps) {
+        if (searchQuery.isBlank()) installedApps
+        else installedApps.filter { it.name.contains(searchQuery, ignoreCase = true) }
+    }
+
     Column(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background).padding(horizontal = 12.dp, vertical = 8.dp)) {
         ScreenHeader(title = "Alle Apps", onBack = onBack)
         
-        LazyVerticalGrid(
-            columns = GridCells.Fixed(3),
-            modifier = Modifier.weight(1f),
-            contentPadding = PaddingValues(8.dp),
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            items(installedApps) { app ->
-                AppItem(app) {
-                    AppLauncher.launchApp(context, app.packageName)
+        Spacer(Modifier.height(8.dp))
+
+        // Zoekbalk voor snelle toegang
+        OutlinedTextField(
+            value = searchQuery,
+            onValueChange = { searchQuery = it },
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),
+            placeholder = { Text("Zoek een app...") },
+            leadingIcon = { Icon(Icons.Default.Search, null) },
+            shape = RoundedCornerShape(16.dp),
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedContainerColor = MaterialTheme.colorScheme.surface,
+                unfocusedContainerColor = MaterialTheme.colorScheme.surface
+            )
+        )
+
+        Spacer(Modifier.height(16.dp))
+
+        if (isLoading) {
+            Box(Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.Center) {
+                CircularProgressIndicator()
+            }
+        } else {
+            LazyVerticalGrid(
+                columns = GridCells.Fixed(3),
+                modifier = Modifier.weight(1f),
+                contentPadding = PaddingValues(8.dp),
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                items(filteredApps) { app ->
+                    AppItem(app) {
+                        AppLauncher.launchApp(context, app.packageName)
+                    }
                 }
             }
         }

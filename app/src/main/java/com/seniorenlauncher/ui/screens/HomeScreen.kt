@@ -33,6 +33,7 @@ import com.seniorenlauncher.LauncherApp
 import com.seniorenlauncher.data.model.*
 import com.seniorenlauncher.ui.components.*
 import com.seniorenlauncher.util.AppLauncher
+import com.seniorenlauncher.util.InstalledApp
 import com.seniorenlauncher.service.NotificationListener
 import java.text.SimpleDateFormat
 import java.util.*
@@ -62,8 +63,6 @@ fun HomeScreen(onNavigate: (String) -> Unit, settingsVm: SettingsViewModel, radi
     val dao = LauncherApp.instance.database.medicationDao()
     val pendingMeds by dao.getPending().collectAsState(initial = emptyList())
     
-    val fontSizeMultiplier = settings.fontSize / 16f
-
     // --- Dynamic Layout Logic ---
     val cols = when (settings.layout) {
         LayoutType.GRID_1x1 -> 1
@@ -90,7 +89,7 @@ fun HomeScreen(onNavigate: (String) -> Unit, settingsVm: SettingsViewModel, radi
         HomeApp(
             id = it.id,
             name = it.name,
-            emoji = if (it.id == "weather" && weatherData != null) getWeatherEmoji(weatherData!!.iconUrl) else it.emoji,
+            emoji = if (it.id == "weather" && weatherData != null) getHomeWeatherEmoji(weatherData!!.iconUrl) else it.emoji,
             icon = null,
             color = Color(it.color),
             weatherOverlay = if (it.id == "weather" && weatherData != null) "${weatherData!!.temp.toInt()}°" else null
@@ -106,14 +105,13 @@ fun HomeScreen(onNavigate: (String) -> Unit, settingsVm: SettingsViewModel, radi
 
     Column(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
         // Top Bar: Clock & Notifications
-        HomeTopBar(fontSizeMultiplier)
+        HomeTopBar()
 
         // Status Card: Radio & Meds
         HomeStatusCard(
             currentStation = currentStation?.name,
             isPlaying = isPlaying,
             pendingMedsCount = pendingMeds.size,
-            fontSizeMultiplier = fontSizeMultiplier,
             onRadioClick = { onNavigate("radio") },
             onMedsClick = { onNavigate("meds") },
             onPlayPause = { if (isPlaying) radioVm.pause() else radioVm.resume() },
@@ -145,7 +143,6 @@ fun HomeScreen(onNavigate: (String) -> Unit, settingsVm: SettingsViewModel, radi
                         label = app.name,
                         color = app.color,
                         small = settings.layout == LayoutType.GRID_3x4,
-                        fontSizeMultiplier = fontSizeMultiplier,
                         badge = if (app.id == "sms") notifications.size else 0,
                         weatherText = app.weatherOverlay,
                         onClick = {
@@ -173,7 +170,6 @@ fun HomeScreen(onNavigate: (String) -> Unit, settingsVm: SettingsViewModel, radi
                             label = "Toevoegen",
                             color = Color(0xFF718096),
                             small = settings.layout == LayoutType.GRID_3x4,
-                            fontSizeMultiplier = fontSizeMultiplier,
                             onClick = { showAppPickerFor = "new" }
                         )
                     }
@@ -303,7 +299,9 @@ fun AppPickerDialog(
     onRemove: () -> Unit
 ) {
     val context = LocalContext.current
-    val installedApps = remember { AppLauncher.getInstalledApps(context, includeIcons = true) }
+    val installedApps by produceState<List<InstalledApp>>(initialValue = emptyList(), context) {
+        value = AppLauncher.getInstalledApps(context, includeIcons = true)
+    }
     var searchQuery by remember { mutableStateOf("") }
     val selectedPackages = remember { mutableStateListOf<String>() }
 
@@ -374,14 +372,14 @@ fun AppPickerDialog(
                 Row(Modifier.fillMaxWidth().padding(top = 16.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                     OutlinedButton(
                         onClick = onDismiss, 
-                        modifier = Modifier.weight(1f).height(60.dp),
+                        modifier = Modifier.weight(1f).heightIn(min = 60.dp).wrapContentHeight(),
                         shape = RoundedCornerShape(12.dp)
                     ) {
                         Text("ANNULEREN")
                     }
                     Button(
                         onClick = { onAppsSelected(selectedPackages.toList()) }, 
-                        modifier = Modifier.weight(1f).height(60.dp),
+                        modifier = Modifier.weight(1f).heightIn(min = 60.dp).wrapContentHeight(),
                         enabled = selectedPackages.isNotEmpty(),
                         shape = RoundedCornerShape(12.dp)
                     ) {
@@ -394,7 +392,7 @@ fun AppPickerDialog(
 }
 
 @Composable
-fun HomeTopBar(fontSizeMultiplier: Float) {
+fun HomeTopBar() {
     var currentTime by remember { mutableStateOf(SimpleDateFormat("HH:mm", Locale.getDefault()).format(Date())) }
     var currentDate by remember { mutableStateOf(SimpleDateFormat("EEEE d MMMM", Locale.getDefault()).format(Date())) }
     
@@ -414,13 +412,13 @@ fun HomeTopBar(fontSizeMultiplier: Float) {
     ) {
         Text(
             currentTime, 
-            fontSize = (64 * fontSizeMultiplier).sp, 
+            fontSize = 64.sp, 
             fontWeight = FontWeight.ExtraBold,
             color = MaterialTheme.colorScheme.primary
         )
         Text(
             currentDate.replaceFirstChar { it.uppercase() }, 
-            fontSize = (20 * fontSizeMultiplier).sp, 
+            fontSize = 20.sp, 
             fontWeight = FontWeight.Medium,
             color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f)
         )
@@ -432,7 +430,6 @@ fun HomeStatusCard(
     currentStation: String?,
     isPlaying: Boolean,
     pendingMedsCount: Int,
-    fontSizeMultiplier: Float,
     onRadioClick: () -> Unit,
     onMedsClick: () -> Unit,
     onPlayPause: () -> Unit,
@@ -496,5 +493,19 @@ fun HomeStatusCard(
                 }
             }
         }
+    }
+}
+
+private fun getHomeWeatherEmoji(iconUrl: String): String {
+    return when {
+        iconUrl.contains("01d") -> "☀️"
+        iconUrl.contains("01n") -> "🌙"
+        iconUrl.contains("02d") || iconUrl.contains("02n") -> "⛅"
+        iconUrl.contains("03") || iconUrl.contains("04") -> "☁️"
+        iconUrl.contains("09") || iconUrl.contains("10") -> "🌧️"
+        iconUrl.contains("11") -> "⛈️"
+        iconUrl.contains("13") -> "❄️"
+        iconUrl.contains("50") -> "🌫️"
+        else -> "☁️"
     }
 }

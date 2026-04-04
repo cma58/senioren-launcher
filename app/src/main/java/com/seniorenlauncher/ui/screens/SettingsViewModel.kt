@@ -43,6 +43,10 @@ class SettingsViewModel : ViewModel() {
         viewModelScope.launch { repository.setBatteryAlert(!settings.value.batteryAlertEnabled) }
     }
 
+    fun toggleDefaultLauncher() {
+        // Handled in UI via intent
+    }
+
     fun toggleChargingReminder() {
         viewModelScope.launch { repository.setChargingReminder(!settings.value.chargingReminderEnabled) }
     }
@@ -87,6 +91,14 @@ class SettingsViewModel : ViewModel() {
 
     fun unlockSettings() {
         viewModelScope.launch { repository.setSettingsLocked(false) }
+    }
+
+    fun setPinCode(pin: String) {
+        viewModelScope.launch { repository.setPinCode(pin) }
+    }
+
+    fun completeSetup() {
+        viewModelScope.launch { repository.setHasCompletedSetup(true) }
     }
 
     fun verifyPin(pin: String): Boolean = pin == (settings.value.pinCode ?: "1234")

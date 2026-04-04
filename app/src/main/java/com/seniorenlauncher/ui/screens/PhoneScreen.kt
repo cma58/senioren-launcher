@@ -42,14 +42,15 @@ import com.seniorenlauncher.LauncherApp
 import com.seniorenlauncher.data.model.QuickContact
 import com.seniorenlauncher.ui.components.ScreenHeader
 import androidx.lifecycle.viewmodel.compose.viewModel
+import kotlinx.coroutines.launch
 
 data class DeviceContact(val name: String, val number: String, val photoUri: String? = null)
 
 @Composable
 fun PhoneScreen(onNavigate: (String) -> Unit, onBack: () -> Unit, settingsVm: SettingsViewModel = viewModel()) {
     val localContext = LocalContext.current
+    val scope = rememberCoroutineScope()
     val settings by settingsVm.settings.collectAsState()
-    val fontSizeMultiplier = settings.fontSize / 16f
     
     val dao = remember { LauncherApp.instance.database.contactDao() }
     val favorieten by dao.getAll().collectAsState(initial = emptyList())
@@ -57,7 +58,6 @@ fun PhoneScreen(onNavigate: (String) -> Unit, onBack: () -> Unit, settingsVm: Se
     var phoneNumber by remember { mutableStateOf("") }
     var showContacts by remember { mutableStateOf(false) }
     
-    // Zoek contact op basis van huidig nummer
     val matchedContact = favorieten.find { it.phoneNumber.replace(" ", "") == phoneNumber.replace(" ", "") }
 
     Column(
@@ -72,14 +72,26 @@ fun PhoneScreen(onNavigate: (String) -> Unit, onBack: () -> Unit, settingsVm: Se
         )
         
         if (showContacts) {
-            AllContactsList(fontSizeMultiplier, favorieten) { selectedNumber ->
-                phoneNumber = selectedNumber
-                showContacts = false
-            }
+            AllContactsList(
+                favorieten = favorieten,
+                onToggleFavorite = { contact ->
+                    scope.launch {
+                        val existing = favorieten.find { it.phoneNumber.replace(" ","") == contact.number.replace(" ","") }
+                        if (existing != null) {
+                            dao.delete(existing)
+                        } else {
+                            dao.insert(QuickContact(name = contact.name, phoneNumber = contact.number, photoUri = contact.photoUri))
+                        }
+                    }
+                },
+                onContactSelected = { selectedNumber ->
+                    phoneNumber = selectedNumber
+                    showContacts = false
+                }
+            )
         } else {
             DialerContent(
                 phoneNumber = phoneNumber,
-                fontSizeMultiplier = fontSizeMultiplier,
                 matchedContact = matchedContact,
                 favorieten = favorieten,
                 onNumberChange = { phoneNumber = it },
@@ -94,7 +106,6 @@ fun PhoneScreen(onNavigate: (String) -> Unit, onBack: () -> Unit, settingsVm: Se
 @Composable
 fun ColumnScope.DialerContent(
     phoneNumber: String,
-    fontSizeMultiplier: Float,
     matchedContact: QuickContact?,
     favorieten: List<QuickContact>,
     onNumberChange: (String) -> Unit,
@@ -103,18 +114,16 @@ fun ColumnScope.DialerContent(
 ) {
     val localContext = LocalContext.current
 
-    // --- DE "WIE BEL IK?" KAART ---
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .height(140.dp * fontSizeMultiplier.coerceAtLeast(1f))
             .padding(vertical = 8.dp),
         colors = CardDefaults.cardColors(
             containerColor = if (matchedContact != null) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant
         ),
         shape = RoundedCornerShape(24.dp)
     ) {
-        Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+        Box(Modifier.fillMaxWidth().heightIn(min = 100.dp).padding(16.dp), contentAlignment = Alignment.Center) {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 if (matchedContact != null) {
                     if (matchedContact.photoUri != null) {
@@ -129,7 +138,7 @@ fun ColumnScope.DialerContent(
                     }
                     Text(
                         matchedContact.name,
-                        fontSize = 32.sp * fontSizeMultiplier,
+                        fontSize = 32.sp,
                         fontWeight = FontWeight.Black,
                         textAlign = TextAlign.Center,
                         color = MaterialTheme.colorScheme.onPrimaryContainer
@@ -137,7 +146,7 @@ fun ColumnScope.DialerContent(
                 }
                 Text(
                     text = phoneNumber.ifEmpty { "Toets nummer..." },
-                    fontSize = (if (matchedContact != null) 24f else 42f).sp * fontSizeMultiplier,
+                    fontSize = (if (matchedContact != null) 24f else 42f).sp,
                     fontWeight = FontWeight.Bold,
                     letterSpacing = 2.sp,
                     color = if (phoneNumber.isEmpty()) Color.Gray else MaterialTheme.colorScheme.onSurfaceVariant
@@ -148,7 +157,7 @@ fun ColumnScope.DialerContent(
                 Box(
                     modifier = Modifier
                         .align(Alignment.CenterEnd)
-                        .padding(end = 12.dp)
+                        .padding(end = 4.dp)
                         .size(64.dp)
                         .clip(CircleShape)
                         .combinedClickable(
@@ -169,7 +178,6 @@ fun ColumnScope.DialerContent(
         }
     }
 
-    // --- SNELKIEZERS ---
     if (phoneNumber.isEmpty() && favorieten.isNotEmpty()) {
         LazyRow(
             Modifier.fillMaxWidth().padding(bottom = 8.dp),
@@ -178,7 +186,8 @@ fun ColumnScope.DialerContent(
             items(favorieten) { contact ->
                 Column(
                     Modifier
-                        .width(100.dp * fontSizeMultiplier.coerceAtLeast(1f))
+                        .widthIn(min = 100.dp)
+                        .wrapContentWidth()
                         .clip(RoundedCornerShape(16.dp))
                         .clickable { 
                             vibratePhone(localContext, 50)
@@ -209,13 +218,12 @@ fun ColumnScope.DialerContent(
         }
     }
 
-    // --- TOETSENBORD ---
     val keys = listOf("1", "2", "3", "4", "5", "6", "7", "8", "9", "*", "0", "#")
     LazyVerticalGrid(
         columns = GridCells.Fixed(3),
         modifier = Modifier.weight(1f),
-        verticalArrangement = Arrangement.spacedBy(12.dp),
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
         contentPadding = PaddingValues(vertical = 8.dp)
     ) {
         items(keys) { key ->
@@ -224,18 +232,17 @@ fun ColumnScope.DialerContent(
                     vibratePhone(localContext, 40)
                     if (phoneNumber.length < 15) onNumberChange(phoneNumber + key) 
                 },
-                modifier = Modifier.aspectRatio(1.3f),
+                modifier = Modifier.aspectRatio(1.5f),
                 shape = RoundedCornerShape(20.dp),
                 color = MaterialTheme.colorScheme.secondaryContainer
             ) {
                 Box(contentAlignment = Alignment.Center) {
-                    Text(key, fontSize = 40.sp * fontSizeMultiplier, fontWeight = FontWeight.Black)
+                    Text(key, fontSize = 36.sp, fontWeight = FontWeight.Black)
                 }
             }
         }
     }
 
-    // --- BELKNOP ---
     Button(
         onClick = { 
             vibratePhone(localContext, 60)
@@ -244,7 +251,8 @@ fun ColumnScope.DialerContent(
         },
         modifier = Modifier
             .fillMaxWidth()
-            .height(85.dp * fontSizeMultiplier.coerceAtLeast(1f))
+            .heightIn(min = 72.dp)
+            .wrapContentHeight()
             .padding(vertical = 4.dp),
         colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF38A169)),
         shape = RoundedCornerShape(20.dp)
@@ -253,7 +261,7 @@ fun ColumnScope.DialerContent(
         Spacer(Modifier.width(16.dp))
         Text(
             if (phoneNumber.isNotEmpty()) "BELLEN" else "ALLE CONTACTEN", 
-            fontSize = 24.sp * fontSizeMultiplier, 
+            fontSize = 24.sp, 
             fontWeight = FontWeight.Black
         )
     }
@@ -261,8 +269,8 @@ fun ColumnScope.DialerContent(
 
 @Composable
 fun AllContactsList(
-    fontSizeMultiplier: Float, 
     favorieten: List<QuickContact>,
+    onToggleFavorite: (DeviceContact) -> Unit,
     onContactSelected: (String) -> Unit
 ) {
     val localContext = LocalContext.current
@@ -327,15 +335,18 @@ fun AllContactsList(
                         
                         Spacer(Modifier.width(16.dp))
                         Column(Modifier.weight(1f)) {
-                            Text(contact.name, fontSize = 20.sp * fontSizeMultiplier, fontWeight = FontWeight.Bold)
-                            Text(contact.number, fontSize = 16.sp * fontSizeMultiplier, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            Text(contact.name, fontSize = 20.sp, fontWeight = FontWeight.Bold)
+                            Text(contact.number, fontSize = 16.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
                         }
                         
-                        Icon(
-                            imageVector = if (isFavorite) Icons.Default.Star else Icons.Default.StarBorder, 
-                            contentDescription = "Favoriet", 
-                            tint = if (isFavorite) Color(0xFFF59E0B) else Color.Gray
-                        )
+                        IconButton(onClick = { onToggleFavorite(contact) }) {
+                            Icon(
+                                imageVector = if (isFavorite) Icons.Default.Star else Icons.Default.StarBorder, 
+                                contentDescription = "Favoriet", 
+                                tint = if (isFavorite) Color(0xFFF59E0B) else Color.Gray,
+                                modifier = Modifier.size(32.dp)
+                            )
+                        }
                     }
                 }
             }

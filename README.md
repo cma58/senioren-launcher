@@ -1,10 +1,12 @@
-# 📱 Senior Launcher (Beta)
+# 📱 Senior Launcher (0.8.1 Beta)
 
 **The honest, open-source Android launcher for our elders. Created to make technology accessible and safe again.**
 
 [![License: GPL-3.0](https://img.shields.io/badge/License-GPL%20v3-blue.svg)](LICENSE)
 [![Privacy](https://img.shields.io/badge/Privacy-100%25-brightgreen.svg)](PRIVACY.md)
-[![Status: Beta](https://img.shields.io/badge/Status-Beta-orange.svg)](#)
+[![Status: Beta](https://img.shields.io/badge/Status-0.8.1%20Beta-orange.svg)](#)
+
+> **⚠️ Beta Stage:** This project is currently in the beta phase. This means you might encounter some bugs or errors. I am doing my absolute best to update and improve the app as quickly as possible!
 
 ---
 
@@ -30,17 +32,28 @@
 
 ---
 
+## 🚀 New in Version 0.8.1 Beta
+
+- **Global UI Scaling Engine**: A completely redesigned density-based scaling system. No more manual multipliers! The entire interface (paddings, icons, text) now zooms proportionally.
+- **Intelligent Setup Wizard**: A brand new step-by-step installation guide with two distinct flows:
+  - **The Caregiver Flow**: Quickly handle permissions, set up SOS contacts (up to 4), and lock settings with a PIN.
+  - **The Senior Flow**: A gentle, visual-first setup focused on readability (Eye-test) and simple choices.
+- **Improved Phone Experience**: Redesigned dialer with better space management for large zoom levels.
+- **Enhanced Contact Picker**: Search and select multiple SOS contacts instantly.
+- **Performance Fixes**: Smoother transitions and faster loading of system data.
+- **Memory Optimization**: Improved build stability and Metaspace handling.
+
+---
+
 ## Why Senior Launcher?
 
-Many existing launchers for seniors are unnecessarily expensive, full of ads, or secretly collect data. I believe our parents and grandparents deserve better.
+Many existing launchers for seniors are unnecessarily expensive, full of ads, or secretly collect data. We believe our parents and grandparents deserve better.
 
 This is a **passion project I work on in my spare time**, with the goal of building a launcher that is:
 
 - **Truly Simple** — Large buttons, clear text, and no redundant menus.
 - **Privacy First** — Your data stays on your phone. Zero analytics, zero ads.
 - **100% Free & Open Source** — Available to everyone without a profit motive.
-
-> **Note:** This project is currently in **Beta phase**. Since I do this alongside my daily work, development can sometimes be a bit slow, but I work on it with a lot of love. **My goal is to eventually publish this app on F-Droid.**
 
 ---
 
@@ -76,41 +89,15 @@ A simplified calendar and a place for short notes, so you never forget an appoin
 
 ---
 
-## 🛠️ Development Status
-
-Because we want to be transparent about what does and doesn't work in this beta:
-
-- **🛡️ Fall Detection**: Currently **experimental**. Sensitivity is still being tested to prevent false alarms.
-- **🪫 Battery Warning**: This feature is currently **under development** and not yet functional.
-- **🌍 Languages**: The base is Dutch, other languages will follow as soon as I find time.
-
----
-
-## 🎨 Customization & Security
-
-The launcher can be adjusted to the user's needs:
-- **Layouts**: Choose from 2x3, 3x4, or 1x1 grid.
-- **Font Size**: Everything can be displayed extra large.
-- **🔒 Lock Settings**: Secure settings with a PIN code.
-  - **Default PIN code**: `1234`
-
----
-
 ## 🏗️ Technology
 
-I use modern and secure technologies to provide the best experience:
-
-| Component | Technology |
+| Component | Technologie |
 |-----------|-------------|
-| **Language** | Kotlin 2.0 |
+| **Language** | Kotlin 2.1 |
 | **UI** | Jetpack Compose + Material 3 |
-| **Architecture** | MVVM + Clean Architecture |
 | **Database** | Room (SQLite) + DataStore |
-| **Background** | WorkManager |
-| **Camera** | CameraX (for the Magnifier) |
-| **Sensors** | Accelerometer (Fall Detection) & Step Counter |
-| **Media** | Media3 ExoPlayer (for the Radio) |
-| **Min SDK** | API 26 (Android 8.0) |
+| **Camera** | CameraX |
+| **Sensors** | Step Counter |
 | **Target SDK** | API 36 (Android 15) |
 
 ---

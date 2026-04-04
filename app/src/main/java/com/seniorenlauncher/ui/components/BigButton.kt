@@ -10,10 +10,8 @@ import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
@@ -44,21 +42,19 @@ fun BigButton(
     onLongClick: (() -> Unit)? = null,
     badge: Int? = null, 
     small: Boolean = false,
-    fontSizeMultiplier: Float = 1f,
     weatherText: String? = null
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val pressed by interactionSource.collectIsPressedAsState()
     val scale by animateFloatAsState(if (pressed) 0.95f else 1f, label = "s")
     
-    // Dynamic height calculation to prevent text overlap
     val minHeight = if (small) 90.dp else 120.dp
-    val adjustedHeight = (minHeight * fontSizeMultiplier).coerceIn(minHeight, 300.dp)
 
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .heightIn(min = adjustedHeight)
+            .heightIn(min = minHeight)
+            .wrapContentHeight()
             .scale(scale)
             .shadow(if (pressed) 2.dp else 6.dp, RoundedCornerShape(14.dp))
             .clip(RoundedCornerShape(14.dp))
@@ -82,14 +78,14 @@ fun BigButton(
                     Image(
                         painter = rememberAsyncImagePainter(icon),
                         contentDescription = null,
-                        modifier = Modifier.size((if (small) 36.dp else 48.dp) * fontSizeMultiplier.coerceIn(1f, 1.5f)),
+                        modifier = Modifier.size(if (small) 36.dp else 48.dp),
                         contentScale = ContentScale.Fit
                     )
                 } else if (emoji != null) {
                     Text(
                         emoji, 
-                        fontSize = (if (small) 24.sp else 36.sp) * fontSizeMultiplier.coerceIn(1f, 1.5f),
-                        lineHeight = (if (small) 28.sp else 40.sp) * fontSizeMultiplier.coerceIn(1f, 1.5f)
+                        fontSize = if (small) 24.sp else 36.sp,
+                        lineHeight = if (small) 28.sp else 40.sp
                     )
                 }
                 
@@ -116,13 +112,13 @@ fun BigButton(
             
             Text(
                 label, 
-                fontSize = (if (small) 14.sp else 18.sp) * fontSizeMultiplier, 
+                fontSize = if (small) 14.sp else 18.sp, 
                 fontWeight = FontWeight.Bold,
                 color = Color.White, 
                 textAlign = TextAlign.Center, 
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis,
-                lineHeight = (if (small) 16.sp else 22.sp) * fontSizeMultiplier
+                lineHeight = if (small) 16.sp else 22.sp
             )
         }
         
@@ -131,14 +127,14 @@ fun BigButton(
                 Modifier
                     .align(Alignment.TopEnd)
                     .offset(x = (-2).dp, y = 2.dp)
-                    .size((28 * fontSizeMultiplier).coerceIn(28f, 50f).dp)
+                    .size(28.dp)
                     .clip(CircleShape)
                     .background(Color(0xFFEF4444)), 
                 contentAlignment = Alignment.Center
             ) {
                 Text(
                     badge.toString(), 
-                    fontSize = (14 * fontSizeMultiplier).coerceIn(14f, 24f).sp,
+                    fontSize = 14.sp,
                     fontWeight = FontWeight.Bold, 
                     color = Color.White
                 )
@@ -153,6 +149,7 @@ fun SOSButton(onClick: () -> Unit, modifier: Modifier = Modifier) {
         modifier = modifier
             .fillMaxWidth()
             .heightIn(min = 100.dp)
+            .wrapContentHeight()
             .clip(RoundedCornerShape(16.dp))
             .background(Brush.linearGradient(listOf(Color(0xFFEF4444), Color(0xFFDC2626))))
             .clickable { onClick() }

@@ -38,28 +38,19 @@ import kotlinx.coroutines.launch
 
 @Composable
 fun ContactsScreen(onBack: () -> Unit, settingsVm: SettingsViewModel = viewModel()) {
-    // --- DEMO MODE TOGGLE ---
+    // --- DEMO MODE UIT ---
     val isDemoMode = false
 
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val dao = remember { LauncherApp.instance.database.contactDao() }
     
-    // Bestaande echte data
+    // Bestaande echte data uit de database
     val realContacts by dao.getAll().collectAsState(initial = emptyList())
     
-    // --- DUMMY DATA ---
-    val dummyContacts = listOf(
-        QuickContact(id = 1, name = "Dochter Sofie", phoneNumber = "06 12345678", emoji = "👧", color = 0xFFEC4899, isSosContact = true),
-        QuickContact(id = 2, name = "Huisarts de Vries", phoneNumber = "020 555 0123", emoji = "👨‍⚕️", color = 0xFF3B82F6, isSosContact = false),
-        QuickContact(id = 3, name = "Buurman Jan", phoneNumber = "06 87654321", emoji = "👴", color = 0xFFF59E0B, isSosContact = false)
-    )
-
-    // Gebruik dummy data als isDemoMode true is
-    val contacts = if (isDemoMode) dummyContacts else realContacts
+    val contacts = realContacts
     
     val settings by settingsVm.settings.collectAsState()
-    val fontSizeMultiplier = settings.fontSize / 16f
 
     var showAddDialog by remember { mutableStateOf(false) }
 
@@ -78,19 +69,19 @@ fun ContactsScreen(onBack: () -> Unit, settingsVm: SettingsViewModel = viewModel
         ) {
             Text(
                 "Mijn Lijst", 
-                fontSize = 22.sp * fontSizeMultiplier, 
+                fontSize = 22.sp, 
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onBackground
             )
             Button(
-                onClick = { if (!isDemoMode) showAddDialog = true },
+                onClick = { showAddDialog = true },
                 shape = RoundedCornerShape(12.dp),
-                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
-                enabled = !isDemoMode // Schakel uit in demo mode
+                modifier = Modifier.heightIn(min = 48.dp).wrapContentHeight(),
+                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)
             ) {
                 Icon(Icons.Default.Add, null)
                 Spacer(Modifier.width(4.dp))
-                Text("Nieuw", fontSize = 16.sp * fontSizeMultiplier)
+                Text("Nieuw", fontSize = 16.sp)
             }
         }
 
@@ -99,7 +90,7 @@ fun ContactsScreen(onBack: () -> Unit, settingsVm: SettingsViewModel = viewModel
                 Text(
                     "Geen favoriete contacten.\nTik op 'Nieuw' om er een toe te voegen.",
                     textAlign = TextAlign.Center,
-                    fontSize = 18.sp * fontSizeMultiplier,
+                    fontSize = 18.sp,
                     color = Color.Gray
                 )
             }
@@ -112,23 +103,15 @@ fun ContactsScreen(onBack: () -> Unit, settingsVm: SettingsViewModel = viewModel
                 items(contacts) { contact ->
                     ContactItem(
                         contact = contact,
-                        fontSizeMultiplier = fontSizeMultiplier,
-                        onCall = { 
-                            if (!isDemoMode) makeCall(context, contact.phoneNumber) 
-                            else Toast.makeText(context, "Demo Mode: Bellen naar ${contact.name}", Toast.LENGTH_SHORT).show()
-                        },
+                        onCall = { makeCall(context, contact.phoneNumber) },
                         onToggleFavorite = {
-                            if (!isDemoMode) {
-                                scope.launch {
-                                    dao.insert(contact.copy(isSosContact = !contact.isSosContact))
-                                }
+                            scope.launch {
+                                dao.insert(contact.copy(isSosContact = !contact.isSosContact))
                             }
                         },
                         onDelete = {
-                            if (!isDemoMode) {
-                                scope.launch {
-                                    dao.delete(contact)
-                                }
+                            scope.launch {
+                                dao.delete(contact)
                             }
                         }
                     )
@@ -137,7 +120,7 @@ fun ContactsScreen(onBack: () -> Unit, settingsVm: SettingsViewModel = viewModel
         }
     }
 
-    if (showAddDialog && !isDemoMode) {
+    if (showAddDialog) {
         AddContactDialog(
             onDismiss = { showAddDialog = false },
             onSave = { name, phone ->
@@ -164,7 +147,6 @@ private fun makeCall(context: Context, phoneNumber: String) {
 @Composable
 fun ContactItem(
     contact: QuickContact, 
-    fontSizeMultiplier: Float, 
     onCall: () -> Unit, 
     onToggleFavorite: () -> Unit,
     onDelete: () -> Unit
@@ -180,15 +162,14 @@ fun ContactItem(
             Modifier.padding(12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Avatar / Emoji
             Box(
                 Modifier
-                    .size(56.dp * fontSizeMultiplier.coerceIn(1f, 1.5f))
+                    .size(56.dp)
                     .clip(CircleShape)
                     .background(Color(contact.color).copy(alpha = 0.2f)),
                 contentAlignment = Alignment.Center
             ) {
-                Text(contact.emoji, fontSize = 28.sp * fontSizeMultiplier)
+                Text(contact.emoji, fontSize = 28.sp)
             }
             
             Spacer(Modifier.width(16.dp))
@@ -196,19 +177,18 @@ fun ContactItem(
             Column(Modifier.weight(1f)) {
                 Text(
                     contact.name, 
-                    fontSize = 20.sp * fontSizeMultiplier, 
+                    fontSize = 20.sp, 
                     fontWeight = FontWeight.Bold,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
                 Text(
                     contact.phoneNumber, 
-                    fontSize = 16.sp * fontSizeMultiplier,
+                    fontSize = 16.sp,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
 
-            // Actions
             IconButton(onClick = onDelete) {
                 Icon(Icons.Default.Delete, contentDescription = "Verwijderen", tint = Color.Gray)
             }
@@ -226,7 +206,7 @@ fun ContactItem(
                 onClick = onCall,
                 shape = CircleShape,
                 color = Color(0xFF38A169),
-                modifier = Modifier.size(56.dp * fontSizeMultiplier.coerceIn(1f, 1.2f))
+                modifier = Modifier.size(56.dp)
             ) {
                 Box(contentAlignment = Alignment.Center) {
                     Icon(Icons.Default.Call, null, tint = Color.White, modifier = Modifier.size(28.dp))
@@ -277,7 +257,7 @@ fun AddContactDialog(onDismiss: () -> Unit, onSave: (String, String) -> Unit) {
                     }
                     Button(
                         onClick = { if (name.isNotBlank() && phone.isNotBlank()) onSave(name, phone) },
-                        modifier = Modifier.weight(1f),
+                        modifier = Modifier.weight(1f).heightIn(min = 48.dp).wrapContentHeight(),
                         shape = RoundedCornerShape(12.dp)
                     ) {
                         Text("Opslaan", fontSize = 18.sp)

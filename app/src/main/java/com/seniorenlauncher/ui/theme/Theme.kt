@@ -1,7 +1,12 @@
 package com.seniorenlauncher.ui.theme
+
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.Density
+import androidx.compose.ui.unit.sp
 import com.seniorenlauncher.data.model.AppTheme
 
 val ClassicColors = darkColorScheme(
@@ -24,13 +29,28 @@ val LightColors = lightColorScheme(
 )
 
 @Composable
-fun SeniorenLauncherTheme(appTheme: AppTheme = AppTheme.CLASSIC, content: @Composable () -> Unit) {
-    MaterialTheme(
-        colorScheme = when (appTheme) {
-            AppTheme.CLASSIC -> ClassicColors
-            AppTheme.HIGH_CONTRAST -> HighContrastColors
-            AppTheme.LIGHT -> LightColors
-        },
-        content = content
+fun SeniorenLauncherTheme(
+    appTheme: AppTheme = AppTheme.CLASSIC, 
+    fontSize: Int = 18,
+    content: @Composable () -> Unit
+) {
+    val scaleFactor = fontSize / 18f
+    
+    val currentDensity = LocalDensity.current
+    val customDensity = Density(
+        density = currentDensity.density * scaleFactor,
+        fontScale = currentDensity.fontScale * scaleFactor
     )
+
+    CompositionLocalProvider(LocalDensity provides customDensity) {
+        MaterialTheme(
+            colorScheme = when (appTheme) {
+                AppTheme.CLASSIC -> ClassicColors
+                AppTheme.HIGH_CONTRAST -> HighContrastColors
+                AppTheme.LIGHT -> LightColors
+            },
+            typography = Typography(),
+            content = content
+        )
+    }
 }

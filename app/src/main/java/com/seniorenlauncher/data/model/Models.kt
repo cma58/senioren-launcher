@@ -18,7 +18,8 @@ data class AppSettings(
     val pinCode: String? = "1234",
     val fallDetectionEnabled: Boolean = false,
     val batteryAlertEnabled: Boolean = true,
-    val chargingReminderEnabled: Boolean = true
+    val chargingReminderEnabled: Boolean = true,
+    val hasCompletedSetup: Boolean = false
 )
 
 @Entity(tableName = "contacts")

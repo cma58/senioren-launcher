@@ -23,7 +23,6 @@ import com.seniorenlauncher.ui.components.ScreenHeader
 @Composable
 fun SettingsScreen(vm: SettingsViewModel, onNavigate: (String) -> Unit, onBack: () -> Unit) {
     val settings by vm.settings.collectAsState()
-    val fontSizeMultiplier = settings.fontSize / 16f
     
     var showPinScreen by remember { mutableStateOf(false) }
     var enteredPin by remember { mutableStateOf("") }
@@ -31,8 +30,7 @@ fun SettingsScreen(vm: SettingsViewModel, onNavigate: (String) -> Unit, onBack: 
     if (settings.settingsLocked && !showPinScreen) {
         LockedSettingsScreen(
             onBack = onBack,
-            onUnlockClick = { showPinScreen = true },
-            fontSizeMultiplier = fontSizeMultiplier
+            onUnlockClick = { showPinScreen = true }
         )
         return
     }
@@ -59,8 +57,7 @@ fun SettingsScreen(vm: SettingsViewModel, onNavigate: (String) -> Unit, onBack: 
             onCancel = { 
                 showPinScreen = false
                 enteredPin = ""
-            },
-            fontSizeMultiplier = fontSizeMultiplier
+            }
         )
         return
     }
@@ -73,7 +70,7 @@ fun SettingsScreen(vm: SettingsViewModel, onNavigate: (String) -> Unit, onBack: 
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             // Thema
-            SettSection("🎨 Thema", fontSizeMultiplier) {
+            SettSection("🎨 Thema") {
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     AppTheme.entries.forEach { t ->
                         val selected = settings.theme == t
@@ -95,7 +92,7 @@ fun SettingsScreen(vm: SettingsViewModel, onNavigate: (String) -> Unit, onBack: 
                                     AppTheme.HIGH_CONTRAST -> "Contrast"
                                     AppTheme.LIGHT -> "Licht" 
                                 },
-                                fontSize = 10.sp * fontSizeMultiplier,
+                                fontSize = 10.sp,
                                 fontWeight = FontWeight.SemiBold,
                                 color = if (selected) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurface
                             )
@@ -105,7 +102,7 @@ fun SettingsScreen(vm: SettingsViewModel, onNavigate: (String) -> Unit, onBack: 
             }
 
             // Layout
-            SettSection("📐 Layout", fontSizeMultiplier) {
+            SettSection("📐 Layout") {
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     listOf(
                         LayoutType.GRID_2x3 to "2×3 Groot",
@@ -120,14 +117,14 @@ fun SettingsScreen(vm: SettingsViewModel, onNavigate: (String) -> Unit, onBack: 
                             colors = if (selected) ButtonDefaults.buttonColors() else ButtonDefaults.filledTonalButtonColors(),
                             contentPadding = PaddingValues(4.dp)
                         ) {
-                            Text(label, fontSize = 11.sp * fontSizeMultiplier, textAlign = TextAlign.Center)
+                            Text(label, fontSize = 11.sp, textAlign = TextAlign.Center)
                         }
                     }
                 }
             }
 
             // Lettergrootte
-            SettSection("🔤 Lettergrootte", fontSizeMultiplier) {
+            SettSection("🔤 Lettergrootte") {
                 Column {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Text("A", fontSize = 12.sp)
@@ -149,7 +146,7 @@ fun SettingsScreen(vm: SettingsViewModel, onNavigate: (String) -> Unit, onBack: 
             }
 
             // Taal
-            SettSection("🌍 Taal", fontSizeMultiplier) {
+            SettSection("🌍 Taal") {
                 val languages = listOf("nl" to "Nederlands", "fr" to "Français", "de" to "Deutsch", "en" to "English", "tr" to "Türkçe", "ar" to "العربية")
                 Column {
                     languages.chunked(3).forEach { row ->
@@ -163,7 +160,7 @@ fun SettingsScreen(vm: SettingsViewModel, onNavigate: (String) -> Unit, onBack: 
                                     colors = if (selected) ButtonDefaults.buttonColors() else ButtonDefaults.filledTonalButtonColors(),
                                     contentPadding = PaddingValues(2.dp)
                                 ) {
-                                    Text(name, fontSize = 12.sp * fontSizeMultiplier)
+                                    Text(name, fontSize = 12.sp)
                                 }
                             }
                         }
@@ -173,15 +170,15 @@ fun SettingsScreen(vm: SettingsViewModel, onNavigate: (String) -> Unit, onBack: 
             }
 
             // Nachtmodus
-            SettSection("🌙 Nachtmodus", fontSizeMultiplier) {
-                SettToggle("Automatisch na 21:00", settings.nightModeAuto, fontSizeMultiplier) { vm.toggleNightMode() }
+            SettSection("🌙 Nachtmodus") {
+                SettToggle("Automatisch na 21:00", settings.nightModeAuto) { vm.toggleNightMode() }
             }
 
             // Zichtbare apps
-            SettSection("📱 Zichtbare apps", fontSizeMultiplier) {
+            SettSection("📱 Zichtbare apps") {
                 ALL_APPS.forEachIndexed { index, app ->
                     val isVisible = app.id in settings.visibleApps
-                    SettToggle("${app.emoji} ${app.name}", isVisible, fontSizeMultiplier) { 
+                    SettToggle("${app.emoji} ${app.name}", isVisible) { 
                         vm.toggleAppVisibility(app.id) 
                     }
                     if (index < ALL_APPS.size - 1) {
@@ -195,29 +192,29 @@ fun SettingsScreen(vm: SettingsViewModel, onNavigate: (String) -> Unit, onBack: 
             }
 
             // Veiligheid
-            SettSection("🛡️ Veiligheid", fontSizeMultiplier) {
-                SettRow("📍 Locatie delen", fontSizeMultiplier) { /* Optioneel: later implementeren */ }
+            SettSection("🛡️ Veiligheid") {
+                SettRow("📍 Locatie delen") { /* Optioneel: later implementeren */ }
                 HorizontalDivider(thickness = 0.5.dp, color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
-                SettRow("🏥 Noodinfo bewerken", fontSizeMultiplier) { 
+                SettRow("🏥 Noodinfo bewerken") { 
                     onNavigate("emergency") // Gaat naar EmergencyInfoScreen
                 }
                 HorizontalDivider(thickness = 0.5.dp, color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
-                SettRow("🆘 SOS contacten instellen", fontSizeMultiplier) { 
+                SettRow("🆘 SOS contacten instellen") { 
                     onNavigate("sos_settings")
                 }
                 HorizontalDivider(thickness = 0.5.dp, color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
-                SettToggle("🛡️ Valdetectie", settings.fallDetectionEnabled, fontSizeMultiplier) { vm.toggleFallDetection() }
+                SettToggle("🛡️ Valdetectie", settings.fallDetectionEnabled) { vm.toggleFallDetection() }
                 HorizontalDivider(thickness = 0.5.dp, color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
-                SettToggle("🪫 Batterij-SMS onder 15%", settings.batteryAlertEnabled, fontSizeMultiplier) { vm.toggleBatteryAlert() }
+                SettToggle("🪫 Batterij-SMS onder 15%", settings.batteryAlertEnabled) { vm.toggleBatteryAlert() }
                 HorizontalDivider(thickness = 0.5.dp, color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
-                SettToggle("🔌 Oplaadherinnering 22:00", settings.chargingReminderEnabled, fontSizeMultiplier) { vm.toggleChargingReminder() }
+                SettToggle("🔌 Oplaadherinnering 22:00", settings.chargingReminderEnabled) { vm.toggleChargingReminder() }
             }
 
             // Afstandsbediening
-            SettSection("📱 Afstandsbediening", fontSizeMultiplier) {
+            SettSection("📱 Afstandsbediening") {
                 Text(
                     "Laat een familielid deze telefoon op afstand instellen via de web-app.",
-                    fontSize = 13.sp * fontSizeMultiplier,
+                    fontSize = 13.sp,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
                 Spacer(Modifier.height(8.dp))
@@ -225,8 +222,8 @@ fun SettingsScreen(vm: SettingsViewModel, onNavigate: (String) -> Unit, onBack: 
                     Modifier.fillMaxWidth().background(MaterialTheme.colorScheme.surfaceVariant, RoundedCornerShape(8.dp)).padding(10.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    Text("Koppelingscode", fontSize = 12.sp * fontSizeMultiplier, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    Text("7 4 2 9", fontSize = 24.sp * fontSizeMultiplier, fontWeight = FontWeight.ExtraBold, color = MaterialTheme.colorScheme.primary, letterSpacing = 4.sp)
+                    Text("Koppelingscode", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text("7 4 2 9", fontSize = 24.sp, fontWeight = FontWeight.ExtraBold, color = MaterialTheme.colorScheme.primary, letterSpacing = 4.sp)
                 }
                 Spacer(Modifier.height(12.dp))
                 Button(
@@ -234,29 +231,29 @@ fun SettingsScreen(vm: SettingsViewModel, onNavigate: (String) -> Unit, onBack: 
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(10.dp)
                 ) {
-                    Text("Hulp op afstand openen", fontWeight = FontWeight.Bold, fontSize = 15.sp * fontSizeMultiplier)
+                    Text("Hulp op afstand openen", fontWeight = FontWeight.Bold, fontSize = 15.sp)
                 }
             }
 
             // PIN Vergrendeling
-            SettSection("🔒 PIN vergrendeling", fontSizeMultiplier) {
+            SettSection("🔒 PIN vergrendeling") {
                 Button(
                     onClick = { vm.lockSettings() },
                     modifier = Modifier.fillMaxWidth(),
                     colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error.copy(alpha = 0.7f)),
                     shape = RoundedCornerShape(10.dp)
                 ) {
-                    Text("Instellingen vergrendelen", fontWeight = FontWeight.Bold, fontSize = 15.sp * fontSizeMultiplier)
+                    Text("Instellingen vergrendelen", fontWeight = FontWeight.Bold, fontSize = 15.sp)
                 }
             }
 
             // Over
-            SettSection("ℹ️ Over", fontSizeMultiplier) {
+            SettSection("ℹ️ Over") {
                 Text(
                     "Senioren Launcher v1.0\nOpen Source · GPL-3.0 Licentie\nGeen tracking · Geen advertenties\nGemaakt met liefde voor onze ouderen ❤️",
-                    fontSize = 13.sp * fontSizeMultiplier, 
+                    fontSize = 13.sp, 
                     color = MaterialTheme.colorScheme.onSurfaceVariant, 
-                    lineHeight = (18.sp * fontSizeMultiplier)
+                    lineHeight = 18.sp
                 )
             }
             
@@ -266,7 +263,7 @@ fun SettingsScreen(vm: SettingsViewModel, onNavigate: (String) -> Unit, onBack: 
 }
 
 @Composable
-fun SettSection(title: String, fontSizeMultiplier: Float, content: @Composable ColumnScope.() -> Unit) {
+fun SettSection(title: String, content: @Composable ColumnScope.() -> Unit) {
     Card(
         Modifier.fillMaxWidth(), 
         shape = RoundedCornerShape(12.dp),
@@ -275,7 +272,7 @@ fun SettSection(title: String, fontSizeMultiplier: Float, content: @Composable C
         Column(Modifier.padding(14.dp)) {
             Text(
                 title, 
-                fontSize = 15.sp * fontSizeMultiplier, 
+                fontSize = 15.sp, 
                 fontWeight = FontWeight.Bold, 
                 color = MaterialTheme.colorScheme.onSurface
             )
@@ -286,31 +283,31 @@ fun SettSection(title: String, fontSizeMultiplier: Float, content: @Composable C
 }
 
 @Composable
-fun SettToggle(label: String, checked: Boolean, fontSizeMultiplier: Float, onToggle: () -> Unit) {
+fun SettToggle(label: String, checked: Boolean, onToggle: () -> Unit) {
     Row(
         Modifier.fillMaxWidth().padding(vertical = 4.dp), 
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
-        Text(label, fontSize = 14.sp * fontSizeMultiplier, color = MaterialTheme.colorScheme.onSurface, modifier = Modifier.weight(1f))
+        Text(label, fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurface, modifier = Modifier.weight(1f))
         Switch(checked = checked, onCheckedChange = { onToggle() }, scale = 0.9f)
     }
 }
 
 @Composable
-fun SettRow(label: String, fontSizeMultiplier: Float, onClick: () -> Unit) {
+fun SettRow(label: String, onClick: () -> Unit) {
     Row(
         Modifier.fillMaxWidth().clickable { onClick() }.padding(vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
-        Text(label, fontSize = 14.sp * fontSizeMultiplier, color = MaterialTheme.colorScheme.onSurface)
+        Text(label, fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurface)
         Text("→", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
     }
 }
 
 @Composable
-fun LockedSettingsScreen(onBack: () -> Unit, onUnlockClick: () -> Unit, fontSizeMultiplier: Float) {
+fun LockedSettingsScreen(onBack: () -> Unit, onUnlockClick: () -> Unit) {
     Column(
         Modifier.fillMaxSize().padding(20.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -318,11 +315,11 @@ fun LockedSettingsScreen(onBack: () -> Unit, onUnlockClick: () -> Unit, fontSize
     ) {
         Text("🔒", fontSize = 52.sp)
         Spacer(Modifier.height(12.dp))
-        Text("Instellingen Vergrendeld", fontSize = 22.sp * fontSizeMultiplier, fontWeight = FontWeight.Bold)
+        Text("Instellingen Vergrendeld", fontSize = 22.sp, fontWeight = FontWeight.Bold)
         Spacer(Modifier.height(6.dp))
         Text(
             "Alleen de verzorger kan instellingen wijzigen", 
-            fontSize = 14.sp * fontSizeMultiplier, 
+            fontSize = 14.sp, 
             textAlign = TextAlign.Center,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
@@ -330,24 +327,24 @@ fun LockedSettingsScreen(onBack: () -> Unit, onUnlockClick: () -> Unit, fontSize
         Button(
             onClick = onUnlockClick,
             shape = RoundedCornerShape(12.dp),
-            modifier = Modifier.fillMaxWidth().height(56.dp)
+            modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp).wrapContentHeight()
         ) {
-            Text("PIN Invoeren", fontSize = 16.sp * fontSizeMultiplier, fontWeight = FontWeight.Bold)
+            Text("PIN Invoeren", fontSize = 16.sp, fontWeight = FontWeight.Bold)
         }
         TextButton(onClick = onBack, modifier = Modifier.padding(top = 10.dp)) {
-            Text("Terug", fontSize = 14.sp * fontSizeMultiplier)
+            Text("Terug", fontSize = 14.sp)
         }
     }
 }
 
 @Composable
-fun PinEntryScreen(pin: String, onPinChange: (String) -> Unit, onCancel: () -> Unit, fontSizeMultiplier: Float) {
+fun PinEntryScreen(pin: String, onPinChange: (String) -> Unit, onCancel: () -> Unit) {
     Column(
         Modifier.fillMaxSize().padding(20.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        Text("Voer PIN in", fontSize = 22.sp * fontSizeMultiplier, fontWeight = FontWeight.Bold)
+        Text("Voer PIN in", fontSize = 22.sp, fontWeight = FontWeight.Bold)
         Spacer(Modifier.height(20.dp))
         Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
             repeat(4) { i ->
@@ -394,7 +391,7 @@ fun PinEntryScreen(pin: String, onPinChange: (String) -> Unit, onCancel: () -> U
         }
         Spacer(Modifier.height(16.dp))
         TextButton(onClick = onCancel) {
-            Text("Annuleren", fontSize = 14.sp * fontSizeMultiplier)
+            Text("Annuleren", fontSize = 14.sp)
         }
     }
 }

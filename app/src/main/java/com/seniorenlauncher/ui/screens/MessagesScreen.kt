@@ -1,6 +1,11 @@
 package com.seniorenlauncher.ui.screens
 
+import android.Manifest
+import android.content.pm.PackageManager
+import android.provider.ContactsContract
 import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -22,10 +27,14 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
+import androidx.core.content.ContextCompat
 import com.seniorenlauncher.LauncherApp
 import com.seniorenlauncher.data.model.QuickContact
 import com.seniorenlauncher.ui.components.ScreenHeader
 import androidx.lifecycle.viewmodel.compose.viewModel
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 data class Conversation(
     val address: String,
@@ -50,15 +59,12 @@ fun MessagesScreen(
     initialAddress: String? = null,
     initialName: String? = null
 ) {
-    val settings by settingsVm.settings.collectAsState()
-    val fontSizeMultiplier = settings.fontSize / 16f
-    
-    val dao = LauncherApp.instance.database.contactDao()
-    val favorieten by dao.getAll().collectAsState(initial = emptyList())
-    
+    // --- DEMO MODE UIT ---
+    val isDemoMode = false
+
     var selectedAddress by remember { mutableStateOf<String?>(initialAddress) }
     var selectedName by remember { mutableStateOf<String?>(initialName) }
-    var showNewMessagePicker by remember { mutableStateOf(false) }
+    var showFullContactPicker by remember { mutableStateOf(false) }
     
     Column(
         Modifier
@@ -68,13 +74,11 @@ fun MessagesScreen(
     ) {
         ScreenHeader(
             title = when {
-                showNewMessagePicker -> "Kies Contact"
                 selectedAddress == null -> "Berichten"
                 else -> selectedName ?: selectedAddress!!
             }, 
             onBack = {
                 when {
-                    showNewMessagePicker -> showNewMessagePicker = false
                     selectedAddress != null -> {
                         selectedAddress = null
                         selectedName = null
@@ -85,44 +89,124 @@ fun MessagesScreen(
         )
         
         Box(Modifier.weight(1f)) {
-            if (showNewMessagePicker) {
-                LazyColumn(Modifier.fillMaxSize(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    items(favorieten) { contact ->
-                        Card(
-                            modifier = Modifier.fillMaxWidth().clickable {
-                                selectedAddress = contact.phoneNumber
-                                selectedName = contact.name
-                                showNewMessagePicker = false
-                            },
-                            shape = RoundedCornerShape(12.dp),
-                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
-                        ) {
-                            Row(Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
-                                Text(contact.emoji, fontSize = 28.sp)
-                                Spacer(Modifier.width(16.dp))
-                                Column {
-                                    Text(contact.name, fontSize = 20.sp * fontSizeMultiplier, fontWeight = FontWeight.Bold)
-                                    Text(contact.phoneNumber, fontSize = 16.sp * fontSizeMultiplier)
-                                }
-                            }
-                        }
-                    }
-                }
-            } else if (selectedAddress == null) {
-                ConversationList(messagesVm, fontSizeMultiplier) { conv ->
+            if (selectedAddress == null) {
+                ConversationList(messagesVm, isDemoMode) { conv ->
                     selectedAddress = conv.address
                     selectedName = conv.contactName
                 }
                 
                 FloatingActionButton(
-                    onClick = { showNewMessagePicker = true },
+                    onClick = { showFullContactPicker = true },
                     modifier = Modifier.align(Alignment.BottomEnd).padding(16.dp),
                     containerColor = MaterialTheme.colorScheme.primary
                 ) {
                     Icon(Icons.Default.Add, "Nieuw bericht")
                 }
             } else {
-                ChatScreen(selectedAddress!!, messagesVm, fontSizeMultiplier)
+                ChatScreen(selectedAddress!!, messagesVm, isDemoMode)
+            }
+        }
+    }
+
+    if (showFullContactPicker) {
+        FullContactPickerDialog(
+            onDismiss = { showFullContactPicker = false },
+            onContactSelected = { name, phone ->
+                selectedAddress = phone
+                selectedName = name
+                showFullContactPicker = false
+            }
+        )
+    }
+}
+
+@Composable
+fun FullContactPickerDialog(onDismiss: () -> Unit, onContactSelected: (String, String) -> Unit) {
+    val context = LocalContext.current
+    var contacts by remember { mutableStateOf(emptyList<Pair<String, String>>()) }
+    var searchQuery by remember { mutableStateOf("") }
+    var isLoading by remember { mutableStateOf(true) }
+
+    LaunchedEffect(Unit) {
+        if (ContextCompat.checkSelfPermission(context, Manifest.permission.READ_CONTACTS) == PackageManager.PERMISSION_GRANTED) {
+            withContext(Dispatchers.IO) {
+                val list = mutableListOf<Pair<String, String>>()
+                val cursor = context.contentResolver.query(
+                    ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
+                    null, null, null, ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME + " ASC"
+                )
+                cursor?.use {
+                    val nameIdx = it.getColumnIndex(ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME)
+                    val numIdx = it.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER)
+                    while (it.moveToNext()) {
+                        val name = it.getString(nameIdx)
+                        val num = it.getString(numIdx)
+                        if (name != null && num != null) list.add(name to num)
+                    }
+                }
+                contacts = list.distinctBy { it.second.replace(" ", "") }
+                isLoading = false
+            }
+        } else {
+            isLoading = false
+        }
+    }
+
+    val filteredContacts = remember(searchQuery, contacts) {
+        if (searchQuery.isBlank()) contacts
+        else contacts.filter { it.first.contains(searchQuery, ignoreCase = true) || it.second.contains(searchQuery) }
+    }
+
+    Dialog(onDismissRequest = onDismiss) {
+        Card(
+            Modifier.fillMaxWidth().fillMaxHeight(0.9f),
+            shape = RoundedCornerShape(24.dp)
+        ) {
+            Column(Modifier.padding(16.dp)) {
+                Text("Kies een contact", fontSize = 22.sp, fontWeight = FontWeight.Bold)
+                Spacer(Modifier.height(16.dp))
+                
+                OutlinedTextField(
+                    value = searchQuery,
+                    onValueChange = { searchQuery = it },
+                    modifier = Modifier.fillMaxWidth(),
+                    placeholder = { Text("Zoek op naam...") },
+                    leadingIcon = { Icon(Icons.Default.Search, null) },
+                    shape = RoundedCornerShape(12.dp)
+                )
+
+                Spacer(Modifier.height(12.dp))
+
+                if (isLoading) {
+                    Box(Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.Center) {
+                        CircularProgressIndicator()
+                    }
+                } else {
+                    LazyColumn(Modifier.weight(1f)) {
+                        items(filteredContacts) { contact ->
+                            Row(
+                                Modifier
+                                    .fillMaxWidth()
+                                    .clickable { onContactSelected(contact.first, contact.second) }
+                                    .padding(vertical = 12.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Box(Modifier.size(44.dp).clip(CircleShape).background(MaterialTheme.colorScheme.primaryContainer), contentAlignment = Alignment.Center) {
+                                    Text(contact.first.take(1).uppercase(), fontWeight = FontWeight.Bold)
+                                }
+                                Spacer(Modifier.width(16.dp))
+                                Column {
+                                    Text(contact.first, fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                                    Text(contact.second, fontSize = 14.sp, color = Color.Gray)
+                                }
+                            }
+                            HorizontalDivider(color = Color.LightGray.copy(alpha = 0.5f))
+                        }
+                    }
+                }
+                TextButton(onClick = onDismiss, modifier = Modifier.align(Alignment.End)) {
+                    Text("ANNULEREN")
+                }
             }
         }
     }
@@ -131,25 +215,26 @@ fun MessagesScreen(
 @Composable
 fun ConversationList(
     messagesVm: MessagesViewModel,
-    fontSizeMultiplier: Float, 
+    isDemoMode: Boolean,
     onConversationClick: (Conversation) -> Unit
 ) {
     val context = LocalContext.current
-    val conversations by messagesVm.conversations.collectAsState()
+    val realConversations by messagesVm.conversations.collectAsState()
     val isLoading by messagesVm.isLoading.collectAsState()
     val searchQuery by messagesVm.searchQuery.collectAsState()
 
-    LaunchedEffect(Unit) {
-        messagesVm.loadConversations(context)
+    val conversations = realConversations
+
+    LaunchedEffect(isDemoMode) {
+        if (!isDemoMode) messagesVm.loadConversations(context)
     }
 
     Column {
-        // --- Zoekbalk ---
         OutlinedTextField(
             value = searchQuery,
             onValueChange = { messagesVm.setSearchQuery(it) },
             modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp),
-            placeholder = { Text("Zoek in berichten...", fontSize = 18.sp * fontSizeMultiplier) },
+            placeholder = { Text("Zoek in berichten...", fontSize = 18.sp) },
             leadingIcon = { Icon(Icons.Default.Search, null) },
             trailingIcon = if (searchQuery.isNotEmpty()) {
                 { IconButton(onClick = { messagesVm.setSearchQuery("") }) { Icon(Icons.Default.Clear, null) } }
@@ -161,13 +246,13 @@ fun ConversationList(
             )
         )
 
-        if (isLoading && conversations.isEmpty()) {
+        if (!isDemoMode && isLoading && conversations.isEmpty()) {
             Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 CircularProgressIndicator()
             }
         } else if (conversations.isEmpty()) {
             Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                Text(if (searchQuery.isEmpty()) "Geen berichten gevonden" else "Niets gevonden voor '$searchQuery'", fontSize = 18.sp * fontSizeMultiplier)
+                Text(if (searchQuery.isEmpty()) "Geen berichten gevonden" else "Niets gevonden voor '$searchQuery'", fontSize = 18.sp)
             }
         } else {
             LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -192,7 +277,7 @@ fun ConversationList(
                                 Text(
                                     text = (conv.contactName ?: conv.address).take(1).uppercase(), 
                                     fontWeight = FontWeight.Bold, 
-                                    fontSize = 22.sp * fontSizeMultiplier,
+                                    fontSize = 22.sp,
                                     color = if (conv.isRead) MaterialTheme.colorScheme.onSecondaryContainer else Color.White
                                 )
                             }
@@ -201,7 +286,7 @@ fun ConversationList(
                                 Row(verticalAlignment = Alignment.CenterVertically) {
                                     Text(
                                         text = conv.contactName ?: conv.address, 
-                                        fontSize = 18.sp * fontSizeMultiplier, 
+                                        fontSize = 18.sp, 
                                         fontWeight = if (conv.isRead) FontWeight.Bold else FontWeight.ExtraBold
                                     )
                                     if (!conv.isRead) {
@@ -211,7 +296,7 @@ fun ConversationList(
                                 }
                                 Text(
                                     text = conv.snippet, 
-                                    fontSize = 16.sp * fontSizeMultiplier, 
+                                    fontSize = 16.sp, 
                                     maxLines = 1, 
                                     overflow = TextOverflow.Ellipsis, 
                                     color = if (conv.isRead) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.onSurface,
@@ -227,19 +312,20 @@ fun ConversationList(
 }
 
 @Composable
-fun ChatScreen(address: String, messagesVm: MessagesViewModel, fontSizeMultiplier: Float) {
+fun ChatScreen(address: String, messagesVm: MessagesViewModel, isDemoMode: Boolean) {
     val context = LocalContext.current
-    val messages by messagesVm.messages.collectAsState()
+    val realMessages by messagesVm.messages.collectAsState()
     val msgFontSizeScale by messagesVm.messageFontSizeMultiplier.collectAsState()
     var newMessage by remember { mutableStateOf("") }
     val scrollState = rememberLazyListState()
 
-    LaunchedEffect(address) {
-        messagesVm.loadMessages(context, address)
+    val messages = realMessages
+
+    LaunchedEffect(address, isDemoMode) {
+        if (!isDemoMode) messagesVm.loadMessages(context, address)
     }
 
     Column(Modifier.fillMaxSize()) {
-        // --- Tekstgrootte Knoppen ---
         Row(
             Modifier.fillMaxWidth().padding(bottom = 8.dp),
             horizontalArrangement = Arrangement.End,
@@ -268,7 +354,7 @@ fun ChatScreen(address: String, messagesVm: MessagesViewModel, fontSizeMultiplie
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             items(messages) { msg ->
-                MessageBubble(msg, fontSizeMultiplier * msgFontSizeScale)
+                MessageBubble(msg, msgFontSizeScale)
             }
         }
 
@@ -281,13 +367,14 @@ fun ChatScreen(address: String, messagesVm: MessagesViewModel, fontSizeMultiplie
                 value = newMessage,
                 onValueChange = { newMessage = it },
                 modifier = Modifier.weight(1f),
-                placeholder = { Text("Typ een bericht...", fontSize = 16.sp * fontSizeMultiplier) },
+                placeholder = { Text("Typ een bericht...", fontSize = 16.sp) },
                 shape = RoundedCornerShape(24.dp),
-                textStyle = LocalTextStyle.current.copy(fontSize = 18.sp * fontSizeMultiplier)
+                textStyle = LocalTextStyle.current.copy(fontSize = 18.sp),
+                enabled = !isDemoMode
             )
             FloatingActionButton(
                 onClick = {
-                    if (newMessage.isNotBlank()) {
+                    if (!isDemoMode && newMessage.isNotBlank()) {
                         messagesVm.sendMessage(context, address, newMessage)
                         newMessage = ""
                     }
@@ -302,7 +389,7 @@ fun ChatScreen(address: String, messagesVm: MessagesViewModel, fontSizeMultiplie
 }
 
 @Composable
-fun MessageBubble(message: SmsMessage, totalFontSizeMultiplier: Float) {
+fun MessageBubble(message: SmsMessage, msgFontSizeScale: Float) {
     val alignment = if (message.isMe) Alignment.End else Alignment.Start
     val color = if (message.isMe) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.secondaryContainer
     
@@ -320,9 +407,9 @@ fun MessageBubble(message: SmsMessage, totalFontSizeMultiplier: Float) {
             Text(
                 text = message.body,
                 modifier = Modifier.padding(12.dp),
-                fontSize = 18.sp * totalFontSizeMultiplier,
+                fontSize = 18.sp * msgFontSizeScale,
                 color = if (message.isMe) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSecondaryContainer,
-                lineHeight = (24.sp * totalFontSizeMultiplier)
+                lineHeight = 24.sp * msgFontSizeScale
             )
         }
     }

@@ -27,16 +27,17 @@ class SettingsRepository(private val context: Context) {
         val SETTINGS_LOCKED = booleanPreferencesKey("settings_locked")
         val VISIBLE_APPS = stringPreferencesKey("visible_apps")
         val APP_MAPPINGS = stringPreferencesKey("app_mappings")
+        val HAS_COMPLETED_SETUP = booleanPreferencesKey("has_completed_setup")
     }
 
     val settingsFlow: Flow<AppSettings> = context.dataStore.data.map { prefs ->
         AppSettings(
             theme = try { AppTheme.valueOf(prefs[THEME] ?: AppTheme.CLASSIC.name) } catch(e: Exception) { AppTheme.CLASSIC },
             layout = try { LayoutType.valueOf(prefs[LAYOUT] ?: LayoutType.GRID_2x3.name) } catch(e: Exception) { LayoutType.GRID_2x3 },
-            fontSize = prefs[FONT_SIZE] ?: 16,
+            fontSize = prefs[FONT_SIZE] ?: 18,
             language = prefs[LANGUAGE] ?: "nl",
             nightModeAuto = prefs[NIGHT_MODE_AUTO] ?: true,
-            fallDetectionEnabled = prefs[FALL_DETECTION] ?: true,
+            fallDetectionEnabled = prefs[FALL_DETECTION] ?: false,
             batteryAlertEnabled = prefs[BATTERY_ALERT] ?: true,
             chargingReminderEnabled = prefs[CHARGING_REMINDER] ?: true,
             pinCode = prefs[PIN_CODE] ?: "1234",
@@ -49,7 +50,8 @@ class SettingsRepository(private val context: Context) {
                     json.keys().forEach { key -> map[key] = json.getString(key) }
                     map
                 } catch(e: Exception) { emptyMap<String, String>() }
-            } ?: emptyMap()
+            } ?: emptyMap(),
+            hasCompletedSetup = prefs[HAS_COMPLETED_SETUP] ?: false
         )
     }
 
@@ -100,5 +102,9 @@ class SettingsRepository(private val context: Context) {
     suspend fun setAppMappings(mappings: Map<String, String>) {
         val json = JSONObject(mappings)
         context.dataStore.edit { it[APP_MAPPINGS] = json.toString() }
+    }
+
+    suspend fun setHasCompletedSetup(completed: Boolean) {
+        context.dataStore.edit { it[HAS_COMPLETED_SETUP] = completed }
     }
 }

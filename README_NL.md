@@ -1,10 +1,12 @@
-# 📱 Senioren Launcher (Beta)
+# 📱 Senioren Launcher (0.8.1 Beta)
 
 **De eerlijke, open-source Android launcher voor onze ouderen. Gemaakt om technologie weer toegankelijk en veilig te maken.**
 
 [![License: GPL-3.0](https://img.shields.io/badge/License-GPL%20v3-blue.svg)](LICENSE)
 [![Privacy](https://img.shields.io/badge/Privacy-100%25-brightgreen.svg)](PRIVACY.md)
-[![Status: Beta](https://img.shields.io/badge/Status-Beta-orange.svg)](#)
+[![Status: Beta](https://img.shields.io/badge/Status-0.8.1%20Beta-orange.svg)](#)
+
+> **⚠️ Bèta Fase:** Dit project bevindt zich momenteel in de bèta-fase. Dit betekent dat u nog bugs of fouten kunt tegenkomen. Ik doe mijn uiterste best om de app zo snel mogelijk te updaten en te verbeteren!
 
 ---
 
@@ -30,17 +32,28 @@
 
 ---
 
+## 🚀 Nieuw in Versie 0.8.1 Beta
+
+- **Globale UI Schaling Engine**: Een volledig vernieuwd schalingssysteem op basis van density. Geen handmatige multipliers meer! De hele interface (paddings, iconen, tekst) zoomt nu proportioneel mee.
+- **Intelligente Setup Wizard**: Een gloednieuwe stap-voor-stap installatiehulp met twee unieke routes:
+  - **De Mantelzorger route**: Snel alle machtigingen regelen, SOS-contacten instellen (tot 4 personen) en instellingen beveiligen met een pincode.
+  - **De Senior route**: Een zachte, visuele installatie met focus op leesbaarheid (oogtest) en simpele keuzes in kindertaal.
+- **Verbeterde Telefoon Ervaring**: Vernieuwde dialer met beter ruimtebeheer voor hoge zoomniveaus.
+- **Verbeterde Contacten-kiezer**: Zoek en selecteer direct meerdere SOS-contacten.
+- **Snelheidsverbeteringen**: Soepelere overgangen en sneller laden van systeemgegevens.
+- **Geheugen Optimalisatie**: Verbeterde stabiliteit van de build en afhandeling van Metaspace.
+
+---
+
 ## Waarom Senioren Launcher?
 
 Veel bestaande launchers voor senioren zijn onnodig duur, zitten vol advertenties of verzamelen stiekem data. Wij geloven dat onze ouders en grootouders beter verdienen. 
 
 Dit is een **passieproject waar ik alleen in mijn vrije tijd aan werk**, met als doel een launcher te bouwen die:
 
-- **Echt Simpel is** — Grote knoppen, duidelijke teksten en geen overbodige menu's.
+- **Echt Simpel is** — Grote knoppen, duijke teksten en geen overbodige menu's.
 - **Privacy voorop stelt** — Uw gegevens blijven op uw telefoon. Nul analytics, nul advertenties.
 - **100% Gratis & Open Source** — Voor iedereen beschikbaar zonder winstoogmerk.
-
-> **Let op:** Dit project is momenteel in **Bèta-fase**. Omdat ik dit naast mijn dagelijkse werk doe, kan de ontwikkeling soms iets langzamer gaan, maar ik werk er met veel liefde aan. **Mijn doel is om deze app uiteindelijk ook op F-Droid te publiceren.**
 
 ---
 
@@ -76,33 +89,11 @@ Een versimpelde agenda en een plek voor korte notities, zodat u nooit meer een a
 
 ---
 
-## 🛠️ Status van Ontwikkeling
-
-Omdat we transparant willen zijn over what wel en niet werkt in deze bèta:
-
-- **🛡️ Valdetectie**: Momenteel **experimenteel**. De gevoeligheid wordt nog getest om valse alarmen te voorkomen.
-- **🪫 Batterijwaarschuwing**: Deze functie is momenteel **in ontwikkeling** en werkt nog niet. 
-- **🌍 Talen**: De basis is Nederlands, andere talen volgen zodra ik daar tijd voor vind.
-
----
-
-## 🎨 Aanpassing & Beveiliging
-
-De launcher kan worden aangepast aan de behoeften van de gebruiker:
-- **Layouts**: Kies uit 2x3, 3x4 of 1x1 grid.
-- **Lettergrootte**: Alles kan extra groot worden weergegeven.
-- **🔒 Instellingen vergrendelen**: Beveilig de instellingen met een PIN-code.
-  - **Standaard PIN-code**: `1234`
-
----
-
 ## 🏗️ Technologie
-
-Ik gebruik moderne en veilige technologieën om de beste ervaring te bieden:
 
 | Component | Technologie |
 |-----------|-------------|
-| **Taal** | Kotlin 2.0 |
+| **Taal** | Kotlin 2.1 |
 | **UI** | Jetpack Compose + Material 3 |
 | **Architectuur** | MVVM + Clean Architecture |
 | **Database** | Room (SQLite) + DataStore |
@@ -117,7 +108,7 @@ Ik gebruik moderne en veilige technologieën om de beste ervaring te bieden:
 
 ## 🤝 Bijdragen
 
-Wil je helpen het project te verbeteren? Graag! Zie [CONTRIBUTING.md](CONTRIBUTING.md) voor de richtlijnen over het melden van bugs of het insturen van code.
+Wil je helpen het project te verbeteren? Graag! Zie [CONTRIBUTING.md](CONTRIBUTING.md) for de richtlijnen over het melden van bugs of het insturen van code.
 
 ## 🔒 Privacy
 

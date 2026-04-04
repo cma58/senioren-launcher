@@ -4,6 +4,7 @@ import android.content.Context
 import android.net.Uri
 import android.provider.Telephony
 import android.telephony.SmsManager
+import android.util.Log
 import android.widget.Toast
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -46,28 +47,100 @@ class MessagesViewModel : ViewModel() {
         viewModelScope.launch {
             try {
                 _isLoading.value = true
-                val list = withContext(Dispatchers.IO) {
-                    fetchConversationsInternal(context)
+                if (context.checkSelfPermission(android.Manifest.permission.READ_SMS) == android.content.pm.PackageManager.PERMISSION_GRANTED) {
+                    val list = withContext(Dispatchers.IO) {
+                        fetchConversationsInboxAndSent(context)
+                    }
+                    _allConversations.value = list
+                    Log.d("SMS_FIX", "Gesprekken gevonden: ${list.size}")
                 }
-                _allConversations.value = list
             } catch (e: Exception) {
-                e.printStackTrace()
+                Log.e("SMS_FIX", "Laden mislukt", e)
             } finally {
                 _isLoading.value = false
             }
         }
     }
 
+    private fun fetchConversationsInboxAndSent(context: Context): List<Conversation> {
+        val list = mutableListOf<Conversation>()
+        val addressMap = mutableMapOf<String, Conversation>()
+        val contentResolver = context.contentResolver
+        
+        try {
+            // Op Android 16/15 scan we de gehele CONTENT_URI (bevat inbox + verzonden)
+            // We gebruiken een brede query zonder groepering op database-niveau (dat blokkeert Android 16 soms)
+            val cursor = contentResolver.query(
+                Telephony.Sms.CONTENT_URI,
+                arrayOf(Telephony.Sms._ID, Telephony.Sms.ADDRESS, Telephony.Sms.BODY, Telephony.Sms.DATE, Telephony.Sms.READ, Telephony.Sms.THREAD_ID),
+                null, null, "date DESC"
+            )
+
+            cursor?.use {
+                val addrIdx = it.getColumnIndex(Telephony.Sms.ADDRESS)
+                val bodyIdx = it.getColumnIndex(Telephony.Sms.BODY)
+                val dateIdx = it.getColumnIndex(Telephony.Sms.DATE)
+                val readIdx = it.getColumnIndex(Telephony.Sms.READ)
+                val threadIdx = it.getColumnIndex(Telephony.Sms.THREAD_ID)
+
+                while (it.moveToNext() && addressMap.size < 100) {
+                    val address = it.getString(addrIdx) ?: continue
+                    
+                    // We groeperen op het nummer. We kijken of we dit nummer al hebben gezien.
+                    // We normaliseren het nummer naar de laatste 9 cijfers voor de match.
+                    val normalizedKey = address.replace(Regex("[^0-9]"), "").takeLast(9).ifEmpty { address }
+                    
+                    if (!addressMap.containsKey(normalizedKey)) {
+                        val snippet = it.getString(bodyIdx) ?: ""
+                        val date = it.getLong(dateIdx)
+                        val isRead = it.getInt(readIdx) == 1
+                        val threadId = it.getLong(threadIdx)
+                        val name = getContactName(context, address)
+                        
+                        val conv = Conversation(address, snippet, date, name, threadId, isRead)
+                        addressMap[normalizedKey] = conv
+                        list.add(conv)
+                    }
+                }
+            }
+        } catch (e: Exception) {
+            Log.e("SMS_FIX", "Rauwe scan gefaald", e)
+        }
+        return list.sortedByDescending { it.date }
+    }
+
     fun loadMessages(context: Context, address: String) {
         viewModelScope.launch {
             try {
                 val list = withContext(Dispatchers.IO) {
-                    fetchMessagesForAddressInternal(context, address)
+                    val messagesList = mutableListOf<SmsMessage>()
+                    // We zoeken op de laatste 9 cijfers van het nummer. 
+                    // Dit is de meest veilige match-methode na software updates.
+                    val matchPart = address.replace(Regex("[^0-9]"), "").takeLast(9).ifEmpty { address }
+                    val cursor = context.contentResolver.query(
+                        Telephony.Sms.CONTENT_URI,
+                        null,
+                        "${Telephony.Sms.ADDRESS} LIKE ?",
+                        arrayOf("%$matchPart"),
+                        "date DESC"
+                    )
+                    cursor?.use {
+                        val bodyIdx = it.getColumnIndex(Telephony.Sms.BODY)
+                        val typeIdx = it.getColumnIndex(Telephony.Sms.TYPE)
+                        val dateIdx = it.getColumnIndex(Telephony.Sms.DATE)
+                        while (it.moveToNext()) {
+                            val body = it.getString(bodyIdx) ?: ""
+                            val type = it.getInt(typeIdx)
+                            val date = it.getLong(dateIdx)
+                            messagesList.add(SmsMessage(body, date, type == Telephony.Sms.MESSAGE_TYPE_SENT))
+                        }
+                    }
+                    messagesList
                 }
                 _messages.value = list
                 markAsRead(context, address)
             } catch (e: Exception) {
-                e.printStackTrace()
+                Log.e("SMS_FIX", "Berichten laden gefaald voor $address", e)
             }
         }
     }
@@ -75,20 +148,18 @@ class MessagesViewModel : ViewModel() {
     private fun markAsRead(context: Context, address: String) {
         viewModelScope.launch(Dispatchers.IO) {
             try {
+                val matchPart = address.replace(Regex("[^0-9]"), "").takeLast(9).ifEmpty { address }
                 val values = android.content.ContentValues().apply {
                     put(Telephony.Sms.READ, 1)
                 }
                 context.contentResolver.update(
                     Telephony.Sms.CONTENT_URI,
                     values,
-                    "${Telephony.Sms.ADDRESS} = ? AND ${Telephony.Sms.READ} = 0",
-                    arrayOf(address)
+                    "${Telephony.Sms.ADDRESS} LIKE ? AND ${Telephony.Sms.READ} = 0",
+                    arrayOf("%$matchPart")
                 )
-                // Refresh conversations list to update unread badges
                 loadConversations(context)
-            } catch (e: Exception) {
-                e.printStackTrace()
-            }
+            } catch (e: Exception) { }
         }
     }
 
@@ -108,83 +179,14 @@ class MessagesViewModel : ViewModel() {
                     }
                     context.contentResolver.insert(Telephony.Sms.CONTENT_URI, values)
                 }
-                _messages.value = listOf(SmsMessage(body, System.currentTimeMillis(), true)) + _messages.value
-                loadConversations(context) // Update snippet in list
+                loadMessages(context, address)
+                loadConversations(context)
             } catch (e: Exception) {
                 withContext(Dispatchers.Main) {
-                    Toast.makeText(context, "Verzenden mislukt: ${e.message}", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, "Verzenden mislukt", Toast.LENGTH_SHORT).show()
                 }
             }
         }
-    }
-
-    private fun fetchConversationsInternal(context: Context): List<Conversation> {
-        val list = mutableListOf<Conversation>()
-        try {
-            val cursor = context.contentResolver.query(
-                Telephony.Sms.CONTENT_URI,
-                arrayOf(Telephony.Sms.THREAD_ID, Telephony.Sms.ADDRESS, Telephony.Sms.BODY, Telephony.Sms.DATE, Telephony.Sms.READ),
-                null, null, "${Telephony.Sms.DATE} DESC"
-            )
-
-            val seenThreads = mutableSetOf<Long>()
-
-            cursor?.use {
-                val threadIdIdx = it.getColumnIndex(Telephony.Sms.THREAD_ID)
-                val addressIdx = it.getColumnIndex(Telephony.Sms.ADDRESS)
-                val bodyIdx = it.getColumnIndex(Telephony.Sms.BODY)
-                val dateIdx = it.getColumnIndex(Telephony.Sms.DATE)
-                val readIdx = it.getColumnIndex(Telephony.Sms.READ)
-
-                while (it.moveToNext()) {
-                    val threadId = if (threadIdIdx != -1) it.getLong(threadIdIdx) else 0L
-                    if (threadId == 0L || seenThreads.contains(threadId)) continue
-                    seenThreads.add(threadId)
-
-                    val address = if (addressIdx != -1) it.getString(addressIdx) else null
-                    val snippet = if (bodyIdx != -1) it.getString(bodyIdx) ?: "" else ""
-                    val date = if (dateIdx != -1) it.getLong(dateIdx) else System.currentTimeMillis()
-                    val isRead = if (readIdx != -1) it.getInt(readIdx) == 1 else true
-
-                    if (address != null) {
-                        val name = getContactName(context, address)
-                        list.add(Conversation(address, snippet, date, name, threadId, isRead))
-                    }
-                }
-            }
-        } catch (e: Exception) {
-            e.printStackTrace()
-        }
-        return list
-    }
-
-    private fun fetchMessagesForAddressInternal(context: Context, address: String): List<SmsMessage> {
-        val list = mutableListOf<SmsMessage>()
-        try {
-            val cursor = context.contentResolver.query(
-                Telephony.Sms.CONTENT_URI,
-                null,
-                "${Telephony.Sms.ADDRESS} = ?",
-                arrayOf(address),
-                "${Telephony.Sms.DATE} DESC"
-            )
-
-            cursor?.use {
-                val bodyIdx = it.getColumnIndex(Telephony.Sms.BODY)
-                val typeIdx = it.getColumnIndex(Telephony.Sms.TYPE)
-                val dateIdx = it.getColumnIndex(Telephony.Sms.DATE)
-
-                while (it.moveToNext()) {
-                    val body = if (bodyIdx != -1) it.getString(bodyIdx) ?: "" else ""
-                    val type = if (typeIdx != -1) it.getInt(typeIdx) else Telephony.Sms.MESSAGE_TYPE_INBOX
-                    val date = if (dateIdx != -1) it.getLong(dateIdx) else System.currentTimeMillis()
-                    list.add(SmsMessage(body, date, type == Telephony.Sms.MESSAGE_TYPE_SENT))
-                }
-            }
-        } catch (e: Exception) {
-            e.printStackTrace()
-        }
-        return list
     }
 
     private fun getContactName(context: Context, phoneNumber: String): String? {
@@ -194,12 +196,10 @@ class MessagesViewModel : ViewModel() {
             cursor?.use {
                 if (it.moveToFirst()) {
                     val idx = it.getColumnIndex(android.provider.ContactsContract.PhoneLookup.DISPLAY_NAME)
-                    if (idx != -1) return it.getString(idx)
+                    return it.getString(idx)
                 }
             }
-        } catch (e: Exception) {
-            e.printStackTrace()
-        }
+        } catch (e: Exception) { }
         return null
     }
 }
