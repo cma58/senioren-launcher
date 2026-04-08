@@ -31,7 +31,7 @@
 
 ---
 
-## 🌟 Onze Visie: "Senioren-Eerst"
+## 🌟 Mij Visie: "Senioren-Eerst"
 De meeste smartphones zijn ontworpen voor jonge mensen. Wij draaien het om:
 - **Geen Toetsenborden:** Alles werkt met grote Plus/Min knoppen en simpele lijsten.
 - **Gigantische Elementen:** Teksten zijn minimaal 20-30sp. Knoppen zijn minstens 70dp hoog.
