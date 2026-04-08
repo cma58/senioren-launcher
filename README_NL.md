@@ -6,22 +6,34 @@
 [![Privacy](https://img.shields.io/badge/Privacy-100%25-brightgreen.svg)](PRIVACY.md)
 [![Status: Beta](https://img.shields.io/badge/Status-0.8.2%20Beta-orange.svg)](#)
 
-> **⚠️ Bèta Fase:** Dit project bevindt zich in de bèta-fase. Dit betekent dat u nog bugs kunt tegenkomen. Ik bouw dit project in mijn vrije tijd om onze (groot)ouders hun digitale vrijheid terug te geven.
+> **⚠️ Bèta Fase:** Dit project wordt in mijn vrije tijd gebouwd. Het is momenteel in bèta, wat betekent dat feedback en hulp bij het testen zeer welkom zijn!
 
 ---
 
-## 📢 Oproep aan Testers & Feedback
-Ik ben continu bezig de launcher te verbeteren, maar omdat ik niet elk type Android-toestel in huis heb, heb ik jouw hulp nodig!
+## 📢 Snelkoppelingen naar Documentatie
+- 📖 **[Handleiding voor Beheerders](DOCS_BEHEERDER_NL.md)** — Hoe stel je de app in voor een familielid?
+- 📟 **[Volledig SMS Commando Overzicht](COMMANDS_NL.md)** — Een diepe duik in alle 40+ afstandsbediening-codes.
+- 📬 **Contact & Testers Gezocht:** Ik zoek mensen die de SMS-functies willen testen op verschillende toestellen. Bug? Mail naar [amine.chtaiti@gmail.com](mailto:amine.chtaiti@gmail.com).
 
-**Help mee het project te verbeteren:**
-Ik zoek testers die de functies (met name de SMS-commando's) grondig willen uitproberen op verschillende toestellen (Samsung, Nokia, Motorola, etc.). Heb je advies, een suggestie voor een nieuwe functie of heb je een bug gevonden?
-- **Contact & Bug Reports:** [amine.chtaiti@gmail.com](mailto:amine.chtaiti@gmail.com)
+---
+
+## 📸 Screenshots
+<p align="center">
+  <img src="screenshots/screenshot_home.jpeg" width="250" title="Startscherm">
+  <img src="screenshots/screenshot_phone.jpeg" width="250" title="Telefoon">
+  <img src="screenshots/screenshot_weather.jpeg" width="250" title="Weer & Advies">
+</p>
+<p align="center">
+  <img src="screenshots/screenshot_medication.jpeg" width="250" title="Medicijnen">
+  <img src="screenshots/screenshot_emergency.jpeg" width="250" title="Noodinfo">
+  <img src="screenshots/screenshot_remote_support.jpeg" width="250" title="Hulp op Afstand">
+</p>
 
 ---
 
 ## 🌟 Onze Visie: "Senioren-Eerst"
-De meeste smartphones zijn ontworpen voor jonge mensen. Wij draaien het om. De Senioren Launcher is gebouwd volgens strikte UX-regels voor ouderen:
-- **Geen Toetsenborden:** Alles werkt met grote plus/min knoppen en duidelijke lijsten.
+De meeste smartphones zijn ontworpen voor jonge mensen. Wij draaien het om:
+- **Geen Toetsenborden:** Alles werkt met grote Plus/Min knoppen en simpele lijsten.
 - **Gigantische Elementen:** Teksten zijn minimaal 20-30sp. Knoppen zijn minstens 70dp hoog.
 - **Contrast & Duidelijkheid:** Geen vage icoontjes, maar harde teksten zoals "OPHANGEN" of "OPSLAAN".
 - **Digitale Rust:** Geen onnodige notificaties of ingewikkelde veeg-bewegingen.
@@ -29,62 +41,17 @@ De meeste smartphones zijn ontworpen voor jonge mensen. Wij draaien het om. De S
 ---
 
 ## ✨ Belangrijkste Functies
-
-### 📞 Bellen & Contacten
-- **Simpele Dialer:** Grote nummertoetsen die trillen bij aanraking.
-- **Favorieten met Foto:** Bel familie met één klik op hun gezicht.
-- **Mijn Nummer:** Het eigen nummer staat altijd bovenaan voor het geval ze het vergeten.
-- **NOOD 112:** Een directe knop met een extra bevestiging om vals alarm te voorkomen.
-
-### 💬 Berichten (SMS)
-- **Leesbaarheid:** Berichten worden gegroepeerd per dag met een zeer groot lettertype.
-- **Direct Zoomen:** Verander de tekstgrootte direct in het gesprek met grote knoppen.
-- **Veiligheid:** Onbekende of spam-berichten worden duidelijk gemarkeerd.
-
-### 🆘 SOS & Veiligheid
-- **SOS Knop:** Houd 3 seconden ingedrukt om direct alle noodcontacten te bellen en een SMS te sturen met de exacte GPS-locatie.
-- **Valdetectie:** Gebruikt de sensoren van de telefoon om een val te detecteren en automatisch hulp in te schakelen (Experimenteel).
-- **Noodinfo:** Medische gegevens (bloedgroep, allergieën) direct toegankelijk voor hulpverleners vanaf het hoofdscherm.
-
-### 💊 Medicijnen & Wellness
-- **Herinneringen:** Meldingen met foto's van de medicijnen.
-- **Voorraad:** De app houdt bij hoeveel pillen er nog zijn en waarschuwt de familie bij een bijna lege strip.
-- **Stappen & Radio:** Ingebouwde stappenteller en een simpele radio voor ontspanning.
-
----
-
-## 🎮 Beheer op Afstand (Remote Support)
-
-> **⚠️ Experimentele Functie:** Deze functies zijn succesvol getest op onze testtoestellen. Vanwege de grote variatie in Android-modellen (Samsung, Nokia, etc.) beschouwen we dit als experimenteel. Test de commando's altijd eerst zelf.
-
-Beheerders kunnen de telefoon via een simpele SMS aansturen vanaf hun eigen toestel:
-
-| Commando | Actie | Voorbeeld |
-|----------|-------|-----------|
-| **`#WAAR`** | Ontvang de actuele GPS-locatie via Google Maps link. | `#WAAR` |
-| **`#STATUS`** | Check Batterij %, Volume en of de telefoon op Stil staat. | `#STATUS` |
-| **`#PING`** | Toon een "ALLES GOED?" check op het scherm. | `#PING` |
-| **`#BEL_TERUG`**| De telefoon belt de beheerder automatisch terug. | `#BEL_TERUG` |
-| **`#LAMP`** | Zet de zaklamp aan of uit. | `#LAMP AAN` |
-| **`#KNIPPER`** | Laat de zaklamp 10x knipperen (visueel signaal). | `#KNIPPER` |
-| **`#OPEN`** | Open op afstand een app (bijv. WhatsApp). | `#OPEN WhatsApp` |
-| **`#BERICHT`** | Toon een grote popup die hardop wordt voorgelezen. | `#BERICHT De kapper komt om 14u` |
-| **`#VOLUME`** | Stel geluid in (schaal 1-10). | `#VOLUME 10` |
-| **`#HELDER`** | Stel helderheid in (schaal 1-10). | `#HELDER 10` |
-| **`#WEKKER`** | Stel op afstand een wekker in. | `#WEKKER 08:30 Ontbijt` |
-| **`#HELP`** | Ontvang alle codes op je eigen telefoon. | `#HELP` |
+- **📞 Bellen:** Grote dialer met favorieten (foto's) en 112-beveiliging.
+- **💬 Berichten:** Extra grote SMS-weergave met directe tekst-zoom.
+- **🆘 SOS:** Houd de knop 3 seconden vast voor noodoproepen en GPS-locatie SMS.
+- **💊 Medicijnen:** Herinneringen met foto's en voorraadbeheer.
+- **🎮 Remote Support:** Beheer de telefoon volledig via SMS (geen internet nodig).
 
 ---
 
 ## 🏗️ Technologie & Veiligheid
-- **Kotlin 2.1 & Jetpack Compose:** Moderne, snelle en stabiele code.
-- **Android 16 Ready:** Gebruikt de nieuwste API's voor maximale betrouwbaarheid op nieuwe toestellen.
-- **Privacy:** 100% lokaal. Geen dataverzameling, geen cloud, geen advertenties.
-- **Batterij-efficiënt:** Geoptimaliseerd om de accu van oudere toestellen te sparen.
-
----
-
-## 🤝 Bijdragen & Support
-Dit is een open-source project. Heb je een bug gevonden op jouw toestel? Laat het weten via de Issues op GitHub of stuur een e-mail naar [amine.chtaiti@gmail.com](mailto:amine.chtaiti@gmail.com).
+- **Kotlin 2.1 & Jetpack Compose:** Moderne en stabiele architectuur.
+- **Android 16 Ready:** Gebruikt de nieuwste API's voor privacy en veiligheid.
+- **100% Lokaal:** Uw data blijft op uw toestel. Geen cloud, geen advertenties.
 
 *"Technologie moet mensen verbinden, niet uitsluiten."* ❤️

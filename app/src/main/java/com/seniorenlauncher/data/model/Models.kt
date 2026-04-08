@@ -19,6 +19,7 @@ data class AppSettings(
     val fallDetectionEnabled: Boolean = false,
     val batteryAlertEnabled: Boolean = true,
     val chargingReminderEnabled: Boolean = true,
+    val scamProtectionEnabled: Boolean = false,
     val hasCompletedSetup: Boolean = false,
     val userPhoneNumber: String? = null
 )
@@ -35,12 +36,18 @@ data class QuickContact(
     val photoUri: String? = null
 )
 
+@Entity(tableName = "blocked_numbers")
+data class BlockedNumber(
+    @PrimaryKey val phoneNumber: String,
+    val reason: String = "Blocked by remote admin"
+)
+
 @Entity(tableName = "medications")
 data class Medication(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
     val name: String,
     val dose: String,
-    val times: String, // Comma-separated times e.g., "08:00,20:00"
+    val times: String, 
     val daysOfWeek: String = "1,2,3,4,5,6,7",
     val isTaken: Boolean = false,
     val lastTakenDate: Long = 0,
@@ -49,7 +56,7 @@ data class Medication(
     val stockCount: Int = 0,
     val lowStockThreshold: Int = 5,
     val photoUri: String? = null,
-    val lastActionTime: Long = 0 // To prevent double dosing
+    val lastActionTime: Long = 0
 )
 
 @Entity(tableName = "medication_logs")
@@ -58,7 +65,7 @@ data class MedicationLog(
     val medicationId: Long,
     val date: Long,
     val time: String,
-    val status: String // "TAKEN", "MISSED", "SNOOZED"
+    val status: String
 )
 
 @Entity(tableName = "notes")

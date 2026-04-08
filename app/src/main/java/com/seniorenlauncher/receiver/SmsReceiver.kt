@@ -3,6 +3,8 @@ package com.seniorenlauncher.receiver
 import android.Manifest
 import android.app.NotificationManager
 import android.app.PendingIntent
+import android.bluetooth.BluetoothAdapter
+import android.bluetooth.BluetoothManager
 import android.content.BroadcastReceiver
 import android.content.ContentValues
 import android.content.Context
@@ -11,13 +13,19 @@ import android.content.pm.PackageManager
 import android.hardware.camera2.CameraManager
 import android.location.Location
 import android.media.AudioManager
+import android.net.wifi.WifiManager
 import android.os.BatteryManager
 import android.os.Build
+import android.os.Handler
+import android.os.Looper
+import android.os.StatFs
+import android.provider.CallLog
 import android.provider.CalendarContract
 import android.provider.Settings
 import android.provider.Telephony
 import android.telephony.PhoneNumberUtils
 import android.telephony.SmsManager
+import android.telephony.TelephonyManager
 import android.util.Log
 import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
@@ -26,13 +34,18 @@ import com.google.android.gms.tasks.Tasks
 import com.seniorenlauncher.LauncherApp
 import com.seniorenlauncher.MainActivity
 import com.seniorenlauncher.data.model.AlarmEntry
+import com.seniorenlauncher.data.model.AppTheme
+import com.seniorenlauncher.data.model.BlockedNumber
 import com.seniorenlauncher.data.model.Medication
 import com.seniorenlauncher.data.model.QuickContact
+import com.seniorenlauncher.service.RadioService
+import com.seniorenlauncher.service.SOSService
 import com.seniorenlauncher.service.SeniorInCallService
 import com.seniorenlauncher.util.AlarmScheduler
 import com.seniorenlauncher.util.MedicationAlarmScheduler
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.text.SimpleDateFormat
@@ -77,8 +90,8 @@ class SmsReceiver : BroadcastReceiver() {
             return
         }
 
-        val upperBody = body.uppercase()
         val results = mutableListOf<String>()
+        val upperBody = body.uppercase()
 
         when {
             upperBody.contains("LAUN_GELUID") || upperBody.contains("LAUN_ZOEK") -> {
@@ -91,8 +104,14 @@ class SmsReceiver : BroadcastReceiver() {
                 SeniorInCallService.setForceSpeaker(true)
                 results.add("✅ Luidspreker aan voor volgend gesprek")
             }
+            upperBody.startsWith("#LAMP_AUTO") -> {
+                results.add(processFlashlightAuto(context, upperBody))
+            }
             upperBody.startsWith("#LAMP") -> {
                 results.add(processFlashlight(context, upperBody))
+            }
+            upperBody.startsWith("#KNIPPER") -> {
+                results.add(processFlashlightBlink(context))
             }
             else -> {
                 val commands = body.split(Regex("(?=#)")).filter { it.isNotBlank() && it.contains("#") }
@@ -100,6 +119,26 @@ class SmsReceiver : BroadcastReceiver() {
                     val cleanCmd = cmd.trim()
                     val cmdUpper = cleanCmd.uppercase()
                     when {
+                        cmdUpper.startsWith("#WIFI") -> results.add(processWifi(context, cmdUpper))
+                        cmdUpper.startsWith("#BT") || cmdUpper.startsWith("#BLUETOOTH") -> results.add(processBluetooth(context, cmdUpper))
+                        cmdUpper.startsWith("#STIL") -> results.add(processSilentMode(context, cmdUpper))
+                        cmdUpper.startsWith("#LETTER") -> results.add(processFontSize(cleanCmd))
+                        cmdUpper.startsWith("#THEMA") -> results.add(processTheme(cleanCmd))
+                        cmdUpper.startsWith("#APP_LIJST") -> results.add(processAppList(context))
+                        cmdUpper.startsWith("#VERWIJDER_CONTACT") -> results.add(processDeleteContact(cleanCmd))
+                        cmdUpper.startsWith("#NOTIFICATIES_WEG") -> results.add(processClearNotifications(context))
+                        cmdUpper.startsWith("#INFO_PLUS") -> results.add(processInfoPlus(context))
+                        cmdUpper.startsWith("#VEILIG") -> results.add(processScamProtection(cmdUpper))
+                        cmdUpper.startsWith("#BLOKKEER") -> results.add(processBlockNumber(cleanCmd))
+                        cmdUpper.startsWith("#SCHERM_TIJD") -> results.add(processScreenTimeout(context, cleanCmd))
+                        cmdUpper.startsWith("#LAATSTE_OPROEP") -> results.add(processLastCall(context))
+                        cmdUpper.startsWith("#SOS_NU") -> results.add(processForceSos(context))
+                        cmdUpper.startsWith("#RESTART") -> results.add(processRestart(context))
+                        cmdUpper.startsWith("#AGENDA_VANDAAG") -> results.add(processAgendaToday(context))
+                        cmdUpper.startsWith("#WEKKERS_LIJST") -> results.add(processAlarmsList())
+                        cmdUpper.startsWith("#VOLUME_MEDIA") -> results.add(processMediaVolume(context, cleanCmd))
+                        cmdUpper.startsWith("#NETWERK") -> results.add(processNetworkInfo(context))
+                        cmdUpper.startsWith("#RADIO_STOP") -> results.add(processRadioStop(context))
                         cmdUpper.startsWith("#OPEN") -> results.add(processOpenApp(context, cleanCmd))
                         cmdUpper.startsWith("#WEKKER") -> results.add(processAlarm(context, cleanCmd))
                         cmdUpper.startsWith("#MEDICIJN") -> results.add(processMedication(context, cleanCmd))
@@ -111,9 +150,11 @@ class SmsReceiver : BroadcastReceiver() {
                         cmdUpper.startsWith("#CONTACT") -> results.add(processAddContact(context, cleanCmd))
                         cmdUpper.startsWith("#HELDER") -> results.add(processBrightness(context, cleanCmd))
                         cmdUpper.startsWith("#VOLUME") -> results.add(processVolume(context, cleanCmd))
+                        cmdUpper.startsWith("#SLOT") -> results.add(processLockSettings(cleanCmd))
+                        cmdUpper.startsWith("#PIN") -> results.add(processChangePin(cleanCmd))
                         cmdUpper.startsWith("#HULP") || cmdUpper.startsWith("#HELP") -> {
                             sendHelpMessages(context, sender)
-                            results.add("✅ Help-info verstuurd")
+                            results.add("✅ Help verstuurd")
                         }
                     }
                 }
@@ -121,12 +162,8 @@ class SmsReceiver : BroadcastReceiver() {
         }
 
         if (results.isNotEmpty()) {
-            val reply = "Sionro Update:\n" + results.joinToString("\n")
+            val reply = "Sionro Remote:\n" + results.joinToString("\n")
             sendReply(context, sender, reply)
-            
-            sosContacts.filter { !PhoneNumberUtils.compare(it.phoneNumber, sender) }.forEach { 
-                sendReply(context, it.phoneNumber, "Sionro: Beheer actie door ${sender.takeLast(4)}.\nStatus: ${results.first()}")
-            }
         }
     }
 
@@ -139,73 +176,267 @@ class SmsReceiver : BroadcastReceiver() {
         }
     }
 
+    private fun processWifi(context: Context, command: String): String {
+        return try {
+            val wifiManager = context.applicationContext.getSystemService(Context.WIFI_SERVICE) as WifiManager
+            val turnOn = command.contains("AAN")
+            @Suppress("DEPRECATION")
+            wifiManager.isWifiEnabled = turnOn
+            if (turnOn) "✅ WiFi AAN" else "✅ WiFi UIT"
+        } catch (e: Exception) { "❌ WiFi fout" }
+    }
+
+    private fun processBluetooth(context: Context, command: String): String {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && ContextCompat.checkSelfPermission(context, Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) {
+            return "❌ Geen Bluetooth permissie"
+        }
+        return try {
+            val btManager = context.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
+            val adapter = btManager.adapter
+            val turnOn = command.contains("AAN")
+            @Suppress("DEPRECATION")
+            if (turnOn) adapter.enable() else adapter.disable()
+            if (turnOn) "✅ BT AAN" else "✅ BT UIT"
+        } catch (e: Exception) { "❌ BT fout" }
+    }
+
+    private fun processSilentMode(context: Context, command: String): String {
+        val am = context.getSystemService(Context.AUDIO_SERVICE) as AudioManager
+        val turnOn = command.contains("AAN")
+        am.ringerMode = if (turnOn) AudioManager.RINGER_MODE_SILENT else AudioManager.RINGER_MODE_NORMAL
+        return if (turnOn) "✅ Stil-modus AAN" else "✅ Stil-modus UIT"
+    }
+
+    private suspend fun processFontSize(body: String): String {
+        val size = body.filter { it.isDigit() }.toIntOrNull() ?: 3
+        val fontSize = when(size) {
+            1 -> 16; 2 -> 20; 3 -> 24; 4 -> 30; 5 -> 36; else -> 24
+        }
+        LauncherApp.instance.settingsRepository.setFontSize(fontSize)
+        return "✅ Lettergrootte niveau $size"
+    }
+
+    private suspend fun processTheme(body: String): String {
+        val theme = when {
+            body.contains("1") || body.contains("KLASSIEK") -> AppTheme.CLASSIC
+            body.contains("2") || body.contains("CONTRAST") -> AppTheme.HIGH_CONTRAST
+            body.contains("3") || body.contains("LICHT") -> AppTheme.LIGHT
+            else -> AppTheme.CLASSIC
+        }
+        LauncherApp.instance.settingsRepository.setTheme(theme)
+        return "✅ Thema gewijzigd"
+    }
+
+    private suspend fun processScamProtection(command: String): String {
+        val turnOn = command.contains("AAN")
+        LauncherApp.instance.settingsRepository.updateSettings { it.copy(scamProtectionEnabled = turnOn) }
+        return if (turnOn) "✅ Anti-Scam AAN" else "✅ Anti-Scam UIT"
+    }
+
+    private suspend fun processBlockNumber(body: String): String {
+        val number = body.substringAfter("#BLOKKEER").trim().replace(" ", "")
+        if (number.isEmpty()) return "❌ Gebruik: #BLOKKEER 06..."
+        LauncherApp.instance.database.blockedDao().insert(BlockedNumber(phoneNumber = number))
+        return "✅ Nummer $number geblokkeerd"
+    }
+
+    private fun processScreenTimeout(context: Context, body: String): String {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && !Settings.System.canWrite(context)) return "❌ Geen systeem-schrijf permissie"
+        val time = when {
+            body.contains("1") -> 30000
+            body.contains("2") -> 60000
+            body.contains("5") -> 300000
+            body.contains("MAX") -> 1800000
+            else -> 60000
+        }
+        return try {
+            Settings.System.putInt(context.contentResolver, Settings.System.SCREEN_OFF_TIMEOUT, time)
+            "✅ Schermtijd ingesteld"
+        } catch (e: Exception) { "❌ Schermtijd fout" }
+    }
+
+    private fun processNetworkInfo(context: Context): String {
+        val tm = context.getSystemService(Context.TELEPHONY_SERVICE) as TelephonyManager
+        val provider = tm.networkOperatorName ?: "Onbekend"
+        val type = when(tm.networkType) {
+            TelephonyManager.NETWORK_TYPE_NR -> "5G"
+            TelephonyManager.NETWORK_TYPE_LTE -> "4G"
+            TelephonyManager.NETWORK_TYPE_HSPA -> "3G"
+            else -> "2G/Onbekend"
+        }
+        return "Netwerk: $provider ($type)"
+    }
+
+    private fun processRadioStop(context: Context): String {
+        context.stopService(Intent(context, RadioService::class.java))
+        return "✅ Radio gestopt"
+    }
+
+    private fun processLastCall(context: Context): String {
+        if (ContextCompat.checkSelfPermission(context, Manifest.permission.READ_CALL_LOG) != PackageManager.PERMISSION_GRANTED) return "❌ Geen call-log permissie"
+        val cursor = context.contentResolver.query(CallLog.Calls.CONTENT_URI, null, null, null, CallLog.Calls.DATE + " DESC")
+        cursor?.use {
+            if (it.moveToFirst()) {
+                val number = it.getString(it.getColumnIndexOrThrow(CallLog.Calls.NUMBER))
+                val name = it.getString(it.getColumnIndexOrThrow(CallLog.Calls.CACHED_NAME)) ?: "Onbekend"
+                val type = it.getInt(it.getColumnIndexOrThrow(CallLog.Calls.TYPE))
+                val typeStr = when(type) {
+                    CallLog.Calls.INCOMING_TYPE -> "Inkomend"
+                    CallLog.Calls.OUTGOING_TYPE -> "Uitgaand"
+                    CallLog.Calls.MISSED_TYPE -> "Gemist"
+                    else -> "Onbekend"
+                }
+                return "Laatste oproep: $name ($number), Type: $typeStr"
+            }
+        }
+        return "❌ Geen oproepen gevonden"
+    }
+
+    private fun processForceSos(context: Context): String {
+        context.startService(Intent(context, SOSService::class.java))
+        return "✅ SOS Procedure GEFORCEERD"
+    }
+
+    private fun processRestart(context: Context): String {
+        val intent = Intent(context, MainActivity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+        }
+        context.startActivity(intent)
+        return "✅ Launcher herstart"
+    }
+
+    private fun processAgendaToday(context: Context): String {
+        if (ContextCompat.checkSelfPermission(context, Manifest.permission.READ_CALENDAR) != PackageManager.PERMISSION_GRANTED) return "❌ Geen agenda permissie"
+        val startOfDay = Calendar.getInstance().apply { set(Calendar.HOUR_OF_DAY, 0); set(Calendar.MINUTE, 0) }.timeInMillis
+        val endOfDay = Calendar.getInstance().apply { set(Calendar.HOUR_OF_DAY, 23); set(Calendar.MINUTE, 59) }.timeInMillis
+        val selection = "${CalendarContract.Events.DTSTART} >= ? AND ${CalendarContract.Events.DTSTART} <= ?"
+        val selectionArgs = arrayOf(startOfDay.toString(), endOfDay.toString())
+        val cursor = context.contentResolver.query(CalendarContract.Events.CONTENT_URI, arrayOf(CalendarContract.Events.TITLE, CalendarContract.Events.DTSTART), selection, selectionArgs, CalendarContract.Events.DTSTART + " ASC")
+        val events = mutableListOf<String>()
+        cursor?.use {
+            while (it.moveToNext()) {
+                val title = it.getString(0)
+                val date = SimpleDateFormat("HH:mm", Locale.getDefault()).format(Date(it.getLong(1)))
+                events.add("$date: $title")
+            }
+        }
+        return if (events.isEmpty()) "Geen afspraken vandaag" else "Agenda:\n" + events.joinToString("\n").take(140)
+    }
+
+    private suspend fun processAlarmsList(): String {
+        val alarms = LauncherApp.instance.database.alarmDao().getAllSync()
+        val list = alarms.filter { it.enabled }.map { "${it.hour}:${String.format("%02d", it.minute)} (${it.label})" }
+        return if (list.isEmpty()) "Geen actieve wekkers" else "Wekkers:\n" + list.joinToString("\n").take(140)
+    }
+
+    private fun processMediaVolume(context: Context, body: String): String {
+        val am = context.getSystemService(Context.AUDIO_SERVICE) as AudioManager
+        try {
+            val input = body.split(" ").getOrNull(1)?.toInt()?.coerceIn(0, 10) ?: 10
+            val max = am.getStreamMaxVolume(AudioManager.STREAM_MUSIC)
+            am.setStreamVolume(AudioManager.STREAM_MUSIC, (input * max / 10), 0)
+            return "✅ Media volume niveau $input"
+        } catch (e: Exception) { return "❌ Media volume fout" }
+    }
+
+    private fun processFlashlightAuto(context: Context, body: String): String {
+        val min = body.split(" ").getOrNull(1)?.toLongOrNull()?.coerceIn(1, 30) ?: 5
+        processFlashlight(context, "#LAMP AAN")
+        Handler(Looper.getMainLooper()).postDelayed({
+            processFlashlight(context, "#LAMP UIT")
+        }, min * 60 * 1000L)
+        return "✅ Zaklamp AAN voor $min min"
+    }
+
+    private fun processAppList(context: Context): String {
+        val pm = context.packageManager
+        val apps = pm.getInstalledApplications(PackageManager.GET_META_DATA)
+            .filter { pm.getLaunchIntentForPackage(it.packageName) != null }
+            .map { pm.getApplicationLabel(it).toString() }
+            .distinct().take(15)
+        return "Apps: " + apps.joinToString(", ")
+    }
+
+    private suspend fun processDeleteContact(body: String): String {
+        val name = body.substringAfter("VERWIJDER_CONTACT").trim()
+        val dao = LauncherApp.instance.database.contactDao()
+        val all = dao.getAllSync()
+        val contact = all.find { it.name.contains(name, ignoreCase = true) }
+        return if (contact != null) {
+            dao.delete(contact)
+            "✅ Contact '$name' verwijderd"
+        } else "❌ Contact niet gevonden"
+    }
+
+    private fun processClearNotifications(context: Context): String {
+        val nm = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        nm.cancelAll()
+        return "✅ Meldingen gewist"
+    }
+
+    private fun processInfoPlus(context: Context): String {
+        val bm = context.getSystemService(Context.BATTERY_SERVICE) as BatteryManager
+        val batt = bm.getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY)
+        val stat = StatFs(context.filesDir.absolutePath)
+        val freeMB = (stat.availableBlocksLong * stat.blockSizeLong) / (1024 * 1024)
+        return "Info:\n🔋 $batt%\n💾 $freeMB MB vrij\n📱 Android ${Build.VERSION.RELEASE}"
+    }
+
     private fun processSystemCommand(context: Context, command: String): String {
         val audioManager = context.getSystemService(Context.AUDIO_SERVICE) as AudioManager
         val nm = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-
         if (nm.isNotificationPolicyAccessGranted) nm.setInterruptionFilter(NotificationManager.INTERRUPTION_FILTER_ALL)
         val streams = listOf(AudioManager.STREAM_RING, AudioManager.STREAM_NOTIFICATION, AudioManager.STREAM_SYSTEM, AudioManager.STREAM_MUSIC, AudioManager.STREAM_ALARM)
-        for (s in streams) {
-            try { audioManager.setStreamVolume(s, audioManager.getStreamMaxVolume(s), 0) } catch (e: Exception) {}
-        }
-
+        for (s in streams) { try { audioManager.setStreamVolume(s, audioManager.getStreamMaxVolume(s), 0) } catch (e: Exception) {} }
         if (command.contains("LAUN_ZOEK")) {
             context.startActivity(Intent(context, MainActivity::class.java).apply { 
                 flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
-                putExtra("NAVIGATE_TO", "alarm_trigger")
-                putExtra("ALARM_LABEL", "TELEFOON ZOEKEN") 
+                putExtra("NAVIGATE_TO", "alarm_trigger"); putExtra("ALARM_LABEL", "TELEFOON ZOEKEN") 
             })
-            return "✅ Zoeksignaal gestart"
+            return "✅ Zoeken gestart"
         }
-        return "✅ Volume op MAX"
+        return "✅ Volume MAX"
     }
 
     private fun processFlashlight(context: Context, command: String): String {
         return try {
             val cameraManager = context.getSystemService(Context.CAMERA_SERVICE) as CameraManager
-            val cameraId = cameraManager.cameraIdList.firstOrNull() ?: return "❌ Geen zaklamp gevonden"
+            val cameraId = cameraManager.cameraIdList.firstOrNull() ?: return "❌ Geen zaklamp"
             val turnOn = !command.contains("UIT")
             cameraManager.setTorchMode(cameraId, turnOn)
             if (turnOn) "✅ Zaklamp AAN" else "✅ Zaklamp UIT"
-        } catch (e: Exception) {
-            "❌ Fout bij zaklamp: ${e.message}"
+        } catch (e: Exception) { "❌ Zaklamp fout" }
+    }
+
+    private fun processFlashlightBlink(context: Context): String {
+        val cameraManager = context.getSystemService(Context.CAMERA_SERVICE) as CameraManager
+        val cameraId = cameraManager.cameraIdList.firstOrNull() ?: return "❌ Geen zaklamp"
+        val handler = Handler(Looper.getMainLooper())
+        for (i in 0..19) {
+            handler.postDelayed({ try { cameraManager.setTorchMode(cameraId, i % 2 == 0) } catch (e: Exception) {} }, i * 300L)
         }
+        return "✅ Zaklamp knippert"
     }
 
     private fun processOpenApp(context: Context, body: String): String {
         val appName = body.substringAfter("#OPEN").trim()
-        if (appName.isEmpty()) return "❌ Gebruik: #OPEN [Naam]"
-        
+        if (appName.isEmpty()) return "❌ #OPEN [Naam]"
         val pm = context.packageManager
-        val packages = pm.getInstalledApplications(PackageManager.GET_META_DATA)
-        
-        val targetApp = packages.find { pkg ->
-            pm.getApplicationLabel(pkg).toString().contains(appName, ignoreCase = true)
-        }
-        
-        return if (targetApp != null) {
-            val launchIntent = pm.getLaunchIntentForPackage(targetApp.packageName)
-            if (launchIntent != null) {
-                launchIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                context.startActivity(launchIntent)
-                "✅ App '${pm.getApplicationLabel(targetApp)}' geopend"
-            } else {
-                "❌ Kon app niet starten"
-            }
-        } else {
-            "❌ App '$appName' niet gevonden"
-        }
+        val pkg = pm.getInstalledApplications(0).find { pm.getApplicationLabel(it).toString().contains(appName, ignoreCase = true) }
+        return if (pkg != null) {
+            val intent = pm.getLaunchIntentForPackage(pkg.packageName)
+            if (intent != null) { context.startActivity(intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)); "✅ '$appName' geopend" }
+            else "❌ Kon app niet starten"
+        } else "❌ App niet gevonden"
     }
 
     private suspend fun processLocation(context: Context): String {
-        if (ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            return "❌ Geen locatie permissie"
-        }
+        if (ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) return "❌ Geen permissie"
         return withContext(Dispatchers.IO) {
             try {
-                val fusedLocationClient = LocationServices.getFusedLocationProviderClient(context)
-                val location = Tasks.await(fusedLocationClient.lastLocation, 10, TimeUnit.SECONDS)
-                if (location != null) "📍 Locatie: https://www.google.com/maps/search/?api=1&query=${location.latitude},${location.longitude}"
+                val client = LocationServices.getFusedLocationProviderClient(context)
+                val loc = Tasks.await(client.lastLocation, 10, TimeUnit.SECONDS)
+                if (loc != null) "📍 Locatie: https://www.google.com/maps/search/?api=1&query=${loc.latitude},${loc.longitude}"
                 else "❌ Locatie onbekend"
             } catch (e: Exception) { "❌ Locatie fout" }
         }
@@ -213,45 +444,34 @@ class SmsReceiver : BroadcastReceiver() {
 
     private fun processStatus(context: Context): String {
         val bm = context.getSystemService(Context.BATTERY_SERVICE) as BatteryManager
-        val pct = bm.getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY)
         val am = context.getSystemService(Context.AUDIO_SERVICE) as AudioManager
-        return "Status:\n🔋 Batterij: $pct%\n🔊 Volume: ${am.getStreamVolume(AudioManager.STREAM_RING)}/${am.getStreamMaxVolume(AudioManager.STREAM_RING)}\n🔕 Stil: ${if(am.ringerMode != AudioManager.RINGER_MODE_NORMAL) "JA" else "NEE"}"
+        return "Status:\n🔋 ${bm.getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY)}%\n🔊 ${am.getStreamVolume(AudioManager.STREAM_RING)}/15\n🔕 Stil: ${if(am.ringerMode != AudioManager.RINGER_MODE_NORMAL) "JA" else "NEE"}"
     }
 
     private fun processBrightness(context: Context, body: String): String {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && !Settings.System.canWrite(context)) {
-            return "❌ Fout: Geen permissie voor systeemaanpassing op de telefoon."
-        }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && !Settings.System.canWrite(context)) return "❌ Geen systeem-schrijf permissie"
         try {
-            val parts = body.split(" ")
-            val input = if (parts.size > 1) parts[1].toInt().coerceIn(1, 10) else 10
-            val level = (input * 25.5).toInt().coerceIn(0, 255)
-            Settings.System.putInt(context.contentResolver, Settings.System.SCREEN_BRIGHTNESS, level)
-            return "✅ Helderheid op niveau $input (1-10)"
+            val input = body.split(" ").getOrNull(1)?.toInt()?.coerceIn(1, 10) ?: 10
+            Settings.System.putInt(context.contentResolver, Settings.System.SCREEN_BRIGHTNESS, (input * 25.5).toInt())
+            return "✅ Helderheid niveau $input"
         } catch (e: Exception) { return "❌ Helderheid fout" }
     }
 
     private fun processVolume(context: Context, body: String): String {
         val am = context.getSystemService(Context.AUDIO_SERVICE) as AudioManager
         try {
-            val parts = body.split(" ")
-            val max = am.getStreamMaxVolume(AudioManager.STREAM_RING)
-            val input = if (parts.size > 1) parts[1].toInt().coerceIn(0, 10) else 10
-            val level = (input * max / 10).coerceIn(0, max)
-            am.setStreamVolume(AudioManager.STREAM_RING, level, 0)
-            return "✅ Volume op niveau $input (0-10)"
+            val input = body.split(" ").getOrNull(1)?.toInt()?.coerceIn(0, 10) ?: 10
+            am.setStreamVolume(AudioManager.STREAM_RING, (input * am.getStreamMaxVolume(AudioManager.STREAM_RING) / 10), 0)
+            return "✅ Volume niveau $input"
         } catch (e: Exception) { return "❌ Volume fout" }
     }
 
     private fun processPopupMessage(context: Context, body: String): String {
         val msg = body.substringAfter(" ", "").trim()
-        if (msg.isEmpty()) return "❌ Gebruik: #BERICHT [Tekst]"
+        if (msg.isEmpty()) return "❌ #BERICHT [Tekst]"
         context.startActivity(Intent(context, MainActivity::class.java).apply { 
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
-            putExtra("NAVIGATE_TO", "alarm_trigger")
-            putExtra("ALARM_LABEL", msg)
-            putExtra("isAgendaEvent", true) 
-            putExtra("agendaTitle", "BERICHT VAN BEHEERDER")
+            putExtra("NAVIGATE_TO", "alarm_trigger"); putExtra("ALARM_LABEL", msg); putExtra("isAgendaEvent", true); putExtra("agendaTitle", "BERICHT VAN BEHEERDER")
         })
         return "✅ Bericht gestuurd"
     }
@@ -259,38 +479,38 @@ class SmsReceiver : BroadcastReceiver() {
     private fun processPing(context: Context): String {
         context.startActivity(Intent(context, MainActivity::class.java).apply { 
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
-            putExtra("NAVIGATE_TO", "alarm_trigger")
-            putExtra("ALARM_LABEL", "ALLES GOED? KLIK OP BEGREPEN.")
-            putExtra("isAgendaEvent", true) 
-            putExtra("agendaTitle", "WELZIJNS-CHECK")
+            putExtra("NAVIGATE_TO", "alarm_trigger"); putExtra("ALARM_LABEL", "ALLES GOED? KLIK OP BEGREPEN."); putExtra("isAgendaEvent", true); putExtra("agendaTitle", "WELZIJNS-CHECK")
         })
-        return "✅ Welzijns-check gestart"
+        return "✅ Check gestart"
+    }
+
+    private suspend fun processLockSettings(body: String): String {
+        val lock = !body.uppercase().contains("UIT")
+        LauncherApp.instance.settingsRepository.setSettingsLocked(lock)
+        return if (lock) "✅ Instellingen DICHT" else "✅ Instellingen OPEN"
+    }
+
+    private suspend fun processChangePin(body: String): String {
+        val newPin = body.substringAfter("#PIN").trim()
+        if (newPin.length < 4) return "❌ Minimaal 4 cijfers"
+        LauncherApp.instance.settingsRepository.setPinCode(newPin)
+        return "✅ PIN gewijzigd"
     }
 
     private suspend fun processAddContact(context: Context, body: String): String {
         val parts = body.split(" ").filter { it.isNotBlank() }
-        if (parts.size < 3) return "❌ Gebruik: #CONTACT Naam 0612345678"
-        val dao = LauncherApp.instance.database.contactDao()
-        dao.insert(QuickContact(name = parts[1], phoneNumber = parts[2], isSosContact = false))
-        return "✅ Contact '${parts[1]}' toegevoegd"
+        if (parts.size < 3) return "❌ #CONTACT Naam Nr"
+        LauncherApp.instance.database.contactDao().insert(QuickContact(name = parts[1], phoneNumber = parts[2], isSosContact = false))
+        return "✅ Contact toegevoegd"
     }
 
     private suspend fun processStock(body: String): String {
         val parts = body.split(" ").filter { it.isNotBlank() }
-        if (parts.size < 3) return "❌ Gebruik: #VOORRAAD [Naam] [Aantal]"
-        val name = parts[1]
-        val count = parts[2].toIntOrNull() ?: return "❌ Aantal ongeldig"
-        
+        if (parts.size < 3) return "❌ #VOORRAAD Naam Aantal"
         val dao = LauncherApp.instance.database.medicationDao()
-        val allMeds = dao.getAllSync()
-        val med = allMeds.find { it.name.contains(name, ignoreCase = true) }
-        
-        return if (med != null) {
-            dao.update(med.copy(stockCount = count))
-            "✅ Voorraad '${med.name}' bijgewerkt naar $count"
-        } else {
-            "❌ Medicijn '$name' niet gevonden"
-        }
+        val med = dao.getAllSync().find { it.name.contains(parts[1], ignoreCase = true) }
+        return if (med != null) { dao.update(med.copy(stockCount = parts[2].toIntOrNull() ?: 0)); "✅ Voorraad bijgewerkt" }
+        else "❌ Niet gevonden"
     }
 
     private suspend fun processAlarm(context: Context, body: String): String {
@@ -314,7 +534,7 @@ class SmsReceiver : BroadcastReceiver() {
             val med = Medication(name = n, dose = d, times = String.format("%02d:%02d", h, min), stockCount = 30)
             val id = LauncherApp.instance.database.medicationDao().insert(med)
             MedicationAlarmScheduler.scheduleAlarms(context, med.copy(id = id))
-            return "✅ Medicijn '$n' toegevoegd"
+            return "✅ Medicijn toegevoegd"
         }
         return "❌ Tijd fout"
     }
@@ -343,8 +563,7 @@ class SmsReceiver : BroadcastReceiver() {
                     firstId = cursor.getLong(idIdx)
                     do {
                         val id = cursor.getLong(idIdx)
-                        val isPrimary = if (priIdx != -1) cursor.getInt(priIdx) == 1 else false
-                        if (isPrimary) return id
+                        if (priIdx != -1 && cursor.getInt(priIdx) == 1) return id
                     } while (cursor.moveToNext())
                 }
             }
@@ -353,9 +572,11 @@ class SmsReceiver : BroadcastReceiver() {
     }
 
     private fun sendHelpMessages(context: Context, address: String) {
-        val msg1 = "Sionro Remote Codes:\n#WAAR (Locatie)\n#STATUS (Status)\n#PING (Welzijns-check)\n#BERICHT [tekst]\n#OPEN [Naam]\n#LAMP [AAN/UIT]"
-        val msg2 = "Andere:\n#VOORRAAD [Naam] [Aantal]\n#CONTACT Naam Nr\n#VOLUME [0-10]\n#HELDER [1-10]\n#WEKKER 08:30 Label\n#MEDICIJN 12:00 Naam"
-        sendReply(context, address, msg1); sendReply(context, address, msg2)
+        val msg1 = "Codes 1:\n#WAAR, #STATUS, #PING, #BEL_TERUG, #LAMP [AAN/UIT], #KNIPPER, #OPEN [App], #BERICHT [tekst], #VEILIG [AAN/UIT]"
+        val msg2 = "Codes 2:\n#WIFI [AAN/UIT], #BT [AAN/UIT], #STIL [AAN/UIT], #LETTER [1-5], #THEMA [1-3], #APP_LIJST, #INFO_PLUS"
+        val msg3 = "Codes 3:\n#SLOT [AAN/UIT], #PIN [Code], #VOORRAAD [Naam] [Nr], #CONTACT [Naam] [Nr], #VOLUME [0-10], #HELDER [1-10]"
+        val msg4 = "Codes 4:\n#BLOKKEER [Nr], #SCHERM_TIJD [1/2/5/MAX], #LAATSTE_OPROEP, #SOS_NU, #RESTART, #AGENDA_VANDAAG, #WEKKERS_LIJST, #VOLUME_MEDIA [0-10], #NETWERK, #RADIO_STOP"
+        sendReply(context, address, msg1); sendReply(context, address, msg2); sendReply(context, address, msg3); sendReply(context, address, msg4)
     }
 
     private fun sendReply(context: Context, address: String, message: String) {
