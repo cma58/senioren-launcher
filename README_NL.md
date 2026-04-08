@@ -1,123 +1,90 @@
-# 📱 Senioren Launcher (0.8.1 Beta)
+# 📱 Senioren Launcher (0.8.2 Beta)
 
-**De eerlijke, open-source Android launcher voor onze ouderen. Gemaakt om technologie weer toegankelijk en veilig te maken.**
+**De eerlijke, open-source Android launcher voor onze ouderen. Gemaakt om technologie weer toegankelijk, veilig en menselijk te maken.**
 
 [![License: GPL-3.0](https://img.shields.io/badge/License-GPL%20v3-blue.svg)](LICENSE)
 [![Privacy](https://img.shields.io/badge/Privacy-100%25-brightgreen.svg)](PRIVACY.md)
-[![Status: Beta](https://img.shields.io/badge/Status-0.8.1%20Beta-orange.svg)](#)
+[![Status: Beta](https://img.shields.io/badge/Status-0.8.2%20Beta-orange.svg)](#)
 
-> **⚠️ Bèta Fase:** Dit project bevindt zich momenteel in de bèta-fase. Dit betekent dat u nog bugs of fouten kunt tegenkomen. Ik doe mijn uiterste best om de app zo snel mogelijk te updaten en te verbeteren!
-
----
-
-## 📸 Screenshots
-
-<p align="center">
-  <img src="screenshots/screenshot_homescreenshot_home.jpeg" width="250" title="Startscherm">
-  <img src="screenshots/screenshot_phone.jpeg" width="250" title="Telefoon">
-  <img src="screenshots/screenshot_weather.jpeg" width="250" title="Weer & Advies">
-</p>
-<p align="center">
-  <img src="screenshots/screenshot_medication.jpeg" width="250" title="Medicijnen">
-  <img src="screenshots/screenshot_emergency..jpeg" width="250" title="Noodinfo">
-  <img src="screenshots/screenshot_remote_support..jpeg" width="250" title="Hulp op Afstand">
-</p>
-<p align="center">
-  <img src="screenshots/screenshot_sos.jpeg" width="250" title="SOS Noodhulp">
-</p>
+> **⚠️ Bèta Fase:** Dit project bevindt zich in de bèta-fase. Dit betekent dat u nog bugs kunt tegenkomen. Ik bouw dit project in mijn vrije tijd om onze (groot)ouders hun digitale vrijheid terug te geven.
 
 ---
 
-[English version here](README.md)
+## 📢 Oproep aan Testers & Feedback
+Ik ben continu bezig de launcher te verbeteren, maar omdat ik niet elk type Android-toestel in huis heb, heb ik jouw hulp nodig!
+
+**Help mee het project te verbeteren:**
+Ik zoek testers die de functies (met name de SMS-commando's) grondig willen uitproberen op verschillende toestellen (Samsung, Nokia, Motorola, etc.). Heb je advies, een suggestie voor een nieuwe functie of heb je een bug gevonden?
+- **Contact & Bug Reports:** [amine.chtaiti@gmail.com](mailto:amine.chtaiti@gmail.com)
 
 ---
 
-## 🚀 Nieuw in Versie 0.8.1 Beta
-
-- **Globale UI Schaling Engine**: Een volledig vernieuwd schalingssysteem op basis van density. Geen handmatige multipliers meer! De hele interface (paddings, iconen, tekst) zoomt nu proportioneel mee.
-- **Intelligente Setup Wizard**: Een gloednieuwe stap-voor-stap installatiehulp met twee unieke routes:
-  - **De Mantelzorger route**: Snel alle machtigingen regelen, SOS-contacten instellen (tot 4 personen) en instellingen beveiligen met een pincode.
-  - **De Senior route**: Een zachte, visuele installatie met focus op leesbaarheid (oogtest) en simpele keuzes in kindertaal.
-- **Verbeterde Telefoon Ervaring**: Vernieuwde dialer met beter ruimtebeheer voor hoge zoomniveaus.
-- **Verbeterde Contacten-kiezer**: Zoek en selecteer direct meerdere SOS-contacten.
-- **Snelheidsverbeteringen**: Soepelere overgangen en sneller laden van systeemgegevens.
-- **Geheugen Optimalisatie**: Verbeterde stabiliteit van de build en afhandeling van Metaspace.
+## 🌟 Onze Visie: "Senioren-Eerst"
+De meeste smartphones zijn ontworpen voor jonge mensen. Wij draaien het om. De Senioren Launcher is gebouwd volgens strikte UX-regels voor ouderen:
+- **Geen Toetsenborden:** Alles werkt met grote plus/min knoppen en duidelijke lijsten.
+- **Gigantische Elementen:** Teksten zijn minimaal 20-30sp. Knoppen zijn minstens 70dp hoog.
+- **Contrast & Duidelijkheid:** Geen vage icoontjes, maar harde teksten zoals "OPHANGEN" of "OPSLAAN".
+- **Digitale Rust:** Geen onnodige notificaties of ingewikkelde veeg-bewegingen.
 
 ---
 
-## Waarom Senioren Launcher?
-
-Veel bestaande launchers voor senioren zijn onnodig duur, zitten vol advertenties of verzamelen stiekem data. Wij geloven dat onze ouders en grootouders beter verdienen. 
-
-Dit is een **passieproject waar ik alleen in mijn vrije tijd aan werk**, met als doel een launcher te bouwen die:
-
-- **Echt Simpel is** — Grote knoppen, duijke teksten en geen overbodige menu's.
-- **Privacy voorop stelt** — Uw gegevens blijven op uw telefoon. Nul analytics, nul advertenties.
-- **100% Gratis & Open Source** — Voor iedereen beschikbaar zonder winstoogmerk.
-
----
-
-## ☕ Steun mijn werk
-
-Senioren Launcher is een project dat ik volledig gratis aanbied. Jouw steun helpt enorm om de kosten te dekken (zoals voor hosting of testapparatuur) en motiveert mij om in mijn vrije avonden en weekenden door te blijven bouwen aan nieuwe functies.
-
-**Vind je dit een mooi initiatief?** Elke bijdrage, hoe klein ook, wordt ontzettend gewaardeerd!
-
-[![Doneer via PayPal](https://img.shields.io/badge/Doneer-PayPal-blue.svg?style=for-the-badge)](https://www.paypal.com/donate/?business=amine.chtaiti@gmail.com&no_recurring=0&currency_code=EUR)
-
----
-
-## ✨ Functies in detail
+## ✨ Belangrijkste Functies
 
 ### 📞 Bellen & Contacten
-Grote nummertoetsen en een lijst van favorieten met foto's. Eén druk op de knop om direct te bellen naar familie of vrienden.
+- **Simpele Dialer:** Grote nummertoetsen die trillen bij aanraking.
+- **Favorieten met Foto:** Bel familie met één klik op hun gezicht.
+- **Mijn Nummer:** Het eigen nummer staat altijd bovenaan voor het geval ze het vergeten.
+- **NOOD 112:** Een directe knop met een extra bevestiging om vals alarm te voorkomen.
 
-### 🆘 SOS Noodknop
-Bij het 3 seconden indrukken van de SOS-knop worden noodcontacten direct ingelicht via SMS met de exacte GPS-locatie.
+### 💬 Berichten (SMS)
+- **Leesbaarheid:** Berichten worden gegroepeerd per dag met een zeer groot lettertype.
+- **Direct Zoomen:** Verander de tekstgrootte direct in het gesprek met grote knoppen.
+- **Veiligheid:** Onbekende of spam-berichten worden duidelijk gemarkeerd.
 
-### 👨‍🔧 Hulp op Afstand (RustDesk)
-Unieke functie waarmee een familielid op afstand kan meekijken om te helpen bij instellingen. Inclusief een duidelijk stappenplan voor de senior.
+### 🆘 SOS & Veiligheid
+- **SOS Knop:** Houd 3 seconden ingedrukt om direct alle noodcontacten te bellen en een SMS te sturen met de exacte GPS-locatie.
+- **Valdetectie:** Gebruikt de sensoren van de telefoon om een val te detecteren en automatisch hulp in te schakelen (Experimenteel).
+- **Noodinfo:** Medische gegevens (bloedgroep, allergieën) direct toegankelijk voor hulpverleners vanaf het hoofdscherm.
 
-### 🔍 Vergrootglas & Zaklamp
-Verander de telefoon in een digitale loep om kleine teksten op medicijnen of menukaarten makkelijk te kunnen lezen.
-
-### 🚶 Stappenteller
-Stimuleert beweging door het aantal stappen van vandaag groot en duidelijk te tonen.
-
-### 📅 Agenda & Notities
-Een versimpelde agenda en een plek voor korte notities, zodat u nooit meer een afspraak of boodschap vergeet.
-
----
-
-## 🏗️ Technologie
-
-| Component | Technologie |
-|-----------|-------------|
-| **Taal** | Kotlin 2.1 |
-| **UI** | Jetpack Compose + Material 3 |
-| **Architectuur** | MVVM + Clean Architecture |
-| **Database** | Room (SQLite) + DataStore |
-| **Achtergrond** | WorkManager |
-| **Camera** | CameraX (voor het Vergrootglas) |
-| **Sensoren** | Accelerometer (Valdetectie) & Step Counter |
-| **Media** | Media3 ExoPlayer (voor de Radio) |
-| **Min SDK** | API 26 (Android 8.0) |
-| **Target SDK** | API 36 (Android 15) |
+### 💊 Medicijnen & Wellness
+- **Herinneringen:** Meldingen met foto's van de medicijnen.
+- **Voorraad:** De app houdt bij hoeveel pillen er nog zijn en waarschuwt de familie bij een bijna lege strip.
+- **Stappen & Radio:** Ingebouwde stappenteller en een simpele radio voor ontspanning.
 
 ---
 
-## 🤝 Bijdragen
+## 🎮 Beheer op Afstand (Remote Support)
 
-Wil je helpen het project te verbeteren? Graag! Zie [CONTRIBUTING.md](CONTRIBUTING.md) for de richtlijnen over het melden van bugs of het insturen van code.
+> **⚠️ Experimentele Functie:** Deze functies zijn succesvol getest op onze testtoestellen. Vanwege de grote variatie in Android-modellen (Samsung, Nokia, etc.) beschouwen we dit als experimenteel. Test de commando's altijd eerst zelf.
 
-## 🔒 Privacy
+Beheerders kunnen de telefoon via een simpele SMS aansturen vanaf hun eigen toestel:
 
-Privacy is geen bijzaak, het is de kern van dit project. Wij verzamelen **geen data**. Alles blijft op de telefoon van de senior. Lees ons volledige [PRIVACY.md](PRIVACY.md).
-
-## 📜 Licentie
-
-Dit project is gelicentieerd onder de **GNU General Public License v3.0**. Dit betekent dat de software altijd open en gratis zal blijven.
+| Commando | Actie | Voorbeeld |
+|----------|-------|-----------|
+| **`#WAAR`** | Ontvang de actuele GPS-locatie via Google Maps link. | `#WAAR` |
+| **`#STATUS`** | Check Batterij %, Volume en of de telefoon op Stil staat. | `#STATUS` |
+| **`#PING`** | Toon een "ALLES GOED?" check op het scherm. | `#PING` |
+| **`#BEL_TERUG`**| De telefoon belt de beheerder automatisch terug. | `#BEL_TERUG` |
+| **`#LAMP`** | Zet de zaklamp aan of uit. | `#LAMP AAN` |
+| **`#KNIPPER`** | Laat de zaklamp 10x knipperen (visueel signaal). | `#KNIPPER` |
+| **`#OPEN`** | Open op afstand een app (bijv. WhatsApp). | `#OPEN WhatsApp` |
+| **`#BERICHT`** | Toon een grote popup die hardop wordt voorgelezen. | `#BERICHT De kapper komt om 14u` |
+| **`#VOLUME`** | Stel geluid in (schaal 1-10). | `#VOLUME 10` |
+| **`#HELDER`** | Stel helderheid in (schaal 1-10). | `#HELDER 10` |
+| **`#WEKKER`** | Stel op afstand een wekker in. | `#WEKKER 08:30 Ontbijt` |
+| **`#HELP`** | Ontvang alle codes op je eigen telefoon. | `#HELP` |
 
 ---
+
+## 🏗️ Technologie & Veiligheid
+- **Kotlin 2.1 & Jetpack Compose:** Moderne, snelle en stabiele code.
+- **Android 16 Ready:** Gebruikt de nieuwste API's voor maximale betrouwbaarheid op nieuwe toestellen.
+- **Privacy:** 100% lokaal. Geen dataverzameling, geen cloud, geen advertenties.
+- **Batterij-efficiënt:** Geoptimaliseerd om de accu van oudere toestellen te sparen.
+
+---
+
+## 🤝 Bijdragen & Support
+Dit is een open-source project. Heb je een bug gevonden op jouw toestel? Laat het weten via de Issues op GitHub of stuur een e-mail naar [amine.chtaiti@gmail.com](mailto:amine.chtaiti@gmail.com).
 
 *"Technologie moet mensen verbinden, niet uitsluiten."* ❤️

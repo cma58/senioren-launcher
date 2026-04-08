@@ -19,7 +19,8 @@ data class AppSettings(
     val fallDetectionEnabled: Boolean = false,
     val batteryAlertEnabled: Boolean = true,
     val chargingReminderEnabled: Boolean = true,
-    val hasCompletedSetup: Boolean = false
+    val hasCompletedSetup: Boolean = false,
+    val userPhoneNumber: String? = null
 )
 
 @Entity(tableName = "contacts")
@@ -44,7 +45,11 @@ data class Medication(
     val isTaken: Boolean = false,
     val lastTakenDate: Long = 0,
     val active: Boolean = true,
-    val isPending: Boolean = false
+    val isPending: Boolean = false,
+    val stockCount: Int = 0,
+    val lowStockThreshold: Int = 5,
+    val photoUri: String? = null,
+    val lastActionTime: Long = 0 // To prevent double dosing
 )
 
 @Entity(tableName = "medication_logs")
@@ -52,7 +57,8 @@ data class MedicationLog(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
     val medicationId: Long,
     val date: Long,
-    val status: String
+    val time: String,
+    val status: String // "TAKEN", "MISSED", "SNOOZED"
 )
 
 @Entity(tableName = "notes")
@@ -95,7 +101,8 @@ data class AlarmEntry(
     val label: String,
     val daysOfWeek: String = "",
     val enabled: Boolean = true,
-    val soundUri: String? = null
+    val soundUri: String? = null,
+    val isMorningRoutine: Boolean = false
 )
 
 data class AppInfo(

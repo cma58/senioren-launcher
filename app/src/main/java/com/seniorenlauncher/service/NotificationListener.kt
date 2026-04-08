@@ -32,9 +32,17 @@ class NotificationListener : NotificationListenerService() {
                     (counts["com.seniorenlauncher"] ?: 0)
                 }
                 "whatsapp" -> counts["com.whatsapp"] ?: 0
+                "calendar" -> {
+                    (counts["com.google.android.calendar"] ?: 0) +
+                    (counts["com.samsung.android.calendar"] ?: 0)
+                }
                 else -> {
-                    val pkg = appMappings[appId]
-                    if (pkg != null) counts[pkg] ?: 0 else 0
+                    if (appId.startsWith("mapped_")) {
+                        val pkg = appMappings[appId]
+                        if (pkg != null) counts[pkg] ?: 0 else 0
+                    } else {
+                        counts[appId] ?: 0
+                    }
                 }
             }
         }
@@ -81,21 +89,39 @@ class NotificationListener : NotificationListenerService() {
         try {
             val active = try { activeNotifications } catch (e: Exception) { null } ?: emptyArray()
             
-            // Filter logic: Only communication, important alerts, and non-ongoing
+            // Loosened filter logic: Include more by default, exclude obvious noise
             val filtered = active.filter { sbn ->
-                val isOngoing = sbn.isOngoing
-                val isSystem = sbn.packageName == "android" || sbn.packageName == "com.android.systemui"
+                if (sbn.isOngoing) return@filter false
+                
+                val pkg = sbn.packageName
                 val category = sbn.notification.category
+                
+                // Exclude some very common system noise
+                if (pkg == "android" && category != Notification.CATEGORY_MESSAGE && category != Notification.CATEGORY_CALL) {
+                    if (sbn.id == 17) return@filter false // Android System "USB debugging connected" etc
+                    if (category == Notification.CATEGORY_SYSTEM) return@filter false
+                }
+                if (pkg == "com.android.systemui") return@filter false
                 
                 val isCommunication = category == Notification.CATEGORY_MESSAGE || 
                                      category == Notification.CATEGORY_CALL ||
                                      category == Notification.CATEGORY_EMAIL ||
-                                     category == Notification.CATEGORY_EVENT
+                                     category == Notification.CATEGORY_EVENT ||
+                                     category == Notification.CATEGORY_REMINDER
                 
-                val importantPackages = listOf("com.whatsapp", "com.google.android.apps.messaging", "com.android.mms", "com.seniorenlauncher")
-                val isImportantApp = sbn.packageName in importantPackages
+                // Known important packages that might not have categories set
+                val importantPackages = listOf(
+                    "com.whatsapp", 
+                    "com.google.android.apps.messaging", 
+                    "com.android.mms", 
+                    "com.samsung.android.messaging",
+                    "com.seniorenlauncher",
+                    "com.google.android.dialer",
+                    "com.samsung.android.dialer",
+                    "com.android.dialer"
+                )
                 
-                !isOngoing && (!isSystem || isCommunication) && (isCommunication || isImportantApp || category == Notification.CATEGORY_REMINDER)
+                isCommunication || pkg in importantPackages || pkg.contains("mail") || pkg.contains("message")
             }
             
             _activeNotifications.value = filtered

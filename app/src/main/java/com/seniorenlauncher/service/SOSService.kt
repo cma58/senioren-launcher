@@ -4,7 +4,9 @@ import android.Manifest
 import android.app.Service
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.content.pm.ServiceInfo
 import android.location.Location
+import android.os.Build
 import android.os.IBinder
 import android.telephony.SmsManager
 import android.util.Log
@@ -18,6 +20,7 @@ import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.first
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
+import kotlin.coroutines.suspendCoroutine
 
 class SOSService : Service() {
     private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
@@ -35,7 +38,11 @@ class SOSService : Service() {
             .setCategory(NotificationCompat.CATEGORY_ALARM)
             .build()
 
-        startForeground(1001, notification)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+            startForeground(1001, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_LOCATION)
+        } else {
+            startForeground(1001, notification)
+        }
 
         scope.launch {
             try {
@@ -44,6 +51,7 @@ class SOSService : Service() {
                 Log.e(tag, "Fout bij uitvoeren SOS", e)
             } finally {
                 delay(5000)
+                stopForeground(STOP_FOREGROUND_REMOVE)
                 stopSelf()
             }
         }
@@ -70,24 +78,29 @@ class SOSService : Service() {
 
         val mapsUrl = location?.let { "https://www.google.com/maps?q=${it.latitude},${it.longitude}" }
         val message = if (mapsUrl != null) {
-            "NOODGEVAL! Ik heb hulp nodig. Mijn locatie: $mapsUrl"
+            "Sionro NOODGEVAL! Ik heb direct hulp nodig. Locatie: $mapsUrl"
         } else {
-            "NOODGEVAL! Ik heb hulp nodig. Kon mijn exacte locatie niet bepalen."
+            "Sionro NOODGEVAL! Ik heb direct hulp nodig. Kon exacte locatie niet bepalen."
         }
 
-        val smsManager = context.getSystemService(SmsManager::class.java)
+        val smsManager = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            context.getSystemService(SmsManager::class.java)
+        } else {
+            @Suppress("DEPRECATION")
+            SmsManager.getDefault()
+        }
         
         sosContacts.forEach { contact ->
             try {
-                smsManager.sendTextMessage(contact.phoneNumber, null, message, null, null)
-                Log.d(tag, "SMS verstuurd naar ${contact.name}")
+                smsManager?.sendTextMessage(contact.phoneNumber, null, message, null, null)
+                Log.d(tag, "SOS SMS verstuurd naar ${contact.name}")
             } catch (e: Exception) {
                 Log.e(tag, "Fout bij versturen SMS naar ${contact.name}", e)
             }
         }
     }
 
-    private suspend fun <T> Task<T>.awaitTask(): T = suspendCancellableCoroutine { cont ->
+    private suspend fun <T> Task<T>.awaitTask(): T = suspendCoroutine { cont ->
         addOnCompleteListener { task ->
             if (task.isSuccessful) {
                 cont.resume(task.result)

@@ -1,11 +1,14 @@
 package com.seniorenlauncher.ui.screens
 
 import android.Manifest
+import android.app.role.RoleManager
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.os.Build
 import android.provider.ContactsContract
 import android.provider.Telephony
+import android.telecom.TelecomManager
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.*
@@ -14,6 +17,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
@@ -39,6 +43,7 @@ import androidx.core.content.ContextCompat
 import com.seniorenlauncher.LauncherApp
 import com.seniorenlauncher.data.model.*
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
@@ -49,31 +54,34 @@ fun SetupWizardScreen(
     onFinished: () -> Unit,
     settingsVm: SettingsViewModel
 ) {
+    // Gebruik de ViewModel om de status te onthouden bij een proces-herstart (bv. na instellen launcher)
     var flow by remember { mutableStateOf(SetupFlow.NONE) }
+    var caregiverStep by remember { mutableIntStateOf(1) }
+    var seniorStep by remember { mutableIntStateOf(1) }
 
     when (flow) {
         SetupFlow.NONE -> {
             FlowSelectionScreen(onFlowSelected = { flow = it })
         }
         SetupFlow.CAREGIVER -> {
-            var caregiverStep by remember { mutableIntStateOf(1) }
             when (caregiverStep) {
                 1 -> PermissionsSetupScreen(onNext = { caregiverStep = 2 }, isSenior = false)
-                2 -> DefaultAppsSetupScreen(onNext = { caregiverStep = 3 })
-                3 -> SosSetupScreen(onNext = { caregiverStep = 4 }, settingsVm = settingsVm)
-                4 -> SecuritySetupScreen(onNext = { caregiverStep = 5 }, settingsVm = settingsVm)
-                5 -> HandoverScreen(onNext = { flow = SetupFlow.SENIOR })
+                2 -> SystemPermissionsSetupScreen(onNext = { caregiverStep = 3 }, isSenior = false)
+                3 -> DefaultAppsSetupScreen(onNext = { caregiverStep = 4 }, isSenior = false)
+                4 -> SosSetupScreen(onNext = { caregiverStep = 5 }, settingsVm = settingsVm)
+                5 -> SecuritySetupScreen(onNext = { caregiverStep = 6 }, settingsVm = settingsVm)
+                6 -> HandoverScreen(onNext = { flow = SetupFlow.SENIOR })
             }
         }
         SetupFlow.SENIOR -> {
-            var seniorStep by remember { mutableIntStateOf(1) }
             when (seniorStep) {
                 1 -> SeniorWelcomeStep(onNext = { seniorStep = 2 })
                 2 -> PermissionsSetupScreen(onNext = { seniorStep = 3 }, isSenior = true)
-                3 -> DefaultAppsSetupScreen(onNext = { seniorStep = 4 })
-                4 -> SeniorReadingStep(onNext = { seniorStep = 5 }, settingsVm = settingsVm)
-                5 -> SeniorColorsStep(onNext = { seniorStep = 6 }, settingsVm = settingsVm)
-                6 -> SeniorEmergencyStep(onNext = { 
+                3 -> SystemPermissionsSetupScreen(onNext = { seniorStep = 4 }, isSenior = true)
+                4 -> DefaultAppsSetupScreen(onNext = { seniorStep = 5 }, isSenior = true)
+                5 -> SeniorReadingStep(onNext = { seniorStep = 6 }, settingsVm = settingsVm)
+                6 -> SeniorColorsStep(onNext = { seniorStep = 7 }, settingsVm = settingsVm)
+                7 -> SeniorEmergencyStep(onNext = { 
                     settingsVm.completeSetup()
                     onFinished()
                 })
@@ -153,56 +161,173 @@ fun SetupOptionCard(
 }
 
 @Composable
-fun DefaultAppsSetupScreen(onNext: () -> Unit) {
+fun DefaultAppsSetupScreen(onNext: () -> Unit, isSenior: Boolean = false) {
     val context = LocalContext.current
     
-    val roleLauncher = rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) {
-        // We don't strictly need to check results here as the UI reflects the state
+    var isDefaultHome by remember { mutableStateOf(false) }
+    var isDefaultDialer by remember { mutableStateOf(false) }
+    var isDefaultSms by remember { mutableStateOf(false) }
+
+    // Krachtigere check met RoleManager voor modern Android
+    LaunchedEffect(Unit) {
+        while (true) {
+            isDefaultHome = isLauncherDefault(context)
+            
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                val roleManager = context.getSystemService(Context.ROLE_SERVICE) as RoleManager
+                isDefaultDialer = roleManager.isRoleHeld(RoleManager.ROLE_DIALER)
+                isDefaultSms = roleManager.isRoleHeld(RoleManager.ROLE_SMS)
+            } else {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                    val telecomManager = context.getSystemService(Context.TELECOM_SERVICE) as TelecomManager
+                    isDefaultDialer = telecomManager.defaultDialerPackage == context.packageName
+                } else isDefaultDialer = true
+                
+                isDefaultSms = Telephony.Sms.getDefaultSmsPackage(context) == context.packageName
+            }
+            delay(1000)
+        }
     }
 
+    val roleLauncher = rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) { }
+
+    val allDone = isDefaultHome && isDefaultDialer && isDefaultSms
+
     Column(
-        modifier = Modifier.fillMaxSize().padding(24.dp),
+        modifier = Modifier.fillMaxSize().padding(24.dp).verticalScroll(rememberScrollState()),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Text("Standaard Apps", fontSize = 32.sp, fontWeight = FontWeight.ExtraBold)
-        Spacer(Modifier.height(16.dp))
         Text(
-            "Maak de Senioren Launcher de standaard app voor bellen en berichten. Dit is nodig om meldingen goed te laten werken.",
-            fontSize = 18.sp, textAlign = TextAlign.Center
+            text = if (isSenior) "De telefoon veilig maken" else "Standaard Apps",
+            fontSize = if (isSenior) 36.sp else 32.sp,
+            fontWeight = FontWeight.ExtraBold,
+            textAlign = TextAlign.Center,
+            lineHeight = if (isSenior) 42.sp else 38.sp
         )
         
-        Spacer(Modifier.height(48.dp))
-
-        val isDefaultSms = Telephony.Sms.getDefaultSmsPackage(context) == context.packageName
+        Spacer(Modifier.height(16.dp))
         
-        Button(
-            onClick = {
-                val intent = Intent(Telephony.Sms.Intents.ACTION_CHANGE_DEFAULT).apply {
-                    putExtra(Telephony.Sms.Intents.EXTRA_PACKAGE_NAME, context.packageName)
-                }
-                roleLauncher.launch(intent)
-            },
-            modifier = Modifier.fillMaxWidth().height(80.dp),
-            shape = RoundedCornerShape(20.dp),
-            colors = ButtonDefaults.buttonColors(
-                containerColor = if (isDefaultSms) Color(0xFF10B981) else MaterialTheme.colorScheme.primary
-            )
-        ) {
-            Icon(if (isDefaultSms) Icons.Default.CheckCircle else Icons.Default.Sms, null)
-            Spacer(Modifier.width(12.dp))
-            Text(if (isDefaultSms) "BERICHTEN APP IS INGESTELD" else "STEL IN ALS BERICHTEN APP", fontWeight = FontWeight.Bold)
-        }
+        Text(
+            text = if (isSenior) 
+                "We maken de Senioren Launcher uw vaste hulp voor bellen en berichten. Klik op de rode vakken."
+                else "Stel de launcher in als standaard voor Home, Telefoon en SMS om de stabiliteit te garanderen.",
+            fontSize = if (isSenior) 22.sp else 18.sp, 
+            textAlign = TextAlign.Center,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            lineHeight = if (isSenior) 30.sp else 24.sp
+        )
+        
+        Spacer(Modifier.height(32.dp))
 
+        // 1. START SCHERM (HOME)
+        DefaultAppRow(
+            title = if (isSenior) "1. Basis scherm" else "Startscherm (Home)",
+            description = if (isSenior) "Zodat u altijd de grote knoppen ziet." else "Maak dit de standaard launcher.",
+            isGranted = isDefaultHome,
+            icon = Icons.Default.Home,
+            isSenior = isSenior,
+            onClick = {
+                val intent = Intent(Intent.ACTION_MAIN).apply {
+                    addCategory(Intent.CATEGORY_HOME)
+                    flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                }
+                context.startActivity(intent)
+            }
+        )
+
+        Spacer(Modifier.height(16.dp))
+
+        // 2. TELEFOON (DIALER)
+        DefaultAppRow(
+            title = if (isSenior) "2. Telefoon knop" else "Telefoon (Bellen)",
+            description = if (isSenior) "Om makkelijk uw familie te kunnen bellen." else "Nodig voor de versimpelde bel-interface.",
+            isGranted = isDefaultDialer,
+            icon = Icons.Default.Phone,
+            isSenior = isSenior,
+            onClick = {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                    val roleManager = context.getSystemService(Context.ROLE_SERVICE) as RoleManager
+                    val intent = roleManager.createRequestRoleIntent(RoleManager.ROLE_DIALER)
+                    roleLauncher.launch(intent)
+                } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                    val intent = Intent(TelecomManager.ACTION_CHANGE_DEFAULT_DIALER).apply {
+                        putExtra(TelecomManager.EXTRA_CHANGE_DEFAULT_DIALER_PACKAGE_NAME, context.packageName)
+                    }
+                    roleLauncher.launch(intent)
+                }
+            }
+        )
+
+        Spacer(Modifier.height(16.dp))
+
+        // 3. SMS
+        DefaultAppRow(
+            title = if (isSenior) "3. Berichten knop" else "Berichten (SMS)",
+            description = if (isSenior) "Zodat u veilig berichten kunt ontvangen." else "Nodig voor SOS en batterijmeldingen.",
+            isGranted = isDefaultSms,
+            icon = Icons.Default.Sms,
+            isSenior = isSenior,
+            onClick = {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                    val roleManager = context.getSystemService(Context.ROLE_SERVICE) as RoleManager
+                    val intent = roleManager.createRequestRoleIntent(RoleManager.ROLE_SMS)
+                    roleLauncher.launch(intent)
+                } else {
+                    val intent = Intent(Telephony.Sms.Intents.ACTION_CHANGE_DEFAULT).apply {
+                        putExtra(Telephony.Sms.Intents.EXTRA_PACKAGE_NAME, context.packageName)
+                    }
+                    roleLauncher.launch(intent)
+                }
+            }
+        )
+
+        Spacer(Modifier.weight(1f))
         Spacer(Modifier.height(32.dp))
 
         Button(
             onClick = onNext,
-            modifier = Modifier.fillMaxWidth().height(80.dp),
-            shape = RoundedCornerShape(20.dp)
+            modifier = Modifier.fillMaxWidth().height(if (isSenior) 100.dp else 80.dp),
+            shape = RoundedCornerShape(24.dp),
+            enabled = allDone,
+            colors = ButtonDefaults.buttonColors(
+                containerColor = if (allDone) Color(0xFF10B981) else Color.Gray
+            )
         ) {
-            Text("VOLGENDE", fontSize = 22.sp, fontWeight = FontWeight.Black)
+            Text(
+                text = if (allDone) (if (isSenior) "HET IS GELUKT, GA VERDER" else "VOLGENDE") 
+                       else (if (isSenior) "STEL DE 3 KNOPPEN IN" else "STEL ALLES IN"), 
+                fontSize = if (isSenior) 24.sp else 22.sp, 
+                fontWeight = FontWeight.Black,
+                textAlign = TextAlign.Center
+            )
         }
     }
+}
+
+@Composable
+fun DefaultAppRow(title: String, description: String, isGranted: Boolean, icon: androidx.compose.ui.graphics.vector.ImageVector, isSenior: Boolean, onClick: () -> Unit) {
+    Card(
+        modifier = Modifier.fillMaxWidth().clickable(enabled = !isGranted) { onClick() },
+        shape = RoundedCornerShape(24.dp),
+        colors = CardDefaults.cardColors(containerColor = if (isGranted) Color(0xFFE8F5E9) else Color(0xFFFEF2F2)),
+        border = androidx.compose.foundation.BorderStroke(if (isSenior) 4.dp else 2.dp, if (isGranted) Color(0xFF10B981) else Color(0xFFEF4444))
+    ) {
+        Row(Modifier.padding(if (isSenior) 24.dp else 20.dp), verticalAlignment = Alignment.CenterVertically) {
+            Icon(icon, null, modifier = Modifier.size(if (isSenior) 40.dp else 32.dp), tint = if (isGranted) Color(0xFF10B981) else Color(0xFFEF4444))
+            Spacer(Modifier.width(20.dp))
+            Column(Modifier.weight(1f)) {
+                Text(title, fontSize = if (isSenior) 22.sp else 18.sp, fontWeight = FontWeight.Bold, color = if (isGranted) Color(0xFF1B5E20) else Color(0xFF991B1B))
+                Text(description, fontSize = if (isSenior) 18.sp else 14.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+            Text(if (isGranted) "✅" else "❌", fontSize = if (isSenior) 32.sp else 24.sp)
+        }
+    }
+}
+
+private fun isLauncherDefault(context: Context): Boolean {
+    val intent = Intent(Intent.ACTION_MAIN).apply { addCategory(Intent.CATEGORY_HOME) }
+    val resolveInfo = context.packageManager.resolveActivity(intent, PackageManager.MATCH_DEFAULT_ONLY)
+    return resolveInfo?.activityInfo?.packageName == context.packageName
 }
 
 @Composable

@@ -1,5 +1,6 @@
 package com.seniorenlauncher
 
+import android.app.KeyguardManager
 import android.app.NotificationManager
 import android.content.Context
 import android.content.Intent
@@ -13,35 +14,33 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.navigation.NavController
-import androidx.navigation.compose.NavHost
-import androidx.navigation.compose.composable
-import androidx.navigation.compose.rememberNavController
+import com.seniorenlauncher.ui.AppNavigation
 import com.seniorenlauncher.ui.screens.*
 import com.seniorenlauncher.ui.theme.SeniorenLauncherTheme
+import com.seniorenlauncher.service.SeniorInCallService
+import android.telecom.Call
+import android.util.Log
 
 class MainActivity : ComponentActivity() {
     
-    private var currentAlarmId = mutableStateOf<Long?>(-1L)
+    private var currentAlarmId = mutableStateOf<Long>(-1L)
     private var alarmTriggered = mutableStateOf<String?>(null)
     private var alarmSoundUri = mutableStateOf<String?>(null)
+    private var alarmIsRemote = mutableStateOf(false)
     private var navigateToSmsAddress = mutableStateOf<String?>(null)
+    private var navigateToIncomingCall = mutableStateOf(false)
+    private var navigateToWeatherAfterAlarm = mutableStateOf(false)
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        if (intent?.getStringExtra("NAVIGATE_TO") == "alarm_trigger") {
+            setupLockscreenBypass()
+        }
+        
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1) {
-            setShowWhenLocked(true)
-            setTurnScreenOn(true)
-        } else {
-            @Suppress("DEPRECATION")
-            window.addFlags(WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED or WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON)
-        }
-
         handleIntent(intent)
 
         onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
@@ -62,19 +61,40 @@ class MainActivity : ComponentActivity() {
             val triggerLabel by alarmTriggered
             val alarmId by currentAlarmId
             val soundUri by alarmSoundUri
+            val isRemote by alarmIsRemote
             val smsAddress by navigateToSmsAddress
+            val showIncomingCall by navigateToIncomingCall
+            val shouldNavToWeather by navigateToWeatherAfterAlarm
+            
+            val currentCall by SeniorInCallService.currentCall.collectAsState()
+
+            if (triggerLabel != null) {
+                LaunchedEffect(Unit) {
+                    setupLockscreenBypass()
+                }
+            }
 
             SeniorenLauncherTheme(appTheme = settings.theme, fontSize = settings.fontSize) {
                 Surface(Modifier.fillMaxSize()) {
                     if (triggerLabel != null) {
                         AlarmTriggerScreen(
                             label = triggerLabel!!,
+                            alarmId = alarmId,
                             soundName = soundUri,
+                            isForcedRemote = isRemote,
                             onDismiss = {
                                 val nm = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-                                nm.cancel(alarmId?.toInt() ?: -1)
+                                nm.cancel(alarmId.toInt())
+                                if (triggerLabel!!.startsWith("Medicijn:")) {
+                                    nm.cancel(alarmId.toInt() + 5000)
+                                }
                                 alarmTriggered.value = null
                                 alarmSoundUri.value = null
+                                alarmIsRemote.value = false
+                                currentAlarmId.value = -1L
+                            },
+                            onNavigateToWeather = {
+                                navigateToWeatherAfterAlarm.value = true
                             }
                         )
                     } else if (!settings.hasCompletedSetup) {
@@ -83,18 +103,45 @@ class MainActivity : ComponentActivity() {
                             settingsVm = settingsVm
                         )
                     } else {
-                        AppNavigation(settingsVm, radioVm, smsAddress) {
-                            navigateToSmsAddress.value = null
-                        }
+                        AppNavigation(
+                            settingsVm = settingsVm, 
+                            radioVm = radioVm, 
+                            initialSmsAddress = smsAddress,
+                            initialIncomingCall = showIncomingCall || (currentCall != null && currentCall?.state == Call.STATE_RINGING),
+                            initialWeatherNav = shouldNavToWeather,
+                            onNavigatedToSms = { navigateToSmsAddress.value = null },
+                            onNavigatedToCall = { navigateToIncomingCall.value = false },
+                            onNavigatedToWeather = { navigateToWeatherAfterAlarm.value = false }
+                        )
                     }
                 }
             }
         }
     }
 
+    private fun setupLockscreenBypass() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1) {
+            setShowWhenLocked(true)
+            setTurnScreenOn(true)
+            val keyguardManager = getSystemService(Context.KEYGUARD_SERVICE) as KeyguardManager
+            keyguardManager.requestDismissKeyguard(this, null)
+        }
+        
+        window.addFlags(
+            WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON or
+            WindowManager.LayoutParams.FLAG_ALLOW_LOCK_WHILE_SCREEN_ON or
+            WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED or
+            WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON or
+            WindowManager.LayoutParams.FLAG_DISMISS_KEYGUARD
+        )
+    }
+
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         setIntent(intent)
+        if (intent.getStringExtra("NAVIGATE_TO") == "alarm_trigger") {
+            setupLockscreenBypass()
+        }
         handleIntent(intent)
     }
 
@@ -102,148 +149,20 @@ class MainActivity : ComponentActivity() {
         intent?.let {
             val navigateTo = it.getStringExtra("NAVIGATE_TO")
             if (navigateTo == "alarm_trigger") {
-                alarmTriggered.value = it.getStringExtra("ALARM_LABEL") ?: "Wekker"
-                currentAlarmId.value = it.getLongExtra("ALARM_ID", -1L)
+                val label = it.getStringExtra("ALARM_LABEL") ?: "Wekker"
+                val id = it.getLongExtra("ALARM_ID", -1L)
+                val isRemote = it.getStringExtra("agendaTitle") == "BERICHT VAN BEHEERDER"
+                
+                Log.d("MainActivity", "Wekker ontvangen: $label met ID: $id (Remote: $isRemote)")
+                alarmTriggered.value = label
+                currentAlarmId.value = id
+                alarmIsRemote.value = isRemote
                 alarmSoundUri.value = it.getStringExtra("ALARM_SOUND")
             } else if (navigateTo == "sms") {
                 navigateToSmsAddress.value = it.getStringExtra("SMS_ADDRESS")
+            } else if (navigateTo == "incoming_call") {
+                navigateToIncomingCall.value = true
             }
         }
-    }
-}
-
-@Composable
-fun AppNavigation(
-    settingsVm: SettingsViewModel, 
-    radioVm: RadioViewModel, 
-    initialSmsAddress: String?,
-    onNavigatedToSms: () -> Unit
-) {
-    val navController = rememberNavController()
-    
-    LaunchedEffect(initialSmsAddress) {
-        if (initialSmsAddress != null) {
-            navController.navigate("sms")
-            onNavigatedToSms()
-        }
-    }
-
-    NavHost(navController = navController, startDestination = "home") {
-        composable("home") { 
-            HomeScreen(
-                onNavigate = { navController.navigate(it) },
-                settingsVm = settingsVm,
-                radioVm = radioVm
-            )
-        }
-        composable("settings") { 
-            SettingsScreen(
-                vm = settingsVm,
-                onBack = { navController.popBackStack() },
-                onNavigate = { navController.navigate(it) }
-            ) 
-        }
-        composable("radio") { 
-            RadioScreen(
-                onBack = { navController.popBackStack() },
-                radioVm = radioVm
-            ) 
-        }
-        composable("notifications") {
-            NotificationsScreen(
-                onBack = { navController.popBackStack() },
-                onNavigate = { navController.navigate(it) }
-            )
-        }
-        composable("alarm") { 
-            AlarmScreen(
-                onBack = { navController.popBackStack() }
-            ) 
-        }
-        composable("contacts") { 
-            ContactsScreen(
-                onBack = { navController.popBackStack() }
-            ) 
-        }
-        composable("sms") { 
-            MessagesScreen(
-                onBack = { navController.popBackStack() },
-                initialAddress = initialSmsAddress
-            ) 
-        }
-        composable("phone") {
-            PhoneScreen(
-                onNavigate = { navController.navigate(it) },
-                onBack = { navController.popBackStack() },
-                settingsVm = settingsVm
-            )
-        }
-        composable("emergency") {
-            EmergencyInfoScreen(
-                onBack = { navController.popBackStack() }
-            )
-        }
-        composable("meds") {
-            MedicationScreen(
-                onBack = { navController.popBackStack() }
-            )
-        }
-        composable("sos") {
-            SOSScreen(
-                onBack = { navController.popBackStack() }
-            )
-        }
-        composable("sos_settings") {
-            SosContactSettingsScreen(
-                onBack = { navController.popBackStack() }
-            )
-        }
-        composable("all_apps") {
-            AllAppsScreen(
-                onBack = { navController.popBackStack() }
-            )
-        }
-        composable("photos") {
-            PhotosScreen(
-                onBack = { navController.popBackStack() }
-            )
-        }
-        composable("weather") {
-            WeatherScreen(
-                onBack = { navController.popBackStack() }
-            )
-        }
-        composable("remote_support") {
-            RemoteSupportScreen(
-                onBack = { navController.popBackStack() }
-            )
-        }
-        composable("calendar") {
-            CalendarScreen(
-                onBack = { navController.popBackStack() }
-            )
-        }
-        composable("flashlight") {
-            FlashlightScreen(
-                onBack = { navController.popBackStack() }
-            )
-        }
-        composable("magnifier") {
-            MagnifierScreen(
-                onBack = { navController.popBackStack() }
-            )
-        }
-        composable("notes") {
-            NotesScreen(
-                onBack = { navController.popBackStack() }
-            )
-        }
-        composable("steps") {
-            StepsScreen(
-                onBack = { navController.popBackStack() }
-            )
-        }
-        composable("apps") { Box(Modifier.fillMaxSize()) { Text("Apps Screen", Modifier.align(Alignment.Center)) } }
-        composable("gallery") { Box(Modifier.fillMaxSize()) { Text("Gallery Screen", Modifier.align(Alignment.Center)) } }
     }
 }

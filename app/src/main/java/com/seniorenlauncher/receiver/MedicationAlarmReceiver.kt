@@ -1,26 +1,31 @@
 package com.seniorenlauncher.receiver
 
+import android.app.AlarmManager
 import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
-import android.os.VibrationEffect
-import android.os.Vibrator
+import android.os.Build
+import android.telephony.SmsManager
 import android.util.Log
 import androidx.core.app.NotificationCompat
 import com.seniorenlauncher.LauncherApp
 import com.seniorenlauncher.MainActivity
 import com.seniorenlauncher.data.model.Medication
+import com.seniorenlauncher.data.model.MedicationLog
 import com.seniorenlauncher.util.MedicationAlarmScheduler
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import java.text.SimpleDateFormat
+import java.util.*
 
 class MedicationAlarmReceiver : BroadcastReceiver() {
     override fun onReceive(ctx: Context, intent: Intent) {
         val medicationId = intent.getLongExtra("medication_id", -1L)
         val isSnooze = intent.getBooleanExtra("is_snooze", false)
+        val isEscalation = intent.getBooleanExtra("is_escalation", false)
         val label = intent.getStringExtra("label") ?: "Medicijn"
 
         if (medicationId == -1L) return
@@ -29,53 +34,117 @@ class MedicationAlarmReceiver : BroadcastReceiver() {
             val dao = LauncherApp.instance.database.medicationDao()
             val med = dao.getById(medicationId) ?: return@launch
 
-            // Als het een snooze is, maar de medicatie is al ingenomen (isPending is false), stop dan de herhaling.
-            if (isSnooze && !med.isPending) {
-                Log.d("MedMads", "Snooze gestopt voor med $medicationId: al ingenomen.")
+            if (isEscalation) {
+                handleEscalation(ctx, med)
                 return@launch
             }
 
-            // Bij de eerste melding (geen snooze), zet de status op pending
+            if (isSnooze && !med.isPending) return@launch
+
             if (!isSnooze) {
                 dao.update(med.copy(isPending = true))
-                // Plan ook vast het alarm voor de volgende dag in
                 MedicationAlarmScheduler.scheduleAlarms(ctx, med)
+                // Plan de escalatie over 1 uur
+                scheduleEscalation(ctx, med)
             }
 
-            // Tril de telefoon
-            val vibrator = ctx.getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
-            vibrator.vibrate(VibrationEffect.createWaveform(longArrayOf(0, 800, 400, 800, 400, 800), -1))
-
-            // Toon de notificatie
-            showNotification(ctx, med, label)
-
-            // Plan de volgende herinnering over 15 minuten als het nog niet is afgevinkt
-            MedicationAlarmScheduler.scheduleSnooze(ctx, med.id, label)
+            showFullScreenNotification(ctx, med, label)
         }
     }
 
-    private fun showNotification(ctx: Context, med: Medication, label: String) {
-        val tapIntent = Intent(ctx, MainActivity::class.java).apply {
-            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-            putExtra("navigate_to", "meds")
+    private fun scheduleEscalation(ctx: Context, med: Medication) {
+        val alarmManager = ctx.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+        val escalationTime = System.currentTimeMillis() + (60 * 60 * 1000L) // 1 uur later
+
+        val intent = Intent(ctx, MedicationAlarmReceiver::class.java).apply {
+            putExtra("medication_id", med.id)
+            putExtra("is_escalation", true)
+            action = "com.seniorenlauncher.MED_ESCALATION_${med.id}"
         }
+
+        val pendingIntent = PendingIntent.getBroadcast(
+            ctx, (med.id + 8000).toInt(), intent, 
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+
+        try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && alarmManager.canScheduleExactAlarms()) {
+                alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, escalationTime, pendingIntent)
+            } else {
+                alarmManager.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, escalationTime, pendingIntent)
+            }
+        } catch (e: Exception) {
+            Log.e("MedReceiver", "Escalation failed", e)
+        }
+    }
+
+    private suspend fun handleEscalation(ctx: Context, med: Medication) {
+        val dao = LauncherApp.instance.database.medicationDao()
+        val currentMed = dao.getById(med.id)
+        
+        if (currentMed?.isPending == true) {
+            // Medicijn is nog niet ingenomen na 1 uur -> SMS sturen naar mantelzorger
+            val contactDao = LauncherApp.instance.database.contactDao()
+            val sosContacts = contactDao.getSosContactsSync()
+            
+            if (sosContacts.isNotEmpty()) {
+                val message = "LET OP: Uw familielid heeft het medicijn '${med.name}' (${med.dose}) van een uur geleden nog niet afgevinkt in de Senioren Launcher."
+                val smsManager = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                    ctx.getSystemService(SmsManager::class.java)
+                } else {
+                    @Suppress("DEPRECATION")
+                    SmsManager.getDefault()
+                }
+
+                sosContacts.forEach { contact ->
+                    try {
+                        smsManager.sendTextMessage(contact.phoneNumber, null, message, null, null)
+                    } catch (e: Exception) {
+                        Log.e("MedEscalation", "SMS failed", e)
+                    }
+                }
+            }
+            
+            // Log als gemist
+            dao.insertLog(MedicationLog(
+                medicationId = med.id, 
+                date = System.currentTimeMillis(), 
+                time = SimpleDateFormat("HH:mm", Locale.getDefault()).format(Date()), 
+                status = "MISSED"
+            ))
+        }
+    }
+
+    private fun showFullScreenNotification(ctx: Context, med: Medication, label: String) {
+        val notificationId = (med.id + 5000).toInt()
+        val tapIntent = Intent(ctx, MainActivity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
+            putExtra("NAVIGATE_TO", "alarm_trigger")
+            putExtra("ALARM_LABEL", "Medicijn: ${med.name}")
+            putExtra("ALARM_ID", med.id)
+            putExtra("MED_PHOTO", med.photoUri)
+            action = "com.seniorenlauncher.MED_ALARM_${med.id}"
+        }
+        
         val pendingIntent = PendingIntent.getActivity(
-            ctx, med.id.toInt(), tapIntent, 
+            ctx, notificationId, tapIntent, 
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
 
         val notification = NotificationCompat.Builder(ctx, LauncherApp.CH_MEDS)
-            .setContentTitle("\uD83D\uDC8A Medicijn herinnering")
-            .setContentText("Tijd voor: $label")
+            .setContentTitle("💊 TIJD VOOR MEDICIJNEN")
+            .setContentText("Neem nu in: ${med.name} (${med.dose})")
             .setSmallIcon(android.R.drawable.ic_lock_idle_alarm)
             .setPriority(NotificationCompat.PRIORITY_MAX)
             .setCategory(NotificationCompat.CATEGORY_ALARM)
-            .setAutoCancel(true)
             .setFullScreenIntent(pendingIntent, true) 
             .setContentIntent(pendingIntent)
+            .setOngoing(true)
+            .setAutoCancel(true)
+            .setVibrate(longArrayOf(0, 800, 400, 800, 400, 800))
             .build()
 
         val notificationManager = ctx.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-        notificationManager.notify(med.id.toInt(), notification)
+        notificationManager.notify(notificationId, notification)
     }
 }

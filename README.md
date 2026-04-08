@@ -1,118 +1,77 @@
-# 📱 Senior Launcher (0.8.1 Beta)
+# 📱 Senior Launcher (0.8.2 Beta)
 
-**The honest, open-source Android launcher for our elders. Created to make technology accessible and safe again.**
+**The honest, open-source Android launcher for our elders. Created to make technology accessible, safe, and human again.**
 
 [![License: GPL-3.0](https://img.shields.io/badge/License-GPL%20v3-blue.svg)](LICENSE)
 [![Privacy](https://img.shields.io/badge/Privacy-100%25-brightgreen.svg)](PRIVACY.md)
-[![Status: Beta](https://img.shields.io/badge/Status-0.8.1%20Beta-orange.svg)](#)
+[![Status: Beta](https://img.shields.io/badge/Status-0.8.2%20Beta-orange.svg)](#)
 
-> **⚠️ Beta Stage:** This project is currently in the beta phase. This means you might encounter some bugs or errors. I am doing my absolute best to update and improve the app as quickly as possible!
-
----
-
-## 📸 Screenshots
-
-<p align="center">
-  <img src="screenshots/screenshot_homescreenshot_home.jpeg" width="250" title="Home Screen">
-  <img src="screenshots/screenshot_phone.jpeg" width="250" title="Phone">
-  <img src="screenshots/screenshot_weather.jpeg" width="250" title="Weather & Advice">
-</p>
-<p align="center">
-  <img src="screenshots/screenshot_medication.jpeg" width="250" title="Medication">
-  <img src="screenshots/screenshot_emergency..jpeg" width="250" title="Emergency Info">
-  <img src="screenshots/screenshot_remote_support..jpeg" width="250" title="Remote Support">
-</p>
-<p align="center">
-  <img src="screenshots/screenshot_sos.jpeg" width="250" title="SOS Emergency">
-</p>
+> **⚠️ Beta Stage:** This project is currently in the beta phase. This means you might encounter some bugs. I am building this project in my spare time to give our (grand)parents their digital freedom back.
 
 ---
 
-[Nederlandse versie hier](README_NL.md)
+## 🌟 Our Vision: "Senior-First"
+Most smartphones are designed for young people. We turn that around. The Senior Launcher is built following strict UX rules for the elderly:
+- **No Keyboards:** Everything works with large plus/min buttons and clear lists.
+- **Gigantic Elements:** Texts are at least 20-30sp. Buttons are at least 70dp high.
+- **Contrast & Clarity:** No vague icons, only clear text like "HANG UP" or "SAVE".
+- **Digital Peace:** No unnecessary notifications or complicated swipe gestures.
 
 ---
 
-## 🚀 New in Version 0.8.1 Beta
-
-- **Global UI Scaling Engine**: A completely redesigned density-based scaling system. No more manual multipliers! The entire interface (paddings, icons, text) now zooms proportionally.
-- **Intelligent Setup Wizard**: A brand new step-by-step installation guide with two distinct flows:
-  - **The Caregiver Flow**: Quickly handle permissions, set up SOS contacts (up to 4), and lock settings with a PIN.
-  - **The Senior Flow**: A gentle, visual-first setup focused on readability (Eye-test) and simple choices.
-- **Improved Phone Experience**: Redesigned dialer with better space management for large zoom levels.
-- **Enhanced Contact Picker**: Search and select multiple SOS contacts instantly.
-- **Performance Fixes**: Smoother transitions and faster loading of system data.
-- **Memory Optimization**: Improved build stability and Metaspace handling.
-
----
-
-## Why Senior Launcher?
-
-Many existing launchers for seniors are unnecessarily expensive, full of ads, or secretly collect data. We believe our parents and grandparents deserve better.
-
-This is a **passion project I work on in my spare time**, with the goal of building a launcher that is:
-
-- **Truly Simple** — Large buttons, clear text, and no redundant menus.
-- **Privacy First** — Your data stays on your phone. Zero analytics, zero ads.
-- **100% Free & Open Source** — Available to everyone without a profit motive.
-
----
-
-## ☕ Support my work
-
-Senior Launcher is a project I offer completely for free. Your support helps enormously to cover costs (such as hosting or testing equipment) and motivates me to keep building new features in my free evenings and weekends.
-
-**Do you think this is a great initiative?** Any contribution, no matter how small, is greatly appreciated!
-
-[![Donate via PayPal](https://img.shields.io/badge/Donate-PayPal-blue.svg?style=for-the-badge)](https://www.paypal.com/donate/?business=amine.chtaiti@gmail.com&no_recurring=0&currency_code=EUR)
-
----
-
-## ✨ Features in detail
+## ✨ Key Features
 
 ### 📞 Calling & Contacts
-Large number keys and a list of favorites with photos. One press of a button to call family or friends directly.
+- **Simple Dialer:** Large number keys with haptic feedback.
+- **Favorites with Photos:** Call family with one click on their face.
+- **My Number:** The user's own number is always pinned at the top for easy reference.
+- **EMERGENCY 112:** A dedicated button with a safety confirmation to prevent false alarms.
 
-### 🆘 SOS Emergency Button
-By pressing the SOS button for 3 seconds, emergency contacts are immediately informed via SMS with the exact GPS location.
+### 💬 Messaging (SMS)
+- **Readability:** Messages grouped by day with an extra-large font.
+- **Instant Zoom:** Change text size directly within the chat using large controls.
+- **Safety:** Unknown or spam messages are clearly marked.
 
-### 👨‍🔧 Remote Support (RustDesk)
-Unique feature that allows a family member to watch remotely to help with settings. Includes a clear step-by-step plan for the senior.
+### 🆘 SOS & Safety
+- **SOS Button:** Hold for 3 seconds to immediately call emergency contacts and send an SMS with exact GPS location.
+- **Fall Detection:** Uses phone sensors to detect falls and automatically trigger help (Experimental).
+- **Emergency Info:** Medical data (blood type, allergies) directly accessible from the home screen for first responders.
 
-### 🔍 Magnifier & Flashlight
-Turn the phone into a digital magnifying glass to easily read small texts on medication or menus.
-
-### 🚶 Step Counter
-Stimulates movement by displaying today's step count large and clearly.
-
-### 📅 Calendar & Notes
-A simplified calendar and a place for short notes, so you never forget an appointment or errand again.
-
----
-
-## 🏗️ Technology
-
-| Component | Technologie |
-|-----------|-------------|
-| **Language** | Kotlin 2.1 |
-| **UI** | Jetpack Compose + Material 3 |
-| **Database** | Room (SQLite) + DataStore |
-| **Camera** | CameraX |
-| **Sensors** | Step Counter |
-| **Target SDK** | API 36 (Android 15) |
+### 💊 Medication & Wellness
+- **Reminders:** Notifications with actual photos of the medication.
+- **Stock Tracking:** The app tracks pill counts and warns the family when supplies are low.
+- **Steps & Radio:** Built-in step counter and a simple radio for relaxation.
 
 ---
 
-## 🤝 Contributing
+## 🎮 Remote Management (Remote Support)
 
-Want to help improve the project? Great! See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines on reporting bugs or submitting code.
+> **⚠️ Experimental Feature:** These features have been successfully tested on our primary devices. Due to the wide variety of Android hardware (Samsung, Nokia, etc.), we consider this experimental. Always test the commands yourself first.
 
-## 🔒 Privacy
+Administrators can manage the phone via simple SMS commands from their own device:
 
-Privacy is not an afterthought; it is the core of this project. We **do not collect data**. Everything remains on the senior's phone. Read our full [PRIVACY.md](PRIVACY.md).
+| Command | Action | Example |
+|---------|--------|---------|
+| **`#WAAR`** | Receive current GPS location via Google Maps link. | `#WAAR` |
+| **`#STATUS`** | Check Battery %, Volume, and Silent mode. | `#STATUS` |
+| **`#PING`** | Show an "ARE YOU OKAY?" check on the screen. | `#PING` |
+| **`#BEL_TERUG`**| The phone automatically calls the administrator back. | `#BEL_TERUG` |
+| **`#LAMP`** | Turn the flashlight ON or OFF. | `#LAMP ON` |
+| **`#KNIPPER`** | Make the flashlight blink 10x (visual signal). | `#KNIPPER` |
+| **`#OPEN`** | Remotely open an app (e.g., WhatsApp). | `#OPEN WhatsApp` |
+| **`#BERICHT`** | Show a large popup that is read aloud. | `#BERICHT Dinner at 6PM` |
+| **`#VOLUME`** | Set volume (scale 1-10). | `#VOLUME 10` |
+| **`#HELDER`** | Set brightness (scale 1-10). | `#HELDER 10` |
+| **`#WEKKER`** | Remotely set an alarm. | `#WEKKER 08:30 Breakfast` |
+| **`#HELP`** | Receive all codes on your own phone. | `#HELP` |
 
-## 📜 License
+---
 
-This project is licensed under the **GNU General Public License v3.0**. This means the software will always remain open and free.
+## 🏗️ Technology & Safety
+- **Kotlin 2.1 & Jetpack Compose:** Modern, fast, and stable code.
+- **Android 16 Ready:** Using the latest APIs for maximum reliability on new devices.
+- **Privacy:** 100% local. No data collection, no cloud, no ads.
+- **Battery Efficient:** Optimized to save battery on older devices.
 
 ---
 

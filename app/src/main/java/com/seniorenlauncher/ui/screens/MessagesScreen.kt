@@ -46,6 +46,9 @@ fun MessagesScreen(
     val isDefaultSms by messagesVm.isDefaultSmsApp.collectAsState()
     val context = LocalContext.current
     
+    // Zoom/Grootte status
+    var textZoom by remember { mutableStateOf(1f) }
+
     // Permission state
     var hasSmsPermissions by remember {
         mutableStateOf(
@@ -84,11 +87,11 @@ fun MessagesScreen(
     var selectedAddress by remember { mutableStateOf<String?>(null) }
     var selectedName by remember { mutableStateOf<String?>(null) }
 
-    // Handle deep link
+    // Handle deep link - verbeterd om direct naar chat te gaan bij initialAddress
     LaunchedEffect(initialAddress) {
-        if (initialAddress != null) {
+        if (initialAddress != null && initialAddress.isNotBlank()) {
             selectedAddress = initialAddress
-            selectedName = null // We'll look this up via the conversation list if needed, or just show number
+            selectedName = null 
             activeView = MessageView.Chat
         }
     }
@@ -106,14 +109,26 @@ fun MessagesScreen(
     }
 
     Column(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background).padding(horizontal = 12.dp, vertical = 8.dp)) {
-        ScreenHeader(
-            title = when (activeView) {
-                MessageView.Overview -> "Berichten"
-                MessageView.Chat -> selectedName ?: selectedAddress ?: "Chat"
-                MessageView.NewMessage -> "Nieuw Bericht"
-            },
-            onBack = backHandler
-        )
+        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
+            Box(Modifier.weight(1f)) {
+                ScreenHeader(
+                    title = when (activeView) {
+                        MessageView.Overview -> "Berichten"
+                        MessageView.Chat -> selectedName ?: selectedAddress ?: "Chat"
+                        MessageView.NewMessage -> "Nieuw Bericht"
+                    },
+                    onBack = backHandler
+                )
+            }
+            
+            // Zoom Controls
+            IconButton(onClick = { if (textZoom > 0.8f) textZoom -= 0.2f }) {
+                Icon(Icons.Default.TextFormat, "Kleiner", modifier = Modifier.size(24.dp))
+            }
+            IconButton(onClick = { if (textZoom < 2.0f) textZoom += 0.2f }) {
+                Icon(Icons.Default.TextFormat, "Groter", modifier = Modifier.size(36.dp))
+            }
+        }
 
         if (!hasSmsPermissions) {
             Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -145,14 +160,20 @@ fun MessagesScreen(
                                 selectedName = conv.contactName
                                 activeView = MessageView.Chat
                             },
-                            onNewMessageClick = { activeView = MessageView.NewMessage }
+                            onNewMessageClick = { activeView = MessageView.NewMessage },
+                            zoom = textZoom
                         )
                     }
                     MessageView.Chat -> {
-                        ChatScreen(
-                            address = selectedAddress!!,
-                            messagesVm = messagesVm
-                        )
+                        if (selectedAddress != null) {
+                            ChatScreen(
+                                address = selectedAddress!!,
+                                messagesVm = messagesVm,
+                                zoom = textZoom
+                            )
+                        } else {
+                            activeView = MessageView.Overview
+                        }
                     }
                     MessageView.NewMessage -> {
                         NewMessageScreen(
@@ -201,15 +222,18 @@ fun DefaultSmsBanner(onSetDefault: () -> Unit) {
 fun ConversationOverview(
     messagesVm: MessagesViewModel,
     onConversationClick: (Conversation) -> Unit,
-    onNewMessageClick: () -> Unit
+    onNewMessageClick: () -> Unit,
+    zoom: Float
 ) {
     val conversations by messagesVm.conversations.collectAsState()
     val isLoading by messagesVm.isLoading.collectAsState()
-    val context = LocalContext.current
 
     LaunchedEffect(Unit) {
         messagesVm.loadConversations()
     }
+
+    val unreadConversations = remember(conversations) { conversations.filter { !it.isRead } }
+    val readConversations = remember(conversations) { conversations.filter { it.isRead } }
 
     Column(Modifier.fillMaxSize()) {
         Button(
@@ -232,8 +256,22 @@ fun ConversationOverview(
             }
         } else {
             LazyColumn(verticalArrangement = Arrangement.spacedBy(10.dp), contentPadding = PaddingValues(bottom = 20.dp)) {
-                items(conversations) { conv ->
-                    ConversationItem(conv, onConversationClick)
+                if (unreadConversations.isNotEmpty()) {
+                    item {
+                        ListSectionHeader("NIEUWE BERICHTEN", Color.Red)
+                    }
+                    items(unreadConversations) { conv ->
+                        ConversationItem(conv, onConversationClick, zoom)
+                    }
+                }
+                
+                if (readConversations.isNotEmpty()) {
+                    item {
+                        ListSectionHeader("GELEZEN BERICHTEN", Color.Gray)
+                    }
+                    items(readConversations) { conv ->
+                        ConversationItem(conv, onConversationClick, zoom)
+                    }
                 }
             }
         }
@@ -241,7 +279,25 @@ fun ConversationOverview(
 }
 
 @Composable
-fun ConversationItem(conv: Conversation, onClick: (Conversation) -> Unit) {
+fun ListSectionHeader(title: String, color: Color) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp)
+    ) {
+        Box(Modifier.size(12.dp).clip(CircleShape).background(color))
+        Spacer(Modifier.width(8.dp))
+        Text(
+            text = title,
+            fontSize = 16.sp,
+            fontWeight = FontWeight.Black,
+            color = color,
+            letterSpacing = 1.sp
+        )
+    }
+}
+
+@Composable
+fun ConversationItem(conv: Conversation, onClick: (Conversation) -> Unit, zoom: Float) {
     Card(
         modifier = Modifier.fillMaxWidth().clickable { onClick(conv) },
         shape = RoundedCornerShape(16.dp),
@@ -251,13 +307,16 @@ fun ConversationItem(conv: Conversation, onClick: (Conversation) -> Unit) {
     ) {
         Row(Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
             Box(
-                Modifier.size(60.dp).clip(CircleShape).background(MaterialTheme.colorScheme.secondaryContainer),
+                Modifier.size((60 * zoom).dp).clip(CircleShape).background(
+                    if (conv.isRead) MaterialTheme.colorScheme.secondaryContainer else MaterialTheme.colorScheme.primary
+                ),
                 contentAlignment = Alignment.Center
             ) {
                 Text(
                     (conv.contactName ?: conv.address).take(1).uppercase(),
-                    fontSize = 28.sp,
-                    fontWeight = FontWeight.Bold
+                    fontSize = (28 * zoom).sp,
+                    fontWeight = FontWeight.Bold,
+                    color = if (conv.isRead) MaterialTheme.colorScheme.onSecondaryContainer else Color.White
                 )
             }
             Spacer(Modifier.width(16.dp))
@@ -265,7 +324,7 @@ fun ConversationItem(conv: Conversation, onClick: (Conversation) -> Unit) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(
                         conv.contactName ?: conv.address,
-                        fontSize = 22.sp,
+                        fontSize = (22 * zoom).sp,
                         fontWeight = if (conv.isRead) FontWeight.Bold else FontWeight.Black,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
@@ -277,7 +336,7 @@ fun ConversationItem(conv: Conversation, onClick: (Conversation) -> Unit) {
                 }
                 Text(
                     conv.snippet,
-                    fontSize = 18.sp,
+                    fontSize = (18 * zoom).sp,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -293,7 +352,7 @@ fun ConversationItem(conv: Conversation, onClick: (Conversation) -> Unit) {
 }
 
 @Composable
-fun ChatScreen(address: String, messagesVm: MessagesViewModel) {
+fun ChatScreen(address: String, messagesVm: MessagesViewModel, zoom: Float) {
     val messages by messagesVm.messages.collectAsState()
     var newMessageBody by remember { mutableStateOf("") }
     val scrollState = rememberLazyListState()
@@ -301,6 +360,10 @@ fun ChatScreen(address: String, messagesVm: MessagesViewModel) {
 
     LaunchedEffect(address) {
         messagesVm.loadChat(address)
+    }
+
+    val groupedMessages = remember(messages) {
+        messages.groupBy { formatGroupDate(it.timestamp) }
     }
 
     Column(Modifier.fillMaxSize()) {
@@ -311,11 +374,17 @@ fun ChatScreen(address: String, messagesVm: MessagesViewModel) {
             contentPadding = PaddingValues(vertical = 12.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            items(messages) { msg ->
-                MessageBubble(
-                    message = msg,
-                    onDelete = { messageToDelete = msg }
-                )
+            groupedMessages.forEach { (date, msgs) ->
+                items(msgs) { msg ->
+                    MessageBubble(
+                        message = msg,
+                        onDelete = { messageToDelete = msg },
+                        zoom = zoom
+                    )
+                }
+                item {
+                    DateHeader(date)
+                }
             }
         }
 
@@ -328,9 +397,9 @@ fun ChatScreen(address: String, messagesVm: MessagesViewModel) {
                 value = newMessageBody,
                 onValueChange = { newMessageBody = it },
                 modifier = Modifier.weight(1f),
-                placeholder = { Text("Schrijf bericht...", fontSize = 20.sp) },
+                placeholder = { Text("Schrijf bericht...", fontSize = (20 * zoom).sp) },
                 shape = RoundedCornerShape(24.dp),
-                textStyle = LocalTextStyle.current.copy(fontSize = 20.sp)
+                textStyle = LocalTextStyle.current.copy(fontSize = (20 * zoom).sp)
             )
             FloatingActionButton(
                 onClick = {
@@ -374,7 +443,25 @@ fun ChatScreen(address: String, messagesVm: MessagesViewModel) {
 }
 
 @Composable
-fun MessageBubble(message: SmsMessage, onDelete: () -> Unit) {
+fun DateHeader(date: String) {
+    Box(Modifier.fillMaxWidth().padding(vertical = 8.dp), contentAlignment = Alignment.Center) {
+        Surface(
+            color = Color.Gray.copy(alpha = 0.2f),
+            shape = RoundedCornerShape(12.dp)
+        ) {
+            Text(
+                text = date,
+                modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color.DarkGray
+            )
+        }
+    }
+}
+
+@Composable
+fun MessageBubble(message: SmsMessage, onDelete: () -> Unit, zoom: Float) {
     val alignment = if (message.isSent) Alignment.End else Alignment.Start
     val color = if (message.isSent) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.secondaryContainer
     
@@ -393,9 +480,9 @@ fun MessageBubble(message: SmsMessage, onDelete: () -> Unit) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(
                         text = message.body,
-                        fontSize = 22.sp,
+                        fontSize = (22 * zoom).sp,
                         fontWeight = FontWeight.Medium,
-                        lineHeight = 28.sp,
+                        lineHeight = (28 * zoom).sp,
                         modifier = Modifier.weight(1f)
                     )
                     IconButton(onClick = onDelete, modifier = Modifier.size(30.dp)) {
@@ -404,8 +491,8 @@ fun MessageBubble(message: SmsMessage, onDelete: () -> Unit) {
                 }
                 Spacer(Modifier.height(4.dp))
                 Text(
-                    text = formatDateTime(message.timestamp),
-                    fontSize = 14.sp,
+                    text = formatMessageTime(message.timestamp),
+                    fontSize = 12.sp,
                     color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
                     textAlign = if (message.isSent) TextAlign.End else TextAlign.Start,
                     modifier = Modifier.fillMaxWidth()
@@ -490,6 +577,20 @@ fun NewMessageScreen(messagesVm: MessagesViewModel, onContactSelected: (String, 
 
 fun formatTime(timestamp: Long): String {
     return SimpleDateFormat("HH:mm", Locale.getDefault()).format(Date(timestamp))
+}
+
+fun formatMessageTime(timestamp: Long): String {
+    return SimpleDateFormat("HH:mm", Locale.getDefault()).format(Date(timestamp))
+}
+
+fun formatGroupDate(timestamp: Long): String {
+    val now = Calendar.getInstance()
+    val msgTime = Calendar.getInstance().apply { timeInMillis = timestamp }
+    return when {
+        now.get(Calendar.DATE) == msgTime.get(Calendar.DATE) -> "Vandaag"
+        now.get(Calendar.DATE) - msgTime.get(Calendar.DATE) == 1 -> "Gisteren"
+        else -> SimpleDateFormat("d MMMM yyyy", Locale.getDefault()).format(Date(timestamp))
+    }
 }
 
 fun formatDateTime(timestamp: Long): String {

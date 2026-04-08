@@ -7,6 +7,7 @@ import android.content.Intent
 import android.content.IntentSender
 import android.content.pm.PackageManager
 import android.location.LocationManager
+import android.net.Uri
 import android.provider.Settings
 import android.util.Log
 import android.widget.Toast
@@ -59,6 +60,20 @@ fun SOSScreen(onBack: () -> Unit) {
     val dao = LauncherApp.instance.database.contactDao()
     val realSosContacts by dao.getSosContacts().collectAsState(initial = emptyList())
     
+    // Samsung fix: Controleer of de app bovenop andere apps mag verschijnen
+    var canDrawOverlays by remember { mutableStateOf(Settings.canDrawOverlays(context)) }
+    
+    val lifecycleOwner = androidx.lifecycle.compose.LocalLifecycleOwner.current
+    DisposableEffect(lifecycleOwner) {
+        val observer = androidx.lifecycle.LifecycleEventObserver { _, event ->
+            if (event == androidx.lifecycle.Lifecycle.Event.ON_RESUME) {
+                canDrawOverlays = Settings.canDrawOverlays(context)
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+    }
+
     // --- DUMMY DATA ---
     val dummySosContacts = listOf(
         QuickContact(name = "Dochter Sofie", phoneNumber = "06 12345678", isSosContact = true),
@@ -129,6 +144,35 @@ fun SOSScreen(onBack: () -> Unit) {
             verticalArrangement = Arrangement.Center
         ) {
             if (!sosTriggered) {
+                // --- SAMSUNG LOCKSCREEN FIX ---
+                if (!canDrawOverlays) {
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = 12.dp)
+                            .clickable {
+                                val intent = Intent(
+                                    Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+                                    Uri.parse("package:${context.packageName}")
+                                )
+                                context.startActivity(intent)
+                            },
+                        colors = CardDefaults.cardColors(containerColor = Color(0xFFFED7D7)),
+                        shape = RoundedCornerShape(16.dp)
+                    ) {
+                        Row(Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
+                            Icon(Icons.Default.Warning, null, tint = Color(0xFFC53030), modifier = Modifier.size(32.dp))
+                            Spacer(Modifier.width(12.dp))
+                            Text(
+                                "Samsung blokkeert onze hulp. Tik hier en zet 'Verschijnen bovenop' AAN.",
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color(0xFFC53030)
+                            )
+                        }
+                    }
+                }
+
                 if (!hasLocationPermission || !isGpsEnabled) {
                     Card(
                         modifier = Modifier.fillMaxWidth().padding(bottom = 24.dp),

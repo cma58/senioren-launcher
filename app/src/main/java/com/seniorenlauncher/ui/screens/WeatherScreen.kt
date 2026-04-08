@@ -1,5 +1,11 @@
 package com.seniorenlauncher.ui.screens
 
+import android.Manifest
+import android.content.Intent
+import android.content.pm.PackageManager
+import android.net.Uri
+import android.provider.Settings
+import android.speech.tts.TextToSpeech
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -9,308 +15,231 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.VolumeUp
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
+import androidx.core.content.ContextCompat
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.seniorenlauncher.data.model.ForecastDay
 import com.seniorenlauncher.data.model.WeatherLocation
+import com.seniorenlauncher.data.model.SafetyStatus
+import com.seniorenlauncher.data.model.DayPartForecast
 import com.seniorenlauncher.ui.components.ScreenHeader
-import java.text.SimpleDateFormat
 import java.util.*
 
 @Composable
 fun WeatherScreen(onBack: () -> Unit, viewModel: WeatherViewModel = viewModel()) {
+    val context = LocalContext.current
     val weatherData by viewModel.currentWeather.collectAsState()
-    val savedLocations by viewModel.savedLocations.collectAsState()
+    val safetyStatus by viewModel.safetyStatus.collectAsState()
+    val dayParts by viewModel.dayParts.collectAsState()
     val selectedLocation by viewModel.selectedLocation.collectAsState()
+    val savedLocations by viewModel.savedLocations.collectAsState()
     
     var showLocationDialog by remember { mutableStateOf(false) }
-    var citySearchQuery by remember { mutableStateOf("") }
 
-    Column(
-        Modifier
-            .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
-            .padding(horizontal = 12.dp, vertical = 8.dp)
-    ) {
-        ScreenHeader(title = "Weer & Advies", onBack = onBack)
+    var hasLocationPermission by remember { 
+        mutableStateOf(ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) 
+    }
 
-        if (weatherData == null) {
-            Box(Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.Center) {
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    CircularProgressIndicator()
-                    Spacer(Modifier.height(16.dp))
-                    Text("Weergegevens ophalen...", color = MaterialTheme.colorScheme.onBackground)
+    val lifecycleOwner = LocalLifecycleOwner.current
+    DisposableEffect(lifecycleOwner) {
+        val observer = androidx.lifecycle.LifecycleEventObserver { _, event ->
+            if (event == androidx.lifecycle.Lifecycle.Event.ON_RESUME) {
+                hasLocationPermission = ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
+                if (hasLocationPermission) viewModel.refreshWeather()
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+    }
+
+    var tts by remember { mutableStateOf<TextToSpeech?>(null) }
+    DisposableEffect(Unit) {
+        tts = TextToSpeech(context) { status -> if (status == TextToSpeech.SUCCESS) tts?.language = Locale.forLanguageTag("nl-NL") }
+        onDispose { tts?.stop(); tts?.shutdown() }
+    }
+
+    Column(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background).padding(12.dp)) {
+        ScreenHeader(title = "Weer in ${selectedLocation?.cityName ?: "uw regio"}", onBack = onBack)
+
+        if (!hasLocationPermission) {
+            Card(
+                modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp).clickable {
+                    context.startActivity(Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply { data = Uri.fromParts("package", context.packageName, null) })
+                },
+                colors = CardDefaults.cardColors(containerColor = Color(0xFFEF4444)),
+                shape = RoundedCornerShape(16.dp)
+            ) {
+                Row(Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Default.LocationOff, null, tint = Color.White)
+                    Spacer(Modifier.width(16.dp))
+                    Text("⚠️ Locatie uit. Klik hier om in te stellen.", color = Color.White, fontWeight = FontWeight.Bold)
                 }
             }
+        }
+
+        Button(onClick = { showLocationDialog = true }, modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp)) {
+            Icon(Icons.Default.LocationOn, null)
+            Spacer(Modifier.width(8.dp))
+            Text("ANDERE STAD KIEZEN", fontSize = 18.sp, fontWeight = FontWeight.Bold)
+        }
+
+        if (weatherData == null) {
+            Box(Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
         } else {
             val data = weatherData!!
-            Column(
-                Modifier
-                    .weight(1f)
-                    .verticalScroll(rememberScrollState()),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
-            ) {
-                // Locatie Selector
-                Card(
-                    Modifier.fillMaxWidth().clickable { showLocationDialog = true },
-                    shape = RoundedCornerShape(20.dp),
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer)
-                ) {
-                    Row(
-                        Modifier.padding(16.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Icon(if (selectedLocation?.isCurrentLocation != false) Icons.Default.MyLocation else Icons.Default.LocationCity, null)
-                        Spacer(Modifier.width(12.dp))
-                        Text(
-                            text = selectedLocation?.cityName ?: "Huidige Locatie",
-                            fontSize = 20.sp,
-                            fontWeight = FontWeight.Bold,
-                            modifier = Modifier.weight(1f)
-                        )
-                        Text("WIJZIG", fontWeight = FontWeight.Black, color = MaterialTheme.colorScheme.primary)
-                    }
-                }
-
-                // Huidig Weer Kaart
-                Card(
-                    Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(24.dp),
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)
-                ) {
-                    Column(
-                        Modifier.padding(24.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        Text(
-                            getWeatherEmoji(data.iconUrl),
-                            fontSize = 80.sp,
-                            modifier = Modifier.padding(vertical = 8.dp)
-                        )
-                        
-                        Text(
-                            "${data.temp.toInt()}°C",
-                            fontSize = 72.sp,
-                            fontWeight = FontWeight.Black,
-                            color = MaterialTheme.colorScheme.onPrimaryContainer
-                        )
-                        
-                        Text(
-                            data.condition,
-                            fontSize = 24.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onPrimaryContainer
-                        )
-                    }
-                }
-
-                // AI Kledingadvies Kaart
-                Card(
-                    Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(24.dp),
-                    colors = CardDefaults.cardColors(containerColor = Color(0xFFFFF9C4))
-                ) {
-                    Row(
-                        Modifier.padding(20.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text("💡", fontSize = 40.sp)
-                        Spacer(Modifier.width(16.dp))
-                        Column {
-                            Text("KLEDINGADVIES", fontSize = 14.sp, fontWeight = FontWeight.Black, color = Color(0xFFF57F17))
-                            Text(
-                                data.clothingAdvice,
-                                fontSize = 18.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = Color.Black,
-                                lineHeight = 24.sp
-                            )
-                        }
-                    }
-                }
-
-                // Komende Dagen
-                Text("Komende 5 dagen", fontSize = 22.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(top = 8.dp))
+            Column(Modifier.weight(1f).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                SafetyTrafficLight(safetyStatus, data.temp)
                 
-                Card(
-                    Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(24.dp),
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
-                ) {
-                    Column(Modifier.padding(16.dp)) {
-                        data.forecast.forEach { day ->
-                            ForecastRow(day)
-                            if (day != data.forecast.last()) {
-                                HorizontalDivider(Modifier.padding(vertical = 12.dp), color = MaterialTheme.colorScheme.outlineVariant)
-                            }
-                        }
+                Card(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(24.dp)) {
+                    Column(Modifier.padding(20.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text("KLEDINGADVIES", fontSize = 14.sp, fontWeight = FontWeight.Black, color = Color.Gray)
+                        Text(data.clothingIcons, fontSize = 60.sp)
                     }
                 }
-                
+
                 Button(
-                    onClick = { viewModel.refreshWeather() },
-                    modifier = Modifier.fillMaxWidth().height(70.dp),
-                    shape = RoundedCornerShape(16.dp)
+                    onClick = {
+                        val statusText = when(safetyStatus) {
+                            SafetyStatus.RED -> if (data.temp > 30) "Blijf binnen, extreem warm." else "Blijf binnen, gevaarlijk weer."
+                            SafetyStatus.ORANGE -> "Let op, kans op regen of wind."
+                            SafetyStatus.GREEN -> "Heerlijk weer om buiten te komen!"
+                        }
+                        val speech = "Het is nu ${data.temp.toInt()} graden. $statusText ${data.gardenAdvice} ${data.windowAdvice} ${data.activityAdvice} ${data.uvAdvice}"
+                        tts?.speak(speech, TextToSpeech.QUEUE_FLUSH, null, "WeatherSpeak")
+                    },
+                    modifier = Modifier.fillMaxWidth().height(90.dp),
+                    shape = RoundedCornerShape(20.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.tertiary)
                 ) {
-                    Icon(Icons.Default.Refresh, null)
+                    Icon(Icons.AutoMirrored.Filled.VolumeUp, null, modifier = Modifier.size(32.dp))
                     Spacer(Modifier.width(12.dp))
-                    Text("VERVERSEN", fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                    Text("LEES ALLES VOOR", fontSize = 22.sp, fontWeight = FontWeight.Black)
                 }
-                
-                Spacer(Modifier.height(20.dp))
+
+                if (data.gardenAdvice.isNotEmpty()) AdviceCard(data.gardenAdvice, Color(0xFFE8F5E9), "🌱")
+                if (data.windowAdvice.isNotEmpty()) AdviceCard(data.windowAdvice, Color(0xFFE3F2FD), "🪟")
+                if (data.activityAdvice.isNotEmpty()) AdviceCard(data.activityAdvice, Color(0xFFE0F2F1), "🚶")
+                if (data.uvAdvice.isNotEmpty()) AdviceCard(data.uvAdvice, Color(0xFFFFF3E0), "☀️")
+
+                Text("Vandaag in delen", fontSize = 22.sp, fontWeight = FontWeight.Bold)
+                dayParts.forEach { part -> DayPartCard(part) }
             }
         }
     }
 
     if (showLocationDialog) {
-        Dialog(onDismissRequest = { showLocationDialog = false }) {
-            Card(
-                Modifier.fillMaxWidth().fillMaxHeight(0.8f),
-                shape = RoundedCornerShape(28.dp)
-            ) {
-                Column(Modifier.padding(20.dp)) {
-                    Text("Locatie Wijzigen", fontSize = 24.sp, fontWeight = FontWeight.Bold)
-                    Spacer(Modifier.height(16.dp))
-                    
-                    OutlinedTextField(
-                        value = citySearchQuery,
-                        onValueChange = { citySearchQuery = it },
-                        modifier = Modifier.fillMaxWidth(),
-                        placeholder = { Text("Zoek een stad...") },
-                        trailingIcon = {
-                            IconButton(onClick = { 
-                                if (citySearchQuery.isNotBlank()) {
-                                    viewModel.searchAndAddCity(citySearchQuery)
-                                    citySearchQuery = ""
-                                }
-                            }) {
-                                Icon(Icons.Default.Add, "Toevoegen")
-                            }
-                        },
-                        shape = RoundedCornerShape(12.dp)
-                    )
-                    
-                    Spacer(Modifier.height(16.dp))
-                    
-                    LazyColumn(Modifier.weight(1f)) {
-                        item {
-                            LocationItem(
-                                name = "Mijn Locatie (GPS)",
-                                isCurrent = selectedLocation?.isCurrentLocation ?: true,
-                                icon = Icons.Default.MyLocation,
-                                onClick = {
-                                    viewModel.selectCurrentLocation()
-                                    showLocationDialog = false
-                                }
-                            )
-                        }
-                        
-                        items(savedLocations) { loc ->
-                            LocationItem(
-                                name = loc.cityName,
-                                isCurrent = selectedLocation?.id == loc.id,
-                                icon = Icons.Default.LocationCity,
-                                onClick = {
-                                    viewModel.selectLocation(loc)
-                                    showLocationDialog = false
-                                },
-                                onDelete = { viewModel.deleteLocation(loc) }
-                            )
-                        }
-                    }
-                    
-                    Button(
-                        onClick = { showLocationDialog = false },
-                        modifier = Modifier.fillMaxWidth().padding(top = 16.dp),
-                        shape = RoundedCornerShape(12.dp)
-                    ) {
-                        Text("SLUITEN")
-                    }
-                }
-            }
-        }
-    }
-}
-
-@Composable
-fun LocationItem(
-    name: String, 
-    isCurrent: Boolean, 
-    icon: androidx.compose.ui.graphics.vector.ImageVector, 
-    onClick: () -> Unit,
-    onDelete: (() -> Unit)? = null
-) {
-    Card(
-        modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp).clickable { onClick() },
-        colors = CardDefaults.cardColors(
-            containerColor = if (isCurrent) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant
+        LocationDialog(
+            savedLocations = savedLocations,
+            onDismiss = { showLocationDialog = false },
+            onSelect = { loc -> viewModel.selectLocation(loc); showLocationDialog = false },
+            onSearch = { viewModel.searchAndAddCity(it) },
+            onDelete = { viewModel.deleteLocation(it) }
         )
+    }
+}
+
+@Composable
+fun AdviceCard(text: String, color: Color, icon: String) {
+    Card(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(20.dp), colors = CardDefaults.cardColors(containerColor = color)) {
+        Row(Modifier.padding(20.dp), verticalAlignment = Alignment.CenterVertically) {
+            Text(icon, fontSize = 32.sp)
+            Spacer(Modifier.width(16.dp))
+            Text(text, fontSize = 20.sp, fontWeight = FontWeight.Bold, color = Color.Black)
+        }
+    }
+}
+
+@Composable
+fun SafetyTrafficLight(status: SafetyStatus, temp: Double) {
+    val (color, text) = when(status) {
+        SafetyStatus.RED -> Color(0xFFC53030) to if (temp > 30) "🔴 Blijf binnen! Extreem warm." else "🔴 Blijf binnen! Gevaarlijk glad of storm."
+        SafetyStatus.ORANGE -> Color(0xFFDD6B20) to "🟠 Let op: Kans op regen of wind."
+        SafetyStatus.GREEN -> Color(0xFF2F855A) to "🟢 Heerlijk weer om naar buiten te gaan!"
+    }
+
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(24.dp),
+        colors = CardDefaults.cardColors(containerColor = color.copy(alpha = 0.1f)),
+        border = androidx.compose.foundation.BorderStroke(4.dp, color)
     ) {
-        Row(Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
-            Icon(icon, null)
-            Spacer(Modifier.width(12.dp))
-            Text(name, fontSize = 18.sp, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
-            if (onDelete != null) {
-                IconButton(onClick = onDelete) {
-                    Icon(Icons.Default.Delete, null, tint = Color.Red)
-                }
+        Column(Modifier.padding(24.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+            Text(text, fontSize = 24.sp, fontWeight = FontWeight.Black, color = color, textAlign = TextAlign.Center)
+        }
+    }
+}
+
+@Composable
+fun DayPartCard(part: DayPartForecast) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
+    ) {
+        Row(
+            Modifier.padding(20.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Column(Modifier.weight(1f)) {
+                Text(part.label, fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color.Gray)
+                Text(part.condition, fontSize = 22.sp, fontWeight = FontWeight.Black)
+            }
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(getWeatherEmoji(part.icon), fontSize = 40.sp)
+                Spacer(Modifier.width(16.dp))
+                Text("${part.temp}°", fontSize = 32.sp, fontWeight = FontWeight.Black)
             }
         }
     }
 }
 
 @Composable
-fun ForecastRow(day: ForecastDay) {
-    Row(
-        Modifier.fillMaxWidth(),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.SpaceBetween
-    ) {
-        Column(Modifier.weight(1f)) {
-            Text(formatDate(day.date), fontSize = 18.sp, fontWeight = FontWeight.Bold)
-            Text(day.condition, fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+fun LocationDialog(
+    savedLocations: List<WeatherLocation>,
+    onDismiss: () -> Unit,
+    onSelect: (WeatherLocation) -> Unit,
+    onSearch: (String) -> Unit,
+    onDelete: (WeatherLocation) -> Unit
+) {
+    var query by remember { mutableStateOf("") }
+    Dialog(onDismissRequest = onDismiss) {
+        Card(Modifier.fillMaxWidth().fillMaxHeight(0.7f), shape = RoundedCornerShape(24.dp)) {
+            Column(Modifier.padding(20.dp)) {
+                Text("Kies een plaats", fontSize = 24.sp, fontWeight = FontWeight.Black)
+                OutlinedTextField(value = query, onValueChange = { query = it }, modifier = Modifier.fillMaxWidth(), label = { Text("Zoek stad...") })
+                Button(onClick = { onSearch(query); query = "" }, modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp)) { Text("ZOEKEN / TOEVOEGEN") }
+                LazyColumn(Modifier.weight(1f)) {
+                    items(savedLocations) { loc: WeatherLocation ->
+                        Card(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp).clickable { onSelect(loc) }) {
+                            Row(Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
+                                Text(loc.cityName, fontSize = 18.sp, modifier = Modifier.weight(1f))
+                                IconButton(onClick = { onDelete(loc) }) { Icon(Icons.Default.Delete, null, tint = Color.Red) }
+                            }
+                        }
+                    }
+                }
+                TextButton(onClick = onDismiss, modifier = Modifier.fillMaxWidth()) { Text("ANNULEREN") }
+            }
         }
-        
-        Text(getWeatherEmoji(day.iconUrl), fontSize = 32.sp)
-        
-        Row(Modifier.width(100.dp), horizontalArrangement = Arrangement.End) {
-            Text("${day.maxTemp.toInt()}°", fontSize = 20.sp, fontWeight = FontWeight.Bold)
-            Spacer(Modifier.width(8.dp))
-            Text("${day.minTemp.toInt()}°", fontSize = 20.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
-        }
-    }
-}
-
-fun formatDate(dateStr: String): String {
-    return try {
-        val date = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).parse(dateStr)
-        SimpleDateFormat("EEEE d MMM", Locale("nl")).format(date!!)
-            .replaceFirstChar { it.uppercase() }
-    } catch (e: Exception) {
-        dateStr
     }
 }
 
 fun getWeatherEmoji(codeStr: String): String {
     val code = codeStr.toIntOrNull() ?: return "⛅"
     return when (code) {
-        0 -> "☀️" // Clear
-        1, 2, 3 -> "🌤️" // Clouds
-        45, 48 -> "🌫️" // Fog
-        51, 53, 55 -> "🌦️" // Drizzle
-        61, 63, 65 -> "🌧️" // Rain
-        71, 73, 75 -> "❄️" // Snow
-        80, 81, 82 -> "🌦️" // Showers
-        95 -> "⛈️" // Storm
-        else -> "⛅"
+        0 -> "☀️"; 1, 2, 3 -> "🌤️"; 45, 48 -> "🌫️"; 51, 53, 55 -> "🌦️"; 61, 63, 65 -> "🌧️"; 71, 73, 75 -> "❄️"; 80, 81, 82 -> "🌦️"; 95, 96, 99 -> "⛈️"; else -> "⛅"
     }
 }

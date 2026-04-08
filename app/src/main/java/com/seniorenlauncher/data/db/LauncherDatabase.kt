@@ -3,7 +3,7 @@ import androidx.room.*
 import com.seniorenlauncher.data.model.*
 import kotlinx.coroutines.flow.Flow
 
-@Database(entities = [QuickContact::class, Medication::class, MedicationLog::class, Note::class, CalendarEvent::class, EmergencyInfo::class, AlarmEntry::class, RadioStation::class, WeatherLocation::class], version = 5, exportSchema = false)
+@Database(entities = [QuickContact::class, Medication::class, MedicationLog::class, Note::class, CalendarEvent::class, EmergencyInfo::class, AlarmEntry::class, RadioStation::class, WeatherLocation::class], version = 8, exportSchema = false)
 abstract class LauncherDatabase : RoomDatabase() {
     abstract fun contactDao(): ContactDao
     abstract fun medicationDao(): MedicationDao
@@ -18,6 +18,7 @@ abstract class LauncherDatabase : RoomDatabase() {
 @Dao interface ContactDao {
     @Query("SELECT * FROM contacts ORDER BY sortOrder") fun getAll(): Flow<List<QuickContact>>
     @Query("SELECT * FROM contacts WHERE isSosContact = 1") fun getSosContacts(): Flow<List<QuickContact>>
+    @Query("SELECT * FROM contacts WHERE isSosContact = 1") suspend fun getSosContactsSync(): List<QuickContact>
     @Insert(onConflict = OnConflictStrategy.REPLACE) suspend fun insert(c: QuickContact)
     @Delete suspend fun delete(c: QuickContact)
 }
@@ -29,6 +30,13 @@ abstract class LauncherDatabase : RoomDatabase() {
     @Insert(onConflict = OnConflictStrategy.REPLACE) suspend fun insert(m: Medication): Long
     @Update suspend fun update(m: Medication)
     @Delete suspend fun delete(m: Medication)
+
+    // Logs
+    @Insert(onConflict = OnConflictStrategy.REPLACE) suspend fun insertLog(log: MedicationLog)
+    @Query("SELECT * FROM medication_logs WHERE medicationId = :medId ORDER BY date DESC, time DESC LIMIT 50")
+    fun getLogsForMedication(medId: Long): Flow<List<MedicationLog>>
+    @Query("SELECT * FROM medication_logs ORDER BY date DESC, time DESC LIMIT 100")
+    fun getAllLogs(): Flow<List<MedicationLog>>
 }
 @Dao interface NoteDao {
     @Query("SELECT * FROM notes ORDER BY updatedAt DESC") fun getAll(): Flow<List<Note>>

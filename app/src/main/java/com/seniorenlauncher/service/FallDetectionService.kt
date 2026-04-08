@@ -2,7 +2,9 @@ package com.seniorenlauncher.service
 import android.app.Service
 import android.content.Context
 import android.content.Intent
+import android.content.pm.ServiceInfo
 import android.hardware.*
+import android.os.Build
 import android.os.IBinder
 import android.os.VibrationEffect
 import android.os.Vibrator
@@ -18,8 +20,18 @@ class FallDetectionService : Service(), SensorEventListener {
     override fun onBind(intent: Intent?): IBinder? = null
     override fun onCreate() { super.onCreate(); sensorMgr = getSystemService(Context.SENSOR_SERVICE) as SensorManager }
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        startForeground(1002, NotificationCompat.Builder(this, LauncherApp.CH_GENERAL)
-            .setContentTitle("Valdetectie actief").setSmallIcon(android.R.drawable.ic_dialog_info).setOngoing(true).build())
+        val notification = NotificationCompat.Builder(this, LauncherApp.CH_GENERAL)
+            .setContentTitle("Valdetectie actief")
+            .setSmallIcon(android.R.drawable.ic_dialog_info)
+            .setOngoing(true)
+            .build()
+            
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+            startForeground(1002, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_HEALTH)
+        } else {
+            startForeground(1002, notification)
+        }
+            
         sensorMgr.getDefaultSensor(Sensor.TYPE_ACCELEROMETER)?.let { sensorMgr.registerListener(this, it, SensorManager.SENSOR_DELAY_UI) }
         return START_STICKY
     }
@@ -33,7 +45,15 @@ class FallDetectionService : Service(), SensorEventListener {
     override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {}
     private fun onFall() {
         (getSystemService(Context.VIBRATOR_SERVICE) as Vibrator).vibrate(VibrationEffect.createWaveform(longArrayOf(0,500,200,500),-1))
-        scope.launch { delay(30_000); startService(Intent(this@FallDetectionService, SOSService::class.java)) }
+        scope.launch { 
+            delay(30_000)
+            val intent = Intent(this@FallDetectionService, SOSService::class.java)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                startForegroundService(intent)
+            } else {
+                startService(intent)
+            }
+        }
     }
     override fun onDestroy() { sensorMgr.unregisterListener(this); scope.cancel(); super.onDestroy() }
 }

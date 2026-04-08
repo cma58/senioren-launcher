@@ -1,10 +1,13 @@
 [versions]
+agp = "9.1.0"
 activityCompose = "1.13.0"
 camera = "1.6.0"
 coilCompose = "2.7.0"
 coreKtx = "1.18.0"
 datastorePreferences = "1.2.1"
+kotlin = "2.1.10"
 kotlinxCoroutinesPlayServices = "1.10.2"
+ksp = "2.1.10-1.0.29"
 lifecycle = "2.10.0"
 material = "1.13.0"
 media3 = "1.10.0"
@@ -46,3 +49,6 @@ androidx-compose-material3 = { group = "androidx.compose.material3", name = "mat
 androidx-compose-material-icons-extended = { group = "androidx.compose.material", name = "material-icons-extended" }
 
 [plugins]
+android-application = { id = "com.android.application", version.ref = "agp" }
+kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
+ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }

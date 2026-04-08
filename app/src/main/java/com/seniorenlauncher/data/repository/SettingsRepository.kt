@@ -28,6 +28,10 @@ class SettingsRepository(private val context: Context) {
         val VISIBLE_APPS = stringPreferencesKey("visible_apps")
         val APP_MAPPINGS = stringPreferencesKey("app_mappings")
         val HAS_COMPLETED_SETUP = booleanPreferencesKey("has_completed_setup")
+        val USER_PHONE_NUMBER = stringPreferencesKey("user_phone_number")
+
+        // NIEUW: De sleutel voor het veilige SOS nummer van de mantelzorger
+        val SOS_PHONE_NUMBER = stringPreferencesKey("sos_phone_number")
     }
 
     val settingsFlow: Flow<AppSettings> = context.dataStore.data.map { prefs ->
@@ -51,8 +55,20 @@ class SettingsRepository(private val context: Context) {
                     map
                 } catch(e: Exception) { emptyMap<String, String>() }
             } ?: emptyMap(),
-            hasCompletedSetup = prefs[HAS_COMPLETED_SETUP] ?: false
+            hasCompletedSetup = prefs[HAS_COMPLETED_SETUP] ?: false,
+            userPhoneNumber = prefs[USER_PHONE_NUMBER]
         )
+    }
+
+    // NIEUW: Een aparte 'stroom' die de SmsReceiver kan uitlezen om de afzender te verifiëren
+    val sosPhoneNumberFlow: Flow<String?> = context.dataStore.data.map { it[SOS_PHONE_NUMBER] }
+
+    // NIEUW: De functie om het nummer van de mantelzorger veilig op te slaan
+    suspend fun setSosPhoneNumber(number: String?) {
+        context.dataStore.edit {
+            if (number == null) it.remove(SOS_PHONE_NUMBER)
+            else it[SOS_PHONE_NUMBER] = number
+        }
     }
 
     suspend fun setTheme(theme: AppTheme) {
@@ -106,5 +122,12 @@ class SettingsRepository(private val context: Context) {
 
     suspend fun setHasCompletedSetup(completed: Boolean) {
         context.dataStore.edit { it[HAS_COMPLETED_SETUP] = completed }
+    }
+
+    suspend fun setUserPhoneNumber(number: String?) {
+        context.dataStore.edit {
+            if (number == null) it.remove(USER_PHONE_NUMBER)
+            else it[USER_PHONE_NUMBER] = number
+        }
     }
 }
