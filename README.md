@@ -10,9 +10,37 @@
 
 ---
 
+## 📢 Call for Testers & Feedback
+I am constantly working to improve the launcher, but since I don't own every type of Android device, I need your help!
+
+**Help improve the project:**
+I am looking for testers who want to thoroughly try out the features (especially the SMS commands) on various devices (Samsung, Nokia, Motorola, etc.). Do you have advice, a suggestion for a new feature, or did you find a bug?
+- **Contact & Bug Reports:** [amine.chtaiti@gmail.com](mailto:amine.chtaiti@gmail.com)
+
+---
+
+## 📸 Screenshots
+
+<p align="center">
+  <img src="screenshots/screenshot_home.jpeg" width="250" title="Home Screen">
+  <img src="screenshots/screenshot_phone.jpeg" width="250" title="Phone">
+  <img src="screenshots/screenshot_weather.jpeg" width="250" title="Weather & Advice">
+</p>
+<p align="center">
+  <img src="screenshots/screenshot_medication.jpeg" width="250" title="Medication">
+  <img src="screenshots/screenshot_emergency.jpeg" width="250" title="Emergency Info">
+  <img src="screenshots/screenshot_remote_support.jpeg" width="250" title="Remote Support">
+</p>
+
+---
+
+[Nederlandse versie hier](README_NL.md) | [Admin Guide (NL)](DOCS_BEHEERDER_NL.md)
+
+---
+
 ## 🌟 Our Vision: "Senior-First"
 Most smartphones are designed for young people. We turn that around. The Senior Launcher is built following strict UX rules for the elderly:
-- **No Keyboards:** Everything works with large plus/min buttons and clear lists.
+- **No Keyboards:** Everything works with large plus/minus buttons and clear lists.
 - **Gigantic Elements:** Texts are at least 20-30sp. Buttons are at least 70dp high.
 - **Contrast & Clarity:** No vague icons, only clear text like "HANG UP" or "SAVE".
 - **Digital Peace:** No unnecessary notifications or complicated swipe gestures.
@@ -56,11 +84,11 @@ Administrators can manage the phone via simple SMS commands from their own devic
 | **`#STATUS`** | Check Battery %, Volume, and Silent mode. | `#STATUS` |
 | **`#PING`** | Show an "ARE YOU OKAY?" check on the screen. | `#PING` |
 | **`#BEL_TERUG`**| The phone automatically calls the administrator back. | `#BEL_TERUG` |
-| **`#LAMP`** | Turn the flashlight ON or OFF. | `#LAMP ON` |
+| **`#LAMP`** | Turn the flashlight ON or OFF. | `#LAMP ON` / `#LAMP OFF` |
 | **`#KNIPPER`** | Make the flashlight blink 10x (visual signal). | `#KNIPPER` |
 | **`#OPEN`** | Remotely open an app (e.g., WhatsApp). | `#OPEN WhatsApp` |
 | **`#BERICHT`** | Show a large popup that is read aloud. | `#BERICHT Dinner at 6PM` |
-| **`#VOLUME`** | Set volume (scale 1-10). | `#VOLUME 10` |
+| **`#VOLUME`** | Set volume (scale 0-10). | `#VOLUME 10` |
 | **`#HELDER`** | Set brightness (scale 1-10). | `#HELDER 10` |
 | **`#WEKKER`** | Remotely set an alarm. | `#WEKKER 08:30 Breakfast` |
 | **`#HELP`** | Receive all codes on your own phone. | `#HELP` |
@@ -74,5 +102,8 @@ Administrators can manage the phone via simple SMS commands from their own devic
 - **Battery Efficient:** Optimized to save battery on older devices.
 
 ---
+
+## 🤝 Contributing & Support
+This is an open-source project. If you found a bug or want to help testing, please let me know via GitHub Issues or email at [amine.chtaiti@gmail.com](mailto:amine.chtaiti@gmail.com).
 
 *"Technology should connect people, not exclude them."* ❤️
