@@ -40,7 +40,7 @@ I am looking for testers who want to thoroughly try out the features (especially
 
 ---
 
-## 🌟 Our Vision: "Senior-First"
+## 🌟 My Vision: "Senior-First"
 Most smartphones are designed for young people. We turn that around. The Senior Launcher is built following strict UX rules for the elderly:
 - **No Keyboards:** Everything works with large Plus/Minus buttons and simple lists.
 - **Gigantic Elements:** Texts are at least 20-30sp. Buttons are at least 70dp high.
