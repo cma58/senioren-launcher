@@ -1,6 +1,5 @@
 package com.seniorenlauncher.ui.screens
 
-import android.Manifest
 import android.app.role.RoleManager
 import android.content.Context
 import android.content.Intent
@@ -23,13 +22,11 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
@@ -39,41 +36,47 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
-import androidx.core.content.ContextCompat
 import com.seniorenlauncher.LauncherApp
 import com.seniorenlauncher.data.model.*
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.ui.graphics.vector.ImageVector
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-
-enum class SetupFlow { NONE, CAREGIVER, SENIOR }
 
 @Composable
 fun SetupWizardScreen(
     onFinished: () -> Unit,
     settingsVm: SettingsViewModel
 ) {
-    // Gebruik de ViewModel om de status te onthouden bij een proces-herstart (bv. na instellen launcher)
-    var flow by remember { mutableStateOf(SetupFlow.NONE) }
+    val settings by settingsVm.settings.collectAsState()
+    
+    var flow by remember { mutableStateOf(WizardSetupFlow.NONE) }
     var caregiverStep by remember { mutableIntStateOf(1) }
     var seniorStep by remember { mutableIntStateOf(1) }
 
+    if (!settings.privacyAccepted) {
+        PrivacyConsentScreen(onAccepted = { settingsVm.acceptPrivacy() })
+        return
+    }
+
     when (flow) {
-        SetupFlow.NONE -> {
+        WizardSetupFlow.NONE -> {
             FlowSelectionScreen(onFlowSelected = { flow = it })
         }
-        SetupFlow.CAREGIVER -> {
+        WizardSetupFlow.CAREGIVER -> {
             when (caregiverStep) {
                 1 -> PermissionsSetupScreen(onNext = { caregiverStep = 2 }, isSenior = false)
                 2 -> SystemPermissionsSetupScreen(onNext = { caregiverStep = 3 }, isSenior = false)
                 3 -> DefaultAppsSetupScreen(onNext = { caregiverStep = 4 }, isSenior = false)
                 4 -> SosSetupScreen(onNext = { caregiverStep = 5 }, settingsVm = settingsVm)
                 5 -> SecuritySetupScreen(onNext = { caregiverStep = 6 }, settingsVm = settingsVm)
-                6 -> HandoverScreen(onNext = { flow = SetupFlow.SENIOR })
+                6 -> HandoverScreen(onNext = { flow = WizardSetupFlow.SENIOR })
+                else -> {}
             }
         }
-        SetupFlow.SENIOR -> {
+        WizardSetupFlow.SENIOR -> {
             when (seniorStep) {
                 1 -> SeniorWelcomeStep(onNext = { seniorStep = 2 })
                 2 -> PermissionsSetupScreen(onNext = { seniorStep = 3 }, isSenior = true)
@@ -85,13 +88,107 @@ fun SetupWizardScreen(
                     settingsVm.completeSetup()
                     onFinished()
                 })
+                else -> {}
             }
         }
     }
 }
 
 @Composable
-fun FlowSelectionScreen(onFlowSelected: (SetupFlow) -> Unit) {
+fun PrivacyConsentScreen(onAccepted: () -> Unit) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background)
+            .padding(24.dp)
+            .verticalScroll(rememberScrollState()),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Icon(
+            Icons.Default.PrivacyTip,
+            contentDescription = null,
+            modifier = Modifier.size(64.dp),
+            tint = MaterialTheme.colorScheme.primary
+        )
+        
+        Spacer(Modifier.height(24.dp))
+        
+        Text(
+            text = "Privacy & Veiligheid",
+            fontSize = 32.sp,
+            fontWeight = FontWeight.ExtraBold,
+            textAlign = TextAlign.Center
+        )
+        
+        Spacer(Modifier.height(24.dp))
+        
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)),
+            shape = RoundedCornerShape(20.dp)
+        ) {
+            Column(Modifier.padding(20.dp)) {
+                PrivacyPoint(
+                    icon = Icons.Default.Lock,
+                    title = "Uw data blijft van u",
+                    description = "Alle contacten, SOS-nummers en instellingen worden alleen veilig op dít toestel opgeslagen. Wij verzamelen geen persoonlijke gegevens."
+                )
+                
+                Spacer(Modifier.height(16.dp))
+                
+                PrivacyPoint(
+                    icon = Icons.Default.CloudOff,
+                    title = "Geen Cloud-opslag",
+                    description = "Er wordt geen data naar externe servers of de cloud gestuurd. Uw privacy is 100% gewaarborgd volgens de Europese AVG/GDPR normen."
+                )
+                
+                Spacer(Modifier.height(16.dp))
+                
+                PrivacyPoint(
+                    icon = Icons.Default.AdsClick,
+                    title = "Geen Advertenties",
+                    description = "De Senioren Launcher is volledig vrij van reclame en tracking software."
+                )
+            }
+        }
+        
+        Spacer(Modifier.weight(1f))
+        Spacer(Modifier.height(32.dp))
+        
+        Text(
+            text = "Door op de knop hieronder te drukken, gaat u akkoord met onze privacyverklaring.",
+            fontSize = 14.sp,
+            textAlign = TextAlign.Center,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.padding(horizontal = 16.dp)
+        )
+        
+        Spacer(Modifier.height(16.dp))
+        
+        Button(
+            onClick = onAccepted,
+            modifier = Modifier.fillMaxWidth().height(70.dp),
+            shape = RoundedCornerShape(20.dp)
+        ) {
+            Text("IK GA AKKOORD", fontSize = 20.sp, fontWeight = FontWeight.Bold)
+        }
+    }
+}
+
+@Composable
+fun PrivacyPoint(icon: androidx.compose.ui.graphics.vector.ImageVector, title: String, description: String) {
+    Row(verticalAlignment = Alignment.Top) {
+        Icon(icon, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(28.dp))
+        Spacer(Modifier.width(16.dp))
+        Column {
+            Text(title, fontWeight = FontWeight.Bold, fontSize = 18.sp)
+            Text(description, fontSize = 15.sp, color = MaterialTheme.colorScheme.onSurfaceVariant, lineHeight = 20.sp)
+        }
+    }
+}
+
+@Composable
+fun FlowSelectionScreen(onFlowSelected: (WizardSetupFlow) -> Unit) {
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -106,25 +203,38 @@ fun FlowSelectionScreen(onFlowSelected: (SetupFlow) -> Unit) {
             lineHeight = 42.sp,
             fontWeight = FontWeight.ExtraBold,
             textAlign = TextAlign.Center,
-            modifier = Modifier.padding(bottom = 64.dp)
+            modifier = Modifier.padding(bottom = 32.dp)
         )
+        
+        Card(
+            modifier = Modifier.fillMaxWidth().padding(bottom = 32.dp),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)),
+            shape = RoundedCornerShape(16.dp)
+        ) {
+            Text(
+                "De setup bestaat uit twee delen: technische instellingen door de beheerder en visuele keuzes voor de senior.",
+                modifier = Modifier.padding(16.dp),
+                fontSize = 16.sp,
+                textAlign = TextAlign.Center
+            )
+        }
 
         SetupOptionCard(
             title = "Ik ben de Mantelzorger",
-            description = "Ik stel dit toestel in voor iemand anders.",
+            description = "Ik stel dit toestel technisch in (aanbevolen).",
             icon = Icons.Default.VolunteerActivism,
             color = Color(0xFF3B82F6),
-            onClick = { onFlowSelected(SetupFlow.CAREGIVER) }
+            onClick = { onFlowSelected(WizardSetupFlow.CAREGIVER) }
         )
 
-        Spacer(Modifier.height(32.dp))
+        Spacer(Modifier.height(24.dp))
 
         SetupOptionCard(
             title = "Ik ben de Gebruiker",
-            description = "Ik ga deze telefoon zelf gebruiken.",
+            description = "Ik ga deze telefoon direct zelf gebruiken.",
             icon = Icons.Default.Person,
             color = Color(0xFF10B981),
-            onClick = { onFlowSelected(SetupFlow.SENIOR) }
+            onClick = { onFlowSelected(WizardSetupFlow.SENIOR) }
         )
     }
 }
@@ -144,7 +254,7 @@ fun SetupOptionCard(
             .clickable { onClick() },
         shape = RoundedCornerShape(24.dp),
         colors = CardDefaults.cardColors(containerColor = color.copy(alpha = 0.1f)),
-        border = androidx.compose.foundation.BorderStroke(2.dp, color)
+        border = BorderStroke(2.dp, color)
     ) {
         Row(
             modifier = Modifier.padding(24.dp),
@@ -168,7 +278,6 @@ fun DefaultAppsSetupScreen(onNext: () -> Unit, isSenior: Boolean = false) {
     var isDefaultDialer by remember { mutableStateOf(false) }
     var isDefaultSms by remember { mutableStateOf(false) }
 
-    // Krachtigere check met RoleManager voor modern Android
     LaunchedEffect(Unit) {
         while (true) {
             isDefaultHome = isLauncherDefault(context)
@@ -178,11 +287,8 @@ fun DefaultAppsSetupScreen(onNext: () -> Unit, isSenior: Boolean = false) {
                 isDefaultDialer = roleManager.isRoleHeld(RoleManager.ROLE_DIALER)
                 isDefaultSms = roleManager.isRoleHeld(RoleManager.ROLE_SMS)
             } else {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                    val telecomManager = context.getSystemService(Context.TELECOM_SERVICE) as TelecomManager
-                    isDefaultDialer = telecomManager.defaultDialerPackage == context.packageName
-                } else isDefaultDialer = true
-                
+                val telecomManager = context.getSystemService(Context.TELECOM_SERVICE) as TelecomManager
+                isDefaultDialer = telecomManager.defaultDialerPackage == context.packageName
                 isDefaultSms = Telephony.Sms.getDefaultSmsPackage(context) == context.packageName
             }
             delay(1000)
@@ -219,7 +325,6 @@ fun DefaultAppsSetupScreen(onNext: () -> Unit, isSenior: Boolean = false) {
         
         Spacer(Modifier.height(32.dp))
 
-        // 1. START SCHERM (HOME)
         DefaultAppRow(
             title = if (isSenior) "1. Basis scherm" else "Startscherm (Home)",
             description = if (isSenior) "Zodat u altijd de grote knoppen ziet." else "Maak dit de standaard launcher.",
@@ -237,7 +342,6 @@ fun DefaultAppsSetupScreen(onNext: () -> Unit, isSenior: Boolean = false) {
 
         Spacer(Modifier.height(16.dp))
 
-        // 2. TELEFOON (DIALER)
         DefaultAppRow(
             title = if (isSenior) "2. Telefoon knop" else "Telefoon (Bellen)",
             description = if (isSenior) "Om makkelijk uw familie te kunnen bellen." else "Nodig voor de versimpelde bel-interface.",
@@ -249,7 +353,7 @@ fun DefaultAppsSetupScreen(onNext: () -> Unit, isSenior: Boolean = false) {
                     val roleManager = context.getSystemService(Context.ROLE_SERVICE) as RoleManager
                     val intent = roleManager.createRequestRoleIntent(RoleManager.ROLE_DIALER)
                     roleLauncher.launch(intent)
-                } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                } else {
                     val intent = Intent(TelecomManager.ACTION_CHANGE_DEFAULT_DIALER).apply {
                         putExtra(TelecomManager.EXTRA_CHANGE_DEFAULT_DIALER_PACKAGE_NAME, context.packageName)
                     }
@@ -260,7 +364,6 @@ fun DefaultAppsSetupScreen(onNext: () -> Unit, isSenior: Boolean = false) {
 
         Spacer(Modifier.height(16.dp))
 
-        // 3. SMS
         DefaultAppRow(
             title = if (isSenior) "3. Berichten knop" else "Berichten (SMS)",
             description = if (isSenior) "Zodat u veilig berichten kunt ontvangen." else "Nodig voor SOS en batterijmeldingen.",
@@ -310,7 +413,7 @@ fun DefaultAppRow(title: String, description: String, isGranted: Boolean, icon: 
         modifier = Modifier.fillMaxWidth().clickable(enabled = !isGranted) { onClick() },
         shape = RoundedCornerShape(24.dp),
         colors = CardDefaults.cardColors(containerColor = if (isGranted) Color(0xFFE8F5E9) else Color(0xFFFEF2F2)),
-        border = androidx.compose.foundation.BorderStroke(if (isSenior) 4.dp else 2.dp, if (isGranted) Color(0xFF10B981) else Color(0xFFEF4444))
+        border = BorderStroke(if (isSenior) 4.dp else 2.dp, if (isGranted) Color(0xFF10B981) else Color(0xFFEF4444))
     ) {
         Row(Modifier.padding(if (isSenior) 24.dp else 20.dp), verticalAlignment = Alignment.CenterVertically) {
             Icon(icon, null, modifier = Modifier.size(if (isSenior) 40.dp else 32.dp), tint = if (isGranted) Color(0xFF10B981) else Color(0xFFEF4444))
@@ -332,7 +435,6 @@ private fun isLauncherDefault(context: Context): Boolean {
 
 @Composable
 fun SosSetupScreen(onNext: () -> Unit, settingsVm: SettingsViewModel) {
-    val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val emergencyDao = remember { LauncherApp.instance.database.emergencyDao() }
     val contactDao = remember { LauncherApp.instance.database.contactDao() }
@@ -367,7 +469,6 @@ fun SosSetupScreen(onNext: () -> Unit, settingsVm: SettingsViewModel) {
         
         Spacer(Modifier.height(24.dp))
 
-        // Handmatige invoer
         Row(verticalAlignment = Alignment.Bottom, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             Column(Modifier.weight(1f)) {
                 OutlinedTextField(
@@ -407,7 +508,6 @@ fun SosSetupScreen(onNext: () -> Unit, settingsVm: SettingsViewModel) {
 
         Spacer(Modifier.height(16.dp))
 
-        // Lijst van geselecteerde contacten
         Card(
             modifier = Modifier.fillMaxWidth().weight(1f),
             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)),
@@ -617,7 +717,6 @@ fun SecuritySetupScreen(onNext: () -> Unit, settingsVm: SettingsViewModel) {
         
         Spacer(Modifier.height(32.dp))
         
-        // PIN Sectie
         Card(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(20.dp),
@@ -643,7 +742,6 @@ fun SecuritySetupScreen(onNext: () -> Unit, settingsVm: SettingsViewModel) {
         
         Spacer(Modifier.height(24.dp))
         
-        // Hulp op afstand Sectie
         Card(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(20.dp),
@@ -727,8 +825,6 @@ fun HandoverScreen(onNext: () -> Unit) {
         }
     }
 }
-
-// --- SENIOR FLOW STAPPEN ---
 
 @Composable
 fun SeniorWelcomeStep(onNext: () -> Unit) {

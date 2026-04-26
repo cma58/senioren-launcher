@@ -7,30 +7,48 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.seniorenlauncher.data.model.*
 import com.seniorenlauncher.ui.components.ScreenHeader
+import com.seniorenlauncher.util.UpdateManager
+import kotlinx.coroutines.launch
 
 @Composable
 fun SettingsScreen(vm: SettingsViewModel, onNavigate: (String) -> Unit, onBack: () -> Unit) {
     val settings by vm.settings.collectAsState()
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    val haptic = LocalHapticFeedback.current
     
     var showPinScreen by remember { mutableStateOf(false) }
     var enteredPin by remember { mutableStateOf("") }
+    
+    // Update status
+    var isCheckingUpdate by remember { mutableStateOf(false) }
+    var updateResult by remember { mutableStateOf<String?>(null) }
 
     if (settings.settingsLocked && !showPinScreen) {
         LockedSettingsScreen(
             onBack = onBack,
-            onUnlockClick = { showPinScreen = true }
+            onUnlockClick = { 
+                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                showPinScreen = true 
+            }
         )
         return
     }
@@ -39,6 +57,7 @@ fun SettingsScreen(vm: SettingsViewModel, onNavigate: (String) -> Unit, onBack: 
         PinEntryScreen(
             pin = enteredPin,
             onPinChange = { key ->
+                haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                 if (key == "⌫") {
                     if (enteredPin.isNotEmpty()) enteredPin = enteredPin.dropLast(1)
                 } else if (enteredPin.length < 4) {
@@ -62,15 +81,16 @@ fun SettingsScreen(vm: SettingsViewModel, onNavigate: (String) -> Unit, onBack: 
         return
     }
 
-    Column(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background).padding(horizontal = 12.dp, vertical = 8.dp)) {
-        ScreenHeader(title = "Instellingen", onBack = onBack)
+    Column(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background).padding(horizontal = 16.dp, vertical = 8.dp)) {
+        ScreenHeader(title = "Beheer & Instellingen", onBack = onBack)
         
         Column(
             Modifier.weight(1f).verticalScroll(rememberScrollState()), 
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+            verticalArrangement = Arrangement.spacedBy(20.dp)
         ) {
-            // Thema
-            SettSection("🎨 Thema") {
+            // --- GROEP 1: SCHERM & STIJL ---
+            SettingsGroup(title = "📺 Scherm & Stijl", icon = Icons.Default.Palette) {
+                Text("Kleurthema", fontSize = 16.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(bottom = 8.dp))
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     AppTheme.entries.forEach { t ->
                         val selected = settings.theme == t
@@ -79,204 +99,212 @@ fun SettingsScreen(vm: SettingsViewModel, onNavigate: (String) -> Unit, onBack: 
                                 .weight(1f)
                                 .background(
                                     if (selected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surface,
-                                    RoundedCornerShape(8.dp)
+                                    RoundedCornerShape(12.dp)
                                 )
-                                .clickable { vm.updateTheme(t) }
-                                .padding(8.dp),
+                                .clickable { 
+                                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                    vm.updateTheme(t) 
+                                }
+                                .padding(12.dp),
                             horizontalAlignment = Alignment.CenterHorizontally
                         ) {
-                            Box(Modifier.size(20.dp).background(if (t == AppTheme.LIGHT) Color.Black else Color.White, CircleShape))
+                            Box(Modifier.size(24.dp).background(if (t == AppTheme.LIGHT) Color.Black else Color.White, CircleShape))
                             Text(
                                 text = when(t){ 
                                     AppTheme.CLASSIC -> "Klassiek"
                                     AppTheme.HIGH_CONTRAST -> "Contrast"
                                     AppTheme.LIGHT -> "Licht" 
                                 },
-                                fontSize = 10.sp,
+                                fontSize = 14.sp,
                                 fontWeight = FontWeight.SemiBold,
                                 color = if (selected) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurface
                             )
                         }
                     }
                 }
-            }
+                
+                Spacer(Modifier.height(16.dp))
 
-            // Layout
-            SettSection("📐 Layout") {
+                Text("Knoppen indeling", fontSize = 16.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(bottom = 8.dp))
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    listOf(
-                        LayoutType.GRID_2x3 to "2×3 Groot",
-                        LayoutType.GRID_3x4 to "3×4 Compact",
-                        LayoutType.GRID_1x1 to "1×1 Extra groot"
-                    ).forEach { (type, label) ->
+                    listOf(LayoutType.GRID_2x3 to "Groot", LayoutType.GRID_3x4 to "Compact", LayoutType.GRID_1x1 to "Enorm").forEach { (type, label) ->
                         val selected = settings.layout == type
                         Button(
-                            onClick = { vm.updateLayout(type) },
+                            onClick = { 
+                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                vm.updateLayout(type) 
+                            },
+                            modifier = Modifier.weight(1f),
+                            shape = RoundedCornerShape(12.dp),
+                            colors = if (selected) ButtonDefaults.buttonColors() else ButtonDefaults.filledTonalButtonColors()
+                        ) {
+                            Text(label, fontSize = 14.sp)
+                        }
+                    }
+                }
+
+                Spacer(Modifier.height(16.dp))
+
+                Text("Tekstgrootte", fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text("A", fontSize = 16.sp)
+                    Slider(
+                        value = settings.fontSize.toFloat(), 
+                        onValueChange = { vm.updateFontSize(it.toInt()) }, 
+                        valueRange = 16f..36f, 
+                        modifier = Modifier.weight(1f)
+                    )
+                    Text("A", fontSize = 32.sp, fontWeight = FontWeight.Bold)
+                }
+                
+                SettToggle("Automatische Nachtmodus", settings.nightModeAuto) { 
+                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                    vm.toggleNightMode() 
+                }
+            }
+
+            // --- GROEP 2: APPS & TAAL ---
+            SettingsGroup(title = "🌍 Apps & Taal", icon = Icons.Default.Language) {
+                Text("Taal", fontSize = 16.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(bottom = 8.dp))
+                val languages = listOf("nl" to "Nederlands", "en" to "English", "fr" to "Français", "de" to "Deutsch")
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    languages.forEach { (code, name) ->
+                        val selected = settings.language == code
+                        Button(
+                            onClick = { 
+                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                vm.updateLanguage(code) 
+                            },
                             modifier = Modifier.weight(1f),
                             shape = RoundedCornerShape(8.dp),
                             colors = if (selected) ButtonDefaults.buttonColors() else ButtonDefaults.filledTonalButtonColors(),
                             contentPadding = PaddingValues(4.dp)
                         ) {
-                            Text(label, fontSize = 11.sp, textAlign = TextAlign.Center)
+                            Text(name, fontSize = 12.sp)
                         }
                     }
                 }
-            }
 
-            // Lettergrootte
-            SettSection("🔤 Lettergrootte") {
-                Column {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text("A", fontSize = 12.sp)
-                        Slider(
-                            value = settings.fontSize.toFloat(), 
-                            onValueChange = { vm.updateFontSize(it.toInt()) }, 
-                            valueRange = 14f..30f, 
-                            modifier = Modifier.weight(1f)
-                        )
-                        Text("A", fontSize = 22.sp, fontWeight = FontWeight.Bold)
-                    }
-                    Text(
-                        "Voorbeeld tekst — ${settings.fontSize}px", 
-                        fontSize = settings.fontSize.sp, 
-                        textAlign = TextAlign.Center,
-                        modifier = Modifier.fillMaxWidth().padding(top = 4.dp)
-                    )
-                }
-            }
+                Spacer(Modifier.height(16.dp))
 
-            // Taal
-            SettSection("🌍 Taal") {
-                val languages = listOf("nl" to "Nederlands", "fr" to "Français", "de" to "Deutsch", "en" to "English", "tr" to "Türkçe", "ar" to "العربية")
-                Column {
-                    languages.chunked(3).forEach { row ->
-                        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                            row.forEach { (code, name) ->
-                                val selected = settings.language == code
-                                Button(
-                                    onClick = { vm.updateLanguage(code) },
-                                    modifier = Modifier.weight(1f),
-                                    shape = RoundedCornerShape(6.dp),
-                                    colors = if (selected) ButtonDefaults.buttonColors() else ButtonDefaults.filledTonalButtonColors(),
-                                    contentPadding = PaddingValues(2.dp)
-                                ) {
-                                    Text(name, fontSize = 12.sp)
-                                }
-                            }
-                        }
-                        Spacer(Modifier.height(4.dp))
-                    }
-                }
-            }
-
-            // Nachtmodus
-            SettSection("🌙 Nachtmodus") {
-                SettToggle("Automatisch na 21:00", settings.nightModeAuto) { vm.toggleNightMode() }
-            }
-
-            // Zichtbare apps
-            SettSection("📱 Zichtbare apps") {
-                ALL_APPS.forEachIndexed { index, app ->
-                    val isVisible = app.id in settings.visibleApps
-                    SettToggle("${app.emoji} ${app.name}", isVisible) { 
+                Text("Zichtbare Apps", fontSize = 16.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(bottom = 8.dp))
+                ALL_APPS.filter { it.id != "settings" && it.id != "all_apps" }.forEach { app ->
+                    SettToggle("${app.emoji} ${app.name}", app.id in settings.visibleApps) { 
+                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                         vm.toggleAppVisibility(app.id) 
                     }
-                    if (index < ALL_APPS.size - 1) {
-                        HorizontalDivider(
-                            modifier = Modifier.padding(vertical = 4.dp),
-                            thickness = 0.5.dp,
-                            color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
-                        )
+                }
+            }
+
+            // --- GROEP 3: VEILIGHEID & NOODHULP ---
+            SettingsGroup(title = "🛡️ Veiligheid & Noodhulp", icon = Icons.Default.Security) {
+                SettRow("🏥 Medische Noodinfo bewerken") { 
+                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                    onNavigate("emergency") 
+                }
+                HorizontalDivider(Modifier.padding(vertical = 8.dp), thickness = 0.5.dp)
+                SettRow("🆘 SOS Contacten instellen") { 
+                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                    onNavigate("sos_settings") 
+                }
+                HorizontalDivider(Modifier.padding(vertical = 8.dp), thickness = 0.5.dp)
+                SettToggle("🛡️ Anti-Scam Filter", settings.scamProtectionEnabled) { 
+                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                    vm.toggleScamProtection() 
+                }
+                SettToggle("⚠️ Valdetectie", settings.fallDetectionEnabled) { 
+                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                    vm.toggleFallDetection() 
+                }
+                SettToggle("🪫 Batterij-SMS (<15%)", settings.batteryAlertEnabled) { 
+                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                    vm.toggleBatteryAlert() 
+                }
+                SettToggle("🔌 Oplaadherinnering (22:00)", settings.chargingReminderEnabled) { 
+                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                    vm.toggleChargingReminder() 
+                }
+            }
+
+            // --- GROEP 4: SYSTEEM & BEHEER ---
+            SettingsGroup(title = "⚙️ Systeem & Beheer", icon = Icons.Default.Build) {
+                // UPDATE SECTIE
+                Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxWidth()) {
+                    Text("Versie: ${com.seniorenlauncher.BuildConfig.VERSION_NAME}", fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Spacer(Modifier.height(12.dp))
+                    Button(
+                        onClick = {
+                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                            scope.launch {
+                                isCheckingUpdate = true
+                                val updateManager = UpdateManager(context)
+                                val release = updateManager.checkForUpdates()
+                                if (release != null) {
+                                    updateResult = "Nieuwe versie gevonden!"
+                                    updateManager.downloadAndInstall(release)
+                                } else {
+                                    updateResult = "U heeft de nieuwste versie."
+                                }
+                                isCheckingUpdate = false
+                            }
+                        },
+                        enabled = !isCheckingUpdate,
+                        modifier = Modifier.fillMaxWidth().height(64.dp),
+                        shape = RoundedCornerShape(16.dp)
+                    ) {
+                        if (isCheckingUpdate) CircularProgressIndicator(Modifier.size(24.dp), color = Color.White)
+                        else Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(Icons.Default.SystemUpdate, null)
+                            Spacer(Modifier.width(12.dp))
+                            Text("CONTROLEER OP UPDATES", fontWeight = FontWeight.Black, fontSize = 18.sp)
+                        }
                     }
+                    updateResult?.let { Text(it, fontSize = 16.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary, modifier = Modifier.padding(top = 12.dp)) }
                 }
-            }
 
-            // Veiligheid
-            SettSection("🛡️ Veiligheid") {
-                SettRow("📍 Locatie delen") { /* Optioneel: later implementeren */ }
-                HorizontalDivider(thickness = 0.5.dp, color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
-                SettRow("🏥 Noodinfo bewerken") { 
-                    onNavigate("emergency") // Gaat naar EmergencyInfoScreen
-                }
-                HorizontalDivider(thickness = 0.5.dp, color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
-                SettRow("🆘 SOS contacten instellen") { 
-                    onNavigate("sos_settings")
-                }
-                HorizontalDivider(thickness = 0.5.dp, color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
-                SettToggle("🛡️ Valdetectie", settings.fallDetectionEnabled) { vm.toggleFallDetection() }
-                HorizontalDivider(thickness = 0.5.dp, color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
-                SettToggle("🪫 Batterij-SMS onder 15%", settings.batteryAlertEnabled) { vm.toggleBatteryAlert() }
-                HorizontalDivider(thickness = 0.5.dp, color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
-                SettToggle("🔌 Oplaadherinnering 22:00", settings.chargingReminderEnabled) { vm.toggleChargingReminder() }
-            }
+                HorizontalDivider(Modifier.padding(vertical = 16.dp), thickness = 0.5.dp)
 
-            // Afstandsbediening
-            SettSection("📱 Afstandsbediening") {
-                Text(
-                    "Laat een familielid deze telefoon op afstand instellen via de web-app.",
-                    fontSize = 13.sp,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-                Spacer(Modifier.height(8.dp))
-                Column(
-                    Modifier.fillMaxWidth().background(MaterialTheme.colorScheme.surfaceVariant, RoundedCornerShape(8.dp)).padding(10.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Text("Koppelingscode", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    Text("7 4 2 9", fontSize = 24.sp, fontWeight = FontWeight.ExtraBold, color = MaterialTheme.colorScheme.primary, letterSpacing = 4.sp)
+                SettRow("📱 Hulp op Afstand (Web)") { 
+                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                    onNavigate("remote_support") 
                 }
-                Spacer(Modifier.height(12.dp))
+                
+                Spacer(Modifier.height(16.dp))
+                
                 Button(
-                    onClick = { onNavigate("remote_support") },
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(10.dp)
+                    onClick = { 
+                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                        vm.lockSettings() 
+                    },
+                    modifier = Modifier.fillMaxWidth().height(64.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error),
+                    shape = RoundedCornerShape(16.dp)
                 ) {
-                    Text("Hulp op afstand openen", fontWeight = FontWeight.Bold, fontSize = 15.sp)
+                    Icon(Icons.Default.Lock, null)
+                    Spacer(Modifier.width(12.dp))
+                    Text("MENU VERGRENDELEN", fontWeight = FontWeight.Black, fontSize = 18.sp)
                 }
             }
 
-            // PIN Vergrendeling
-            SettSection("🔒 PIN vergrendeling") {
-                Button(
-                    onClick = { vm.lockSettings() },
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error.copy(alpha = 0.7f)),
-                    shape = RoundedCornerShape(10.dp)
-                ) {
-                    Text("Instellingen vergrendelen", fontWeight = FontWeight.Bold, fontSize = 15.sp)
-                }
-            }
-
-            // Over
-            SettSection("ℹ️ Over") {
-                Text(
-                    "Senioren Launcher v1.0\nOpen Source · GPL-3.0 Licentie\nGeen tracking · Geen advertenties\nGemaakt met liefde voor onze ouderen ❤️",
-                    fontSize = 13.sp, 
-                    color = MaterialTheme.colorScheme.onSurfaceVariant, 
-                    lineHeight = 18.sp
-                )
-            }
-            
-            Spacer(Modifier.height(20.dp))
+            Spacer(Modifier.height(60.dp))
         }
     }
 }
 
 @Composable
-fun SettSection(title: String, content: @Composable ColumnScope.() -> Unit) {
+fun SettingsGroup(title: String, icon: ImageVector, content: @Composable ColumnScope.() -> Unit) {
     Card(
         Modifier.fillMaxWidth(), 
-        shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f))
+        shape = RoundedCornerShape(24.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f))
     ) {
-        Column(Modifier.padding(14.dp)) {
-            Text(
-                title, 
-                fontSize = 15.sp, 
-                fontWeight = FontWeight.Bold, 
-                color = MaterialTheme.colorScheme.onSurface
-            )
-            Spacer(Modifier.height(10.dp))
+        Column(Modifier.padding(20.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(icon, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(24.dp))
+                Spacer(Modifier.width(12.dp))
+                Text(title, fontSize = 20.sp, fontWeight = FontWeight.Black, color = MaterialTheme.colorScheme.primary)
+            }
+            Spacer(Modifier.height(20.dp))
             content()
         }
     }
@@ -285,54 +313,54 @@ fun SettSection(title: String, content: @Composable ColumnScope.() -> Unit) {
 @Composable
 fun SettToggle(label: String, checked: Boolean, onToggle: () -> Unit) {
     Row(
-        Modifier.fillMaxWidth().padding(vertical = 4.dp), 
+        Modifier.fillMaxWidth().clickable { onToggle() }.padding(vertical = 12.dp), 
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
-        Text(label, fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurface, modifier = Modifier.weight(1f))
-        Switch(checked = checked, onCheckedChange = { onToggle() }, scale = 0.9f)
+        Text(label, fontSize = 18.sp, fontWeight = FontWeight.Medium, color = MaterialTheme.colorScheme.onSurface, modifier = Modifier.weight(1f))
+        Switch(checked = checked, onCheckedChange = { onToggle() }, scale = 1.2f)
     }
 }
 
 @Composable
 fun SettRow(label: String, onClick: () -> Unit) {
     Row(
-        Modifier.fillMaxWidth().clickable { onClick() }.padding(vertical = 8.dp),
+        Modifier.fillMaxWidth().clickable { onClick() }.padding(vertical = 16.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
-        Text(label, fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurface)
-        Text("→", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Text(label, fontSize = 18.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
+        Icon(Icons.Default.ChevronRight, null, tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(28.dp))
     }
 }
 
 @Composable
 fun LockedSettingsScreen(onBack: () -> Unit, onUnlockClick: () -> Unit) {
     Column(
-        Modifier.fillMaxSize().padding(20.dp),
+        Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background).padding(32.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        Text("🔒", fontSize = 52.sp)
-        Spacer(Modifier.height(12.dp))
-        Text("Instellingen Vergrendeld", fontSize = 22.sp, fontWeight = FontWeight.Bold)
-        Spacer(Modifier.height(6.dp))
+        Icon(Icons.Default.Lock, null, modifier = Modifier.size(120.dp), tint = MaterialTheme.colorScheme.primary)
+        Spacer(Modifier.height(32.dp))
+        Text("Instellingen Vergrendeld", fontSize = 32.sp, fontWeight = FontWeight.Black, textAlign = TextAlign.Center)
+        Spacer(Modifier.height(16.dp))
         Text(
-            "Alleen de verzorger kan instellingen wijzigen", 
-            fontSize = 14.sp, 
+            "Dit menu is beveiligd om te voorkomen dat instellingen per ongeluk worden gewijzigd.", 
+            fontSize = 20.sp, 
             textAlign = TextAlign.Center,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
-        Spacer(Modifier.height(20.dp))
+        Spacer(Modifier.height(48.dp))
         Button(
             onClick = onUnlockClick,
-            shape = RoundedCornerShape(12.dp),
-            modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp).wrapContentHeight()
+            shape = RoundedCornerShape(20.dp),
+            modifier = Modifier.fillMaxWidth().height(90.dp)
         ) {
-            Text("PIN Invoeren", fontSize = 16.sp, fontWeight = FontWeight.Bold)
+            Text("PINCODE INVOEREN", fontSize = 24.sp, fontWeight = FontWeight.Black)
         }
-        TextButton(onClick = onBack, modifier = Modifier.padding(top = 10.dp)) {
-            Text("Terug", fontSize = 14.sp)
+        TextButton(onClick = onBack, modifier = Modifier.padding(top = 24.dp)) {
+            Text("TERUG NAAR START", fontSize = 20.sp, fontWeight = FontWeight.Bold)
         }
     }
 }
@@ -340,26 +368,26 @@ fun LockedSettingsScreen(onBack: () -> Unit, onUnlockClick: () -> Unit) {
 @Composable
 fun PinEntryScreen(pin: String, onPinChange: (String) -> Unit, onCancel: () -> Unit) {
     Column(
-        Modifier.fillMaxSize().padding(20.dp),
+        Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background).padding(32.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        Text("Voer PIN in", fontSize = 22.sp, fontWeight = FontWeight.Bold)
-        Spacer(Modifier.height(20.dp))
-        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+        Text("Beheerders PIN", fontSize = 28.sp, fontWeight = FontWeight.Black)
+        Spacer(Modifier.height(32.dp))
+        Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
             repeat(4) { i ->
                 Box(
                     Modifier
-                        .size(18.dp)
+                        .size(28.dp)
                         .background(
-                            if (pin.length > i) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.surfaceVariant,
+                            if (pin.length > i) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant,
                             CircleShape
                         )
                 )
             }
         }
-        Spacer(Modifier.height(20.dp))
-        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Spacer(Modifier.height(48.dp))
+        Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
             val keys = listOf(
                 listOf("1", "2", "3"),
                 listOf("4", "5", "6"),
@@ -367,21 +395,19 @@ fun PinEntryScreen(pin: String, onPinChange: (String) -> Unit, onCancel: () -> U
                 listOf("", "0", "⌫")
             )
             keys.forEach { row ->
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
                     row.forEach { key ->
                         if (key.isEmpty()) {
-                            Spacer(Modifier.size(56.dp))
+                            Spacer(Modifier.size(80.dp))
                         } else {
                             Surface(
-                                onClick = {
-                                    onPinChange(key)
-                                },
+                                onClick = { onPinChange(key) },
                                 shape = CircleShape,
                                 color = MaterialTheme.colorScheme.surfaceVariant,
-                                modifier = Modifier.size(56.dp)
+                                modifier = Modifier.size(80.dp)
                             ) {
                                 Box(contentAlignment = Alignment.Center) {
-                                    Text(key, fontSize = 22.sp, fontWeight = FontWeight.Bold)
+                                    Text(key, fontSize = 32.sp, fontWeight = FontWeight.Black)
                                 }
                             }
                         }
@@ -389,30 +415,25 @@ fun PinEntryScreen(pin: String, onPinChange: (String) -> Unit, onCancel: () -> U
                 }
             }
         }
-        Spacer(Modifier.height(16.dp))
+        Spacer(Modifier.height(32.dp))
         TextButton(onClick = onCancel) {
-            Text("Annuleren", fontSize = 14.sp)
+            Text("ANNULEREN", fontSize = 22.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.error)
         }
     }
 }
 
-// Extension to scale switch
 @Composable
 fun Switch(
     checked: Boolean,
     onCheckedChange: ((Boolean) -> Unit)?,
     modifier: Modifier = Modifier,
     scale: Float = 1f,
-    enabled: Boolean = true,
-    colors: SwitchColors = SwitchDefaults.colors(),
-    interactionSource: androidx.compose.foundation.interaction.MutableInteractionSource = remember { androidx.compose.foundation.interaction.MutableInteractionSource() }
+    enabled: Boolean = true
 ) {
     androidx.compose.material3.Switch(
         checked = checked,
         onCheckedChange = onCheckedChange,
         modifier = modifier.scale(scale),
-        enabled = enabled,
-        colors = colors,
-        interactionSource = interactionSource
+        enabled = enabled
     )
 }

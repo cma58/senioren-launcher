@@ -39,6 +39,12 @@ class SettingsViewModel : ViewModel() {
         viewModelScope.launch { repository.setFallDetection(!settings.value.fallDetectionEnabled) }
     }
 
+    fun toggleScamProtection() {
+        viewModelScope.launch {
+            repository.updateSettings { it.copy(scamProtectionEnabled = !it.scamProtectionEnabled) }
+        }
+    }
+
     fun toggleBatteryAlert() {
         viewModelScope.launch { repository.setBatteryAlert(!settings.value.batteryAlertEnabled) }
     }
@@ -99,6 +105,10 @@ class SettingsViewModel : ViewModel() {
 
     fun completeSetup() {
         viewModelScope.launch { repository.setHasCompletedSetup(true) }
+    }
+
+    fun acceptPrivacy() {
+        viewModelScope.launch { repository.setPrivacyAccepted(true) }
     }
 
     fun verifyPin(pin: String): Boolean = pin == (settings.value.pinCode ?: "1234")

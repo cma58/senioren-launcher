@@ -47,7 +47,7 @@ fun PermissionsSetupScreen(onNext: () -> Unit, isSenior: Boolean = false) {
             if (isSenior) "Hulp bij nood" else "Locatie", 
             if (isSenior) "Als u in nood bent, kan de app uw familie vertellen waar u bent." 
             else "Nodig voor de SOS-functie om uw locatie te bepalen.", 
-            "Privacy: Uw locatie wordt alleen gedeeld bij een SOS-melding.",
+            "Privacy: Uw locatiegegevens worden alleen lokaal verwerkt en uitsluitend bij een actieve SOS-melding verstuurd naar uw eigen noodcontacten. Wij slaan geen locatie-historie op.",
             Icons.Default.LocationOn, 
             listOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION)
         ))
@@ -98,7 +98,11 @@ fun PermissionsSetupScreen(onNext: () -> Unit, isSenior: Boolean = false) {
             listOf(Manifest.permission.CAMERA)
         ))
 
-        val storagePerms = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+        val storagePerms = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+            // Android 16+ en 14+ ondersteuning voor Photo Picker (geen permissie nodig voor picker, 
+            // maar voor volledige galerij app-functies is READ_MEDIA_VISUAL_USER_SELECTED/READ_MEDIA_IMAGES nodig)
+            listOf(Manifest.permission.READ_MEDIA_IMAGES, Manifest.permission.READ_MEDIA_VISUAL_USER_SELECTED)
+        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             listOf(Manifest.permission.READ_MEDIA_IMAGES)
         } else {
             listOf(Manifest.permission.READ_EXTERNAL_STORAGE)
@@ -108,7 +112,7 @@ fun PermissionsSetupScreen(onNext: () -> Unit, isSenior: Boolean = false) {
             if (isSenior) "Uw Foto's" else "Foto's", 
             if (isSenior) "Zodat u de foto's van uw familie kunt bekijken."
             else "Nodig om de galerij te kunnen tonen.", 
-            "Privacy: De app bekijkt alleen uw afbeeldingen.",
+            "Privacy: De app gebruikt de moderne Android Photo Picker. We hebben alleen toegang tot foto's die u zelf selecteert of de mappen die u expliciet vrijgeeft.",
             Icons.Default.PhotoLibrary, 
             storagePerms
         ))
@@ -176,7 +180,7 @@ fun PermissionsSetupScreen(onNext: () -> Unit, isSenior: Boolean = false) {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 Icon(
                     imageVector = category.icon,
-                    contentDescription = null,
+                    contentDescription = if (isSenior) "Icoon voor ${category.title}" else null,
                     modifier = Modifier.size(100.dp),
                     tint = MaterialTheme.colorScheme.primary
                 )
@@ -211,7 +215,7 @@ fun PermissionsSetupScreen(onNext: () -> Unit, isSenior: Boolean = false) {
                         modifier = Modifier.padding(16.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Icon(Icons.Default.Info, contentDescription = "Privacy", tint = MaterialTheme.colorScheme.primary)
+                        Icon(Icons.Default.Info, contentDescription = if (isSenior) "Informatie over privacy" else "Privacy", tint = MaterialTheme.colorScheme.primary)
                         Spacer(Modifier.width(12.dp))
                         Text(
                             text = category.privacyNote,
@@ -239,7 +243,7 @@ fun PermissionsSetupScreen(onNext: () -> Unit, isSenior: Boolean = false) {
                     horizontalArrangement = Arrangement.Center,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Icon(Icons.Default.CheckCircle, contentDescription = null, tint = Color(0xFF2E7D32), modifier = Modifier.size(32.dp))
+                    Icon(Icons.Default.CheckCircle, contentDescription = if (isSenior) "Gelukt" else null, tint = Color(0xFF2E7D32), modifier = Modifier.size(32.dp))
                     Spacer(modifier = Modifier.width(12.dp))
                     Text(if (isSenior) "Het is gelukt!" else "Toegang verleend", fontSize = 20.sp, fontWeight = FontWeight.Bold, color = Color(0xFF1B5E20))
                 }
@@ -279,7 +283,7 @@ fun PermissionsSetupScreen(onNext: () -> Unit, isSenior: Boolean = false) {
             ) {
                 Text(if (currentStep < categories.size - 1) "GA NAAR DE VOLGENDE" else "KLAAR!", fontSize = 22.sp, fontWeight = FontWeight.Black)
                 Spacer(Modifier.width(12.dp))
-                Icon(Icons.AutoMirrored.Filled.ArrowForward, null, modifier = Modifier.size(28.dp))
+                Icon(Icons.AutoMirrored.Filled.ArrowForward, contentDescription = if (isSenior) "Volgende stap" else null, modifier = Modifier.size(28.dp))
             }
         }
     }

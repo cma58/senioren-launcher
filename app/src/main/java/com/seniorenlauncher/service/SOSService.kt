@@ -6,6 +6,7 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.content.pm.ServiceInfo
 import android.location.Location
+import android.net.Uri
 import android.os.Build
 import android.os.IBinder
 import android.telephony.SmsManager
@@ -16,6 +17,7 @@ import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.Priority
 import com.google.android.gms.tasks.Task
 import com.seniorenlauncher.LauncherApp
+import com.seniorenlauncher.data.model.QuickContact
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.first
 import kotlin.coroutines.resume
@@ -31,7 +33,7 @@ class SOSService : Service() {
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         val notification = NotificationCompat.Builder(this, LauncherApp.CH_SOS)
             .setContentTitle("SOS ALARM ACTIEF")
-            .setContentText("Uw locatie wordt naar noodcontacten gestuurd.")
+            .setContentText("Uw locatie is verzonden en hulp wordt gebeld.")
             .setSmallIcon(android.R.drawable.ic_dialog_alert)
             .setOngoing(true)
             .setPriority(NotificationCompat.PRIORITY_MAX)
@@ -50,7 +52,8 @@ class SOSService : Service() {
             } catch (e: Exception) {
                 Log.e(tag, "Fout bij uitvoeren SOS", e)
             } finally {
-                delay(5000)
+                // We stoppen de service niet direct, zodat de intercom-modus actief kan blijven
+                delay(10000)
                 stopForeground(STOP_FOREGROUND_REMOVE)
                 stopSelf()
             }
@@ -69,6 +72,7 @@ class SOSService : Service() {
             return
         }
 
+        // 1. Locatie ophalen
         val location = try {
             getLocation()
         } catch (e: Exception) {
@@ -83,6 +87,7 @@ class SOSService : Service() {
             "Sionro NOODGEVAL! Ik heb direct hulp nodig. Kon exacte locatie niet bepalen."
         }
 
+        // 2. SMS versturen naar alle SOS contacten
         val smsManager = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             context.getSystemService(SmsManager::class.java)
         } else {
@@ -97,6 +102,23 @@ class SOSService : Service() {
             } catch (e: Exception) {
                 Log.e(tag, "Fout bij versturen SMS naar ${contact.name}", e)
             }
+        }
+
+        // 3. Eerste SOS contact direct bellen
+        val firstContact = sosContacts.first()
+        makeEmergencyCall(firstContact.phoneNumber)
+        
+        // 4. Forceer speaker voor komende gesprekken (Intercom modus)
+        SeniorInCallService.setForceSpeaker(true)
+    }
+
+    private fun makeEmergencyCall(phoneNumber: String) {
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.CALL_PHONE) == PackageManager.PERMISSION_GRANTED) {
+            val intent = Intent(Intent.ACTION_CALL).apply {
+                data = Uri.parse("tel:$phoneNumber")
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            }
+            startActivity(intent)
         }
     }
 

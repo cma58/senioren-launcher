@@ -22,6 +22,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -51,6 +53,14 @@ fun SystemPermissionsSetupScreen(onNext: () -> Unit, isSenior: Boolean = false) 
             } else true
         )
     }
+    var canRequestPackageInstalls by remember {
+        mutableStateOf(
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                context.packageManager.canRequestPackageInstalls()
+            } else true
+        )
+    }
+    var hasNotificationAccess by remember { mutableStateOf(false) }
 
     val lifecycleOwner = LocalLifecycleOwner.current
     DisposableEffect(lifecycleOwner) {
@@ -63,6 +73,11 @@ fun SystemPermissionsSetupScreen(onNext: () -> Unit, isSenior: Boolean = false) 
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
                     canScheduleExactAlarms = alarmManager.canScheduleExactAlarms()
                 }
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    canRequestPackageInstalls = context.packageManager.canRequestPackageInstalls()
+                }
+                // isNotificationServiceEnabled moet in NotificationsScreen.kt staan in dezelfde package
+                hasNotificationAccess = isNotificationServiceEnabled(context)
             }
         }
         lifecycleOwner.lifecycle.addObserver(observer)
@@ -71,7 +86,7 @@ fun SystemPermissionsSetupScreen(onNext: () -> Unit, isSenior: Boolean = false) 
         }
     }
 
-    val allGranted = canDrawOverlays && canUseFullScreenIntent && canScheduleExactAlarms
+    val allGranted = canDrawOverlays && canUseFullScreenIntent && canScheduleExactAlarms && hasNotificationAccess
 
     Column(
         modifier = Modifier
@@ -93,7 +108,7 @@ fun SystemPermissionsSetupScreen(onNext: () -> Unit, isSenior: Boolean = false) 
         
         Text(
             text = if (isSenior) 
-                "We moeten 3 knoppen aanzetten zodat uw wekker en SOS altijd goed werken. Tik op de rode vakken." 
+                "We moeten 4 knoppen aanzetten zodat uw wekker en SOS altijd goed werken. Tik op de rode vakken." 
                 else "Deze instellingen zijn cruciaal voor een betrouwbare werking op Samsung en Android 14/15/16.",
             fontSize = if (isSenior) 22.sp else 18.sp,
             textAlign = TextAlign.Center,
@@ -104,7 +119,37 @@ fun SystemPermissionsSetupScreen(onNext: () -> Unit, isSenior: Boolean = false) 
         Spacer(Modifier.height(32.dp))
 
         PermissionRow(
-            title = if (isSenior) "1. Scherm aanzetten" else "Verschijnen bovenop",
+            title = if (isSenior) "1. Meldingen lezen" else "Toegang tot meldingen",
+            description = if (isSenior) "Zodat we de SOS-knop op uw scherm kunnen tonen." else "Nodig voor de statusbalk en SOS-functies.",
+            isGranted = hasNotificationAccess,
+            icon = Icons.Default.Notifications,
+            isSenior = isSenior,
+            onClick = {
+                val intent = Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS)
+                context.startActivity(intent)
+            }
+        )
+
+        if (!hasNotificationAccess && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            Card(
+                modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.5f)),
+                shape = RoundedCornerShape(12.dp)
+            ) {
+                Text(
+                    text = "Let op: Krijgt u 'Beperkte instelling'? Ga terug, houd app lang ingedrukt -> App-info -> 3 puntjes -> Beperkte instellingen toestaan.",
+                    modifier = Modifier.padding(12.dp),
+                    fontSize = 12.sp,
+                    lineHeight = 16.sp,
+                    color = MaterialTheme.colorScheme.error
+                )
+            }
+        }
+
+        Spacer(Modifier.height(16.dp))
+
+        PermissionRow(
+            title = if (isSenior) "2. Scherm aanzetten" else "Verschijnen bovenop",
             description = if (isSenior) "Zodat u de wekker direct ziet als hij afgaat." else "Nodig om de wekker en SOS direct op het scherm te tonen.",
             isGranted = canDrawOverlays,
             icon = Icons.Default.Layers,
@@ -121,7 +166,7 @@ fun SystemPermissionsSetupScreen(onNext: () -> Unit, isSenior: Boolean = false) 
         Spacer(Modifier.height(16.dp))
 
         PermissionRow(
-            title = if (isSenior) "2. Belangrijke meldingen" else "Volledig scherm meldingen",
+            title = if (isSenior) "3. Belangrijke meldingen" else "Volledig scherm meldingen",
             description = if (isSenior) "Zodat de telefoon ook in nood geluid maakt." else "Nodig om het scherm te wekken bij een alarm of SOS.",
             isGranted = canUseFullScreenIntent,
             icon = Icons.Default.Fullscreen,
@@ -139,7 +184,7 @@ fun SystemPermissionsSetupScreen(onNext: () -> Unit, isSenior: Boolean = false) 
         Spacer(Modifier.height(16.dp))
 
         PermissionRow(
-            title = if (isSenior) "3. De tijd bewaken" else "Exacte wekkers",
+            title = if (isSenior) "4. De tijd bewaken" else "Exacte wekkers",
             description = if (isSenior) "Zodat uw medicijnen exact op tijd gemeld worden." else "Nodig om medicijn-herinneringen exact op tijd te laten afgaan.",
             isGranted = canScheduleExactAlarms,
             icon = Icons.Default.Alarm,
@@ -147,6 +192,24 @@ fun SystemPermissionsSetupScreen(onNext: () -> Unit, isSenior: Boolean = false) 
             onClick = {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
                     val intent = Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM).apply {
+                        data = Uri.parse("package:${context.packageName}")
+                    }
+                    context.startActivity(intent)
+                }
+            }
+        )
+
+        Spacer(Modifier.height(16.dp))
+
+        PermissionRow(
+            title = if (isSenior) "5. Updates ontvangen" else "Onbekende apps installeren",
+            description = if (isSenior) "Zodat uw familie de app veilig kan vernieuwen." else "Nodig voor de automatische update-functie via HTTPS.",
+            isGranted = canRequestPackageInstalls,
+            icon = Icons.Default.SystemUpdate,
+            isSenior = isSenior,
+            onClick = {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    val intent = Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES).apply {
                         data = Uri.parse("package:${context.packageName}")
                     }
                     context.startActivity(intent)
@@ -163,14 +226,14 @@ fun SystemPermissionsSetupScreen(onNext: () -> Unit, isSenior: Boolean = false) 
                 .fillMaxWidth()
                 .height(if (isSenior) 100.dp else 80.dp),
             shape = RoundedCornerShape(24.dp),
-            enabled = allGranted,
+            enabled = allGranted && canRequestPackageInstalls,
             colors = ButtonDefaults.buttonColors(
-                containerColor = if (allGranted) Color(0xFF10B981) else Color.Gray
+                containerColor = if (allGranted && canRequestPackageInstalls) Color(0xFF10B981) else Color.Gray
             )
         ) {
             Text(
-                text = if (allGranted) (if (isSenior) "HET IS GELUKT, GA VERDER" else "VOLGENDE") 
-                       else (if (isSenior) "ZET DE 3 KNOPPEN AAN" else "STEL ALLES IN OM VERDER TE GAAN"),
+                text = if (allGranted && canRequestPackageInstalls) (if (isSenior) "HET IS GELUKT, GA VERDER" else "VOLGENDE") 
+                       else (if (isSenior) "ZET DE 5 KNOPPEN AAN" else "STEL ALLES IN OM VERDER TE GAAN"),
                 fontSize = if (isSenior) 24.sp else 20.sp,
                 fontWeight = FontWeight.Black,
                 textAlign = TextAlign.Center
@@ -217,7 +280,7 @@ fun PermissionRow(
             ) {
                 Icon(
                     icon, 
-                    null, 
+                    contentDescription = if (isSenior) "Icoon voor $title" else null, 
                     modifier = Modifier.size(if (isSenior) 40.dp else 32.dp), 
                     tint = if (isGranted) Color(0xFF10B981) else Color(0xFFEF4444)
                 )
@@ -243,9 +306,9 @@ fun PermissionRow(
             Spacer(Modifier.width(12.dp))
             
             if (isGranted) {
-                Text("✅", fontSize = if (isSenior) 32.sp else 24.sp)
+                Text("\u2705", fontSize = if (isSenior) 32.sp else 24.sp, modifier = Modifier.clearAndSetSemantics { contentDescription = if (isSenior) "Correct ingesteld" else "Vinkje" })
             } else {
-                Text("❌", fontSize = if (isSenior) 32.sp else 24.sp)
+                Text("\u274C", fontSize = if (isSenior) 32.sp else 24.sp, modifier = Modifier.clearAndSetSemantics { contentDescription = if (isSenior) "Nog niet ingesteld" else "Kruisje" })
             }
         }
     }

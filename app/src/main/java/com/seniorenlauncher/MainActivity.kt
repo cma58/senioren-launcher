@@ -20,6 +20,7 @@ import com.seniorenlauncher.ui.AppNavigation
 import com.seniorenlauncher.ui.screens.*
 import com.seniorenlauncher.ui.theme.SeniorenLauncherTheme
 import com.seniorenlauncher.service.SeniorInCallService
+import com.seniorenlauncher.util.UpdateManager
 import android.telecom.Call
 import android.util.Log
 
@@ -39,12 +40,19 @@ class MainActivity : ComponentActivity() {
         }
         
         super.onCreate(savedInstanceState)
+        
+        // Android 15/16 Edge-to-Edge ondersteuning
         enableEdgeToEdge()
+        
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            window.isNavigationBarContrastEnforced = false
+        }
         
         handleIntent(intent)
 
         onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
+                // Predictive Back support: do not intercept if there's no custom UI showing
                 if (alarmTriggered.value == null) {
                     isEnabled = false
                     onBackPressedDispatcher.onBackPressed()
@@ -67,6 +75,15 @@ class MainActivity : ComponentActivity() {
             val shouldNavToWeather by navigateToWeatherAfterAlarm
             
             val currentCall by SeniorInCallService.currentCall.collectAsState()
+
+            // Auto-update check bij opstarten
+            LaunchedEffect(Unit) {
+                val updateManager = UpdateManager(this@MainActivity)
+                val release = updateManager.checkForUpdates()
+                if (release != null) {
+                    updateManager.downloadAndInstall(release)
+                }
+            }
 
             if (triggerLabel != null) {
                 LaunchedEffect(Unit) {

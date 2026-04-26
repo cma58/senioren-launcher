@@ -1,64 +1,67 @@
-# 📖 Handleiding voor Beheerders & Familie
+# 📖 Handleiding voor Beheerders & Familie (v0.8.3)
 
-Welkom bij de Senioren Launcher. Deze pagina is speciaal geschreven voor de familieleden, mantelzorgers en beheerders van de senior. Hier leggen we uit hoe u de telefoon optimaal instelt en hoe u de afstandsbediening gebruikt.
-
----
-
-## 1. Jezelf instellen als Noodnummer (SOS)
-Om de telefoon op afstand te kunnen beheren en noodmeldingen te ontvangen, moet u als **SOS-contact** geregistreerd staan in de app van de senior.
-
-### Stap-voor-stap instellen:
-1.  Open de **Instellingen** (tandwiel icoon) op de telefoon van de senior.
-2.  Scroll naar beneden naar **SOS Contacten**.
-3.  Klik op de grote blauwe knop **CONTACT TOEVOEGEN**.
-4.  Kies uw eigen naam uit de contactenlijst of voer uw nummer handmatig in.
-5.  Zorg dat de optie **"Dit is een beheerder"** of **"Ontvangt nood-SMS"** is aangevinkt.
-6.  **Belangrijk:** Test de verbinding door op de senior's telefoon de SOS-knop 3 seconden ingedrukt te houden. U moet nu een SMS ontvangen met de locatie.
+Welkom bij de Senioren Launcher. Deze handleiding is bedoeld voor familieleden, mantelzorgers en beheerders. De launcher is volledig voorbereid op **Android 16 (Baklava)** en voldoet aan de strenge Europese privacywetgeving (**AVG/GDPR**).
 
 ---
 
-## 2. Hoe de app werkt (Voor de senior)
-De launcher is ontworpen om fouten te voorkomen:
-*   **Geen widgets of losse icoontjes:** Alles staat vast op zijn plek.
-*   **Geen swipe-bewegingen:** Alles werkt met simpel tikken.
-*   **Terug-knop:** Er is altijd een grote "TERUG" of "STOP" knop aanwezig.
-*   **Bevestiging:** Bij kritieke acties (zoals 112 bellen) vraagt de app altijd om een extra bevestiging.
+## 🔐 1. Autorisatie: Jezelf instellen als Beheerder
+Om de telefoon op afstand te kunnen beheren, moet uw nummer herkend worden als een geautoriseerd SOS-contact.
+
+### Stappenplan voor installatie:
+1.  **Open Contacten:** Tik op het scherm van de senior op de knop **"Contacten"**.
+2.  **Contact toevoegen:** Voeg uzelf toe (of bewerk uw bestaande contact).
+3.  **Ster-markering:** Zorg dat u bent gemarkeerd als een **Favoriet/SOS contact** (meestal door op het sterretje bij de naam te tikken). 
+4.  **Nummerherkenning:** Voer uw nummer in. De app herkent alle formaten automatisch:
+    *   Lokaal: `0487123456`
+    *   Internationaal: `+32487123456` of `0032487123456`
+5.  **Testen:** Stuur een SMS met de tekst `#PING` vanaf uw telefoon naar de senior. Als u een bevestiging ziet op hun scherm, is de koppeling geslaagd.
 
 ---
 
-## 3. Afstandsbediening via SMS
-U kunt de telefoon van de senior beheren door simpelweg een SMS te sturen vanaf uw eigen telefoon. De app herkent uw nummer en voert het commando direct uit, zonder dat de senior iets hoeft te doen.
-
-### Beschikbare Commando's:
-
-| Code | Wat gebeurt er? | Wanneer gebruiken? |
-|------|-----------------|--------------------|
-| **`#WAAR`** | U krijgt een Google Maps link met de locatie terug. | Als u wilt weten waar de senior/telefoon is. |
-| **`#STATUS`**| U ziet batterij %, volume en of de telefoon op stil staat. | Om te checken of de telefoon opgeladen moet worden. |
-| **`#PING`** | Er verschijnt "ALLES GOED?" op het scherm van de senior. | Als een snelle welzijns-check. |
-| **`#BEL_TERUG`**| De telefoon belt u automatisch terug. | Als de senior niet weet hoe hij moet bellen. |
-| **`#BERICHT [tekst]`** | Uw tekst verschijnt groot op het scherm en wordt voorgelezen. | Voor herinneringen: "#BERICHT Ik ben er over 10 min". |
-| **`#LAMP AAN`** | De zaklamp gaat aan. | Als de senior iets kwijt is in het donker. |
-| **`#KNIPPER`** | De zaklamp knippert 10 keer. | Om de telefoon visueel terug te vinden. |
-| **`#VOLUME 10`**| Zet het geluid op maximaal (schaal 1-10). | Als de senior de beltoon niet hoort. |
-| **`#HELDER 10`**| Zet het scherm op maximale helderheid. | Als het scherm per ongeluk te donker is gezet. |
-| **`#OPEN [Naam]`**| Opent een app, bijv. WhatsApp of Foto's. | Als de senior een app niet kan vinden. |
-| **`LAUN_ZOEK`** | De telefoon roept hardop: "Ik ben hier!". | Om de telefoon in huis terug te vinden. |
+## 📱 2. Privacy & Veiligheid (Android 16 Ready)
+De app gebruikt **Privacy by Design**. Dit betekent:
+*   **Privacy Labels:** Op schermen waar gevoelige data wordt gebruikt (zoals Locatie of Contacten), ziet de senior nu expliciet een blauw privacy-icoon met uitleg waarom deze data nodig is.
+*   **Veilige Updates:** App-updates verlopen via HTTPS en vereisen een expliciete check op installatie-rechten, conform de nieuwste Android-beveiligingseisen.
+*   **Scambescherming:** De launcher blokkeert automatisch bekende spam-nummers en waarschuwt bij verdachte SMS-berichten.
 
 ---
 
-## 4. Veelgestelde Vragen (FAQ)
+## 🎮 3. Afstandsbediening via SMS (Volledige Lijst)
+Stuur een SMS naar de senior met een van de volgende codes. De app reageert direct.
 
-**V: Werkt de afstandsbediening ook als de senior geen internet heeft?**
-*Ja, alles werkt via normale SMS-berichten. Internet is alleen nodig voor Google Maps (locatie) en het weerbericht.*
-
-**V: Kan iedereen de telefoon bedienen via SMS?**
-*Nee, de app voert alleen commando's uit die komen van nummers die in de **SOS-lijst** staan. Andere berichten worden als normale SMS behandeld.*
-
-**V: Het volume springt steeds terug naar zacht.**
-*Gebruik het commando `LAUN_GELUID` of `#VOLUME 10` om het geforceerd weer hard te zetten.*
+| Categorie | Code | Actie |
+|:----------|:-----|:------|
+| **Welzijn** | `#WAAR` | Ontvang de GPS-locatie via Google Maps. |
+| | `#STATUS` | Check batterij, signaalsterkte en volume. |
+| | `#PING` | Toon "ALLES GOED?" groot op het scherm. |
+| | `#BEL_TERUG` | De telefoon belt u onmiddellijk terug. |
+| **Hulp** | `#LAMP AAN` / `#LAMP UIT` | Schakel de zaklamp op afstand. |
+| | `#KNIPPER` | Laat de zaklamp 10x knipperen (om de telefoon te vinden). |
+| | `#ALARM [tekst]` | Activeer een luid alarm met een boodschap. |
+| **Instellingen** | `#VOLUME [1-15]` | Pas het belvolume aan (bijv. `#VOLUME 15`). |
+| | `#HELDER [1-100]` | Pas de schermhelderheid aan. |
+| | `#WIFI AAN` / `#WIFI UIT` | Beheer de internetverbinding. |
+| | `#STIL AAN` / `#STIL UIT` | Schakel de stille modus (Niet Storen). |
+| **Beheer** | `#PRIVACY` | Ontvang een overzicht van de privacy-instellingen. |
+| | `#UPDATE_CHECK` | Forceer een controle op beschikbare app-updates. |
+| | `#RESTART` | Herstart de launcher app. |
+| | `#THEMA [1, 2 of 3]` | Wijzig thema (1=Klassiek, 2=Hoog Contrast, 3=Licht). |
 
 ---
 
-## 📬 Support & Feedback
-Heeft u vragen of werkt een functie niet goed op uw toestel? Neem contact op met de ontwikkelaar via [amine.chtaiti@gmail.com](mailto:amine.chtaiti@gmail.com).
+## ❓ Veelgestelde Vragen (FAQ)
+
+**V: Waarom reageert de telefoon niet op mijn SMS?**
+*   Controleer of uw nummer met een sterretje (SOS) in de contactenlijst staat.
+*   Zorg dat de senior beltegoed heeft voor het versturen van de antwoord-SMS.
+
+**V: Kan ik meerdere beheerders instellen?**
+*Ja, elk contact dat gemarkeerd is als SOS/Favoriet kan de commando's gebruiken.*
+
+**V: Is de locatiebepaling nauwkeurig?**
+*De app gebruikt GPS. Als de senior binnen is, kan de nauwkeurigheid variëren. De SMS bevat altijd de geschatte afwijking in meters.*
+
+---
+
+## 📬 Contact voor Beheerders
+Voor technische ondersteuning bij het instellen van meerdere toestellen of specifieke Android 16 vragen: [amine.chtaiti@gmail.com](mailto:amine.chtaiti@gmail.com).

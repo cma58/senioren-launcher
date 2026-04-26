@@ -21,6 +21,7 @@ data class AppSettings(
     val chargingReminderEnabled: Boolean = true,
     val scamProtectionEnabled: Boolean = false,
     val hasCompletedSetup: Boolean = false,
+    val privacyAccepted: Boolean = false,
     val userPhoneNumber: String? = null
 )
 

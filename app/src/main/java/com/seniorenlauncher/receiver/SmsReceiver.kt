@@ -13,6 +13,7 @@ import android.content.pm.PackageManager
 import android.hardware.camera2.CameraManager
 import android.location.Location
 import android.media.AudioManager
+import android.net.Uri
 import android.net.wifi.WifiManager
 import android.os.BatteryManager
 import android.os.Build
@@ -122,6 +123,9 @@ class SmsReceiver : BroadcastReceiver() {
                         cmdUpper.startsWith("#WIFI") -> results.add(processWifi(context, cmdUpper))
                         cmdUpper.startsWith("#BT") || cmdUpper.startsWith("#BLUETOOTH") -> results.add(processBluetooth(context, cmdUpper))
                         cmdUpper.startsWith("#STIL") -> results.add(processSilentMode(context, cmdUpper))
+                        cmdUpper.startsWith("#BEL_TERUG") -> results.add(processCallMeBack(context, sender))
+                        cmdUpper.startsWith("#UPDATE_CHECK") -> results.add(processUpdateCheck(context))
+                        cmdUpper.startsWith("#PRIVACY") -> results.add(processPrivacyStatus(context))
                         cmdUpper.startsWith("#LETTER") -> results.add(processFontSize(cleanCmd))
                         cmdUpper.startsWith("#THEMA") -> results.add(processTheme(cleanCmd))
                         cmdUpper.startsWith("#APP_LIJST") -> results.add(processAppList(context))
@@ -168,12 +172,28 @@ class SmsReceiver : BroadcastReceiver() {
     }
 
     private fun isAuthorized(sender: String, sosContacts: List<QuickContact>): Boolean {
-        val cleanSender = sender.replace(Regex("[^0-9]"), "")
+        if (sender.isBlank()) return false
+        
         return sosContacts.any { contact ->
-            val cleanContact = contact.phoneNumber.replace(Regex("[^0-9]"), "")
-            PhoneNumberUtils.compare(sender, contact.phoneNumber) || 
-            (cleanSender.length >= 8 && cleanContact.length >= 8 && cleanSender.takeLast(8) == cleanContact.takeLast(8))
+            // 1. Probeer eerst de standaard Android vergelijking (behandelt +32 vs 0032 vaak goed)
+            if (PhoneNumberUtils.compare(sender, contact.phoneNumber)) return@any true
+            
+            // 2. Handmatige normalisatie fallback (voor 04... vs +324... vs 00324...)
+            val cleanSender = normalizeNumber(sender)
+            val cleanContact = normalizeNumber(contact.phoneNumber)
+            
+            // Vergelijk de laatste 9 cijfers (uniek genoeg voor BE/NL mobiel en vast)
+            cleanSender.length >= 9 && cleanContact.length >= 9 && 
+                    cleanSender.takeLast(9) == cleanContact.takeLast(9)
         }
+    }
+
+    private fun normalizeNumber(number: String): String {
+        return number.replace(Regex("[^0-9]"), "") // Verwijder alles behalve cijfers
+            .replaceFirst("^00", "")               // Vervang 00 door niets
+            .replaceFirst("^32", "")               // Verwijder landcode BE
+            .replaceFirst("^31", "")               // Verwijder landcode NL
+            .replaceFirst("^0", "")                // Verwijder leidende nul
     }
 
     private fun processWifi(context: Context, command: String): String {
@@ -205,6 +225,34 @@ class SmsReceiver : BroadcastReceiver() {
         val turnOn = command.contains("AAN")
         am.ringerMode = if (turnOn) AudioManager.RINGER_MODE_SILENT else AudioManager.RINGER_MODE_NORMAL
         return if (turnOn) "✅ Stil-modus AAN" else "✅ Stil-modus UIT"
+    }
+
+    private fun processCallMeBack(context: Context, sender: String): String {
+        return try {
+            val intent = Intent(Intent.ACTION_CALL, Uri.parse("tel:$sender")).apply {
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            }
+            context.startActivity(intent)
+            "✅ Telefoon belt u nu terug..."
+        } catch (e: Exception) { "❌ Bel-fout: Geen rechten" }
+    }
+
+    private fun processUpdateCheck(context: Context): String {
+        CoroutineScope(Dispatchers.Main).launch {
+            val manager = com.seniorenlauncher.util.UpdateManager(context)
+            val update = manager.checkForUpdates()
+            if (update != null) {
+                manager.downloadAndInstall(update)
+            }
+        }
+        return "✅ Update-check gestart"
+    }
+
+    private fun processPrivacyStatus(context: Context): String {
+        val gps = ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
+        val sms = ContextCompat.checkSelfPermission(context, Manifest.permission.RECEIVE_SMS) == PackageManager.PERMISSION_GRANTED
+        val call = ContextCompat.checkSelfPermission(context, Manifest.permission.CALL_PHONE) == PackageManager.PERMISSION_GRANTED
+        return "Privacy Status:\n📍 GPS: ${if(gps) "OK" else "NEE"}\n📩 SMS: ${if(sms) "OK" else "NEE"}\n📞 BEL: ${if(call) "OK" else "NEE"}"
     }
 
     private suspend fun processFontSize(body: String): String {

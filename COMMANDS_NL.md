@@ -1,90 +1,128 @@
-# 📟 Volledig Overzicht SMS-Commando's
+# 📟 Volledig Overzicht SMS-Commando's (v0.8.3)
 
-Deze pagina bevat alle beschikbare commando's waarmee u de Senioren Launcher op afstand kunt beheren. Stuur deze codes via een normale SMS vanaf uw eigen telefoon naar de telefoon van de senior.
+Deze pagina bevat **alle** beschikbare commando's waarmee u de Senioren Launcher op afstand kunt beheren. 
 
-> **Let op:** Commando's werken alleen als uw nummer is geregistreerd als **SOS-contact** in de app van de senior.
+---
+
+## 🚀 Snelstart Stappenplan (Beheerder)
+
+Om de telefoon van de senior op afstand te kunnen beheren, moeten de volgende stappen worden doorlopen:
+
+1. **Stel uzelf in als SOS-contact:**
+   - Open de app op de telefoon van de senior.
+   - Tik op **"Contacten"**.
+   - Tik op **"Nieuw"** (of selecteer een bestaand contact).
+   - Voer uw naam en telefoonnummer in.
+   - Tik op het **Sterretje (Favoriet)** naast de naam. De achtergrond van het contact wordt goudgeel. 
+   - **Gefeliciteerd!** U bent nu een SOS-contact en mag commando's sturen.
+
+2. **Geef de benodigde rechten:**
+   - Ga op de telefoon van de senior naar **"Instellingen"** (tandwiel).
+   - Tik op **"Systeem Rechten"**.
+   - Zorg dat alle vinkjes op groen staan (✅), vooral **SMS** en **Locatie**.
+
+3. **Stuur uw eerste commando:**
+   - Pak uw eigen telefoon.
+   - Stuur een SMS naar de senior met de tekst: `#STATUS`
+   - Als alles goed is ingesteld, krijgt u binnen enkele seconden een SMS terug met de batterijstatus.
 
 ---
 
 ## 🛡️ 1. Veiligheid & Locatie
-Deze commando's zijn cruciaal voor de veiligheid van de senior.
+Cruciaal voor de directe veiligheid en hulpverlening.
 
-| Commando | Wat het doet | Situatie |
-|:---|:---|:---|
-| **`#WAAR`** | Stuurt een Google Maps link met de actuele GPS-locatie terug. | Gebruik dit als de senior verdwaald is of de telefoon buiten is verloren. |
-| **`#PING`** | Toont een grote "ALLES GOED?" knop op het scherm. | Als u een snelle welzijns-check wilt doen zonder te storen met een oproep. |
-| **`#BEL_TERUG`** | Laat de telefoon van de senior direct uw nummer bellen. | Handig als de senior niet weet hoe hij moet bellen of in paniek is. |
-| **`#SOS_NU`** | Start direct de volledige noodprocedure (SMS + bellen naar alle SOS contacten). | In geval van een acute noodsituatie waarbij de senior de knop niet zelf kan indrukken. |
-| **`#VEILIG AAN`** | Blokkeert alle inkomende oproepen van nummers die niet in de contacten staan. | Als de senior vaak wordt lastiggevallen door verkopers of scammers. |
-| **`#BLOKKEER 06...`**| Zet een specifiek nummer op de zwarte lijst. | Om een specifiek ongewenst nummer definitief te blokkeren. |
-
----
-
-## ⚙️ 2. Systeem & Verbindingen
-Herstel instellingen die de senior per ongeluk heeft gewijzigd.
-
-| Commando | Wat het doet | Situatie |
-|:---|:---|:---|
-| **`#WIFI AAN`** | Schakelt de WiFi-ontvanger in. | Als de senior per ongeluk WiFi heeft uitgezet en onnodig mobiele data verbruikt. |
-| **`#STIL UIT`** | Schakelt "Niet Storen" uit en zet geluid op normaal. | Als de senior geen oproepen hoort omdat het toestel op stil staat. |
-| **`#HELDER 10`** | Zet de schermhelderheid op maximaal (schaal 1-10). | Als de senior het scherm niet kan zien omdat het te donker is ingesteld. |
-| **`#VOLUME 10`** | Zet de beltoon op maximaal volume (schaal 0-10). | Als de senior de telefoon herhaaldelijk niet hoort overgaan. |
-| **`#BT AAN`** | Schakelt Bluetooth in. | Voor het automatisch koppelen van gehoorapparaten of een SOS-armband. |
-| **`#RESTART`** | Herstart de launcher app. | Als de app zich vreemd gedraagt of vastloopt. |
+| Commando | Uitleg & Voorbeeld |
+|:---|:---|
+| **`#WAAR`** | Vraagt de GPS-locatie op. U krijgt een Google Maps link terug. |
+| **`#SOS_NU`** | Start direct de volledige noodprocedure (alle SOS-contacten worden gebeld). |
+| **`#PING`** | Toont een grote melding: "ALLES GOED?" op het scherm. De senior kan op "Begrepen" tikken. |
+| **`#BEL_TERUG`** | Laat de telefoon van de senior direct naar uw nummer bellen. |
+| **`#SPEAKER`** | Forceert de luidspreker aan voor het eerstvolgende telefoongesprek. |
+| **`#VEILIG AAN`** | Blokkeert alle oproepen van onbekende nummers (anti-scam). |
+| **`#BLOKKEER [nr]`** | Blokkeert een specifiek nummer. *Voorbeeld: `#BLOKKEER 0612345678`* |
 
 ---
 
-## 🔦 3. Zoeken & Hulpmiddelen
-Hulp bij het vinden van de telefoon of extra licht.
+## ⚙️ 2. Systeem & Instellingen
+Herstel instellingen of pas het toestel aan op afstand.
 
-| Commando | Wat het doet | Situatie |
-|:---|:---|:---|
-| **`LAUN_ZOEK`** | De telefoon roept hardop: "Ik ben hier!" en trilt. | Om de telefoon terug te vinden onder de bank of in een andere kamer. |
-| **`#LAMP AAN`** | Zet de zaklamp constant aan. | Als de senior iets moet zoeken in het donker. |
-| **`#LAMP_AUTO 5`**| Zet de zaklamp aan voor 5 minuten en gaat daarna vanzelf uit. | Voorkomt dat de batterij leegloopt als de senior de lamp vergeet uit te zetten. |
-| **`#KNIPPER`** | Laat de zaklamp 10 keer kort knipperen. | Een visueel signaal om de telefoon te vinden zonder veel lawaai. |
+| Commando | Uitleg & Voorbeeld |
+|:---|:---|
+| **`#WIFI AAN/UIT`** | Schakelt WiFi in of uit. |
+| **`#BT AAN/UIT`** | Schakelt Bluetooth in of uit (voor gehoorapparaten). |
+| **`#STIL AAN/UIT`** | Schakelt de stille modus (Niet Storen) in of uit. |
+| **`#VOLUME [0-10]`** | Zet het belvolume op een schaal van 0 tot 10. *Voorbeeld: `#VOLUME 8`* |
+| **`#VOLUME_MEDIA [0-10]`** | Zet het volume voor muziek/radio. *Voorbeeld: `#VOLUME_MEDIA 5`* |
+| **`#HELDER [1-10]`** | Past de schermhelderheid aan. *Voorbeeld: `#HELDER 10`* |
+| **`#SCHERM_TIJD [min]`** | Hoe lang het scherm aan blijft (1, 2, 5 of MAX). *Voorbeeld: `#SCHERM_TIJD 5`* |
+| **`#RESTART`** | Herstart de Senioren Launcher app bij problemen. |
+| **`#UPDATE_CHECK`** | Controleert op nieuwe veilige app-updates (Android 16/HTTPS). |
 
 ---
 
-## 📱 4. UI & App Beheer
+## 📱 3. Uiterlijk & Apps
 Pas de interface aan de behoeften van de senior aan.
 
-| Commando | Wat het doet | Situatie |
-|:---|:---|:---|
-| **`#LETTER 4`** | Zet alle teksten in de app op zeer groot (niveau 1-5). | Als de senior moeite heeft met lezen van het scherm. |
-| **`#THEMA 2`** | Wisselt naar het "Hoog Contrast" thema (geel op zwart). | Voor senioren met een visuele beperking die meer contrast nodig hebben. |
-| **`#SLOT AAN`** | Vergrendelt de instellingenknop voor de senior. | Voorkomt dat de senior zelf instellingen wijzigt en de weg kwijtraakt. |
-| **`#OPEN Foto's`**| Opent direct de Foto-app op de voorgrond. | "Ik kan de foto's van de kleinkinderen niet meer vinden!" |
-| **`#NOTIFICATIES_WEG`**| Veegt alle meldingen bovenin het scherm weg. | Ruimt het scherm op als er te veel (verwarrende) meldingen staan. |
+| Commando | Uitleg & Voorbeeld |
+|:---|:---|
+| **`#LETTER [1-5]`** | Verander de tekstgrootte. 1 is normaal, 5 is gigantisch. *Voorbeeld: `#LETTER 4`* |
+| **`#THEMA [1-3]`** | 1: Klassiek, 2: Hoog Contrast (geel/zwart), 3: Licht thema. *Voorbeeld: `#THEMA 2`* |
+| **`#SLOT AAN/UIT`** | Vergrendel de instellingenknop zodat de senior niets per ongeluk wijzigt. |
+| **`#PIN [code]`** | Wijzig de toegangscode voor de instellingen. *Voorbeeld: `#PIN 1234`* |
+| **`#OPEN [naam]`** | Opent een app op de voorgrond. *Voorbeeld: `#OPEN Foto's`* |
+| **`#NOTIFICATIES_WEG`** | Veegt alle verwarrende meldingen bovenin het scherm weg. |
 
 ---
 
-## 🗓️ 5. Planning & Medicatie
-Beheer de agenda en gezondheid op afstand.
+## 💊 4. Gezondheid & Agenda
+Beheer medicatie en afspraken op afstand.
 
-| Commando | Actie | Situatie |
-|:---|:---|:---|
-| **`#MEDICIJN 08:00 Paracetamol`** | Voegt een dagelijkse herinnering toe. | Beheer het medicijngebruik zonder fysiek aanwezig te zijn. |
-| **`#VOORRAAD Paracetamol 20`**| Werkt het aantal resterende pillen bij. | Nadat u nieuwe medicijnen heeft gehaald voor de senior. |
-| **`#WEKKER 07:30 Opstaan`** | Stelt een eenmalige of dagelijkse wekker in. | Helpt de senior herinneren aan een afspraak vroeg in de morgen. |
-| **`#AGENDA_VANDAAG`** | U krijgt een overzicht van de afspraken van vandaag terug. | Om te controleren of de senior belangrijke afspraken heeft. |
+| Commando | Uitleg & Voorbeeld |
+|:---|:---|
+| **`#MEDICIJN [tijd] [naam]`** | Voegt een medicijn-herinnering toe. *Voorbeeld: `#MEDICIJN 08:30 Aspirine`* |
+| **`#VOORRAAD [naam] [aantal]`**| Werkt het aantal pillen bij. *Voorbeeld: `#VOORRAAD Aspirine 20`* |
+| **`#AGENDA [datum] [tijd] [tekst]`** | Voegt een afspraak toe. *Voorbeeld: `#AGENDA 24-12 14:00 Tandarts`* |
+| **`#WEKKER [tijd] [naam]`** | Stelt een wekker in. *Voorbeeld: `#WEKKER 07:30 Opstaan`* |
+| **`#RADIO_STOP`** | Stopt direct de spelende radio. |
 
 ---
 
-## 🔍 6. Diagnose & Status
-Krijg inzicht in de toestand van het toestel.
+## 🔍 5. Diagnose & Overzichten
+Krijg informatie over de status van de telefoon.
+
+| Commando | Wat krijgt u terug? |
+|:---|:---|
+| **`#STATUS`** | Batterijpercentage, huidig volume en of de telefoon op stil staat. |
+| **`#INFO_PLUS`** | Vrije opslagruimte en de Android-versie. |
+| **`#PRIVACY`** | Status van alle kritieke permissies (GPS, SMS, Locatie). |
+| **`#LAATSTE_OPROEP`**| Wie heeft als laatste gebeld en was dit inkomend of gemist? |
+| **`#AGENDA_VANDAAG`** | Een lijst met alle afspraken van vandaag. |
+| **`#WEKKERS_LIJST`** | Overzicht van alle actieve wekkers en medicijn-tijden. |
+| **`#APP_LIJST`** | Een lijst van de meest gebruikte apps op het toestel. |
+| **`#NETWERK`** | Provider naam (bijv. KPN) en verbindingstype (4G/5G). |
+
+---
+
+## ✉️ 6. Berichten & Contacten
+Beheer de contactenlijst op afstand.
+
+| Commando | Uitleg & Voorbeeld |
+|:---|:---|
+| **`#BERICHT [tekst]`** | Toont een grote popup-melding op het scherm van de senior. *Voorbeeld: `#BERICHT Ik kom over 10 minuten!`* |
+| **`#CONTACT [naam] [nr]`** | Voegt een nieuw contact toe aan de lijst. *Voorbeeld: `#CONTACT Jan 0611223344`* |
+| **`#VERWIJDER_CONTACT [naam]`**| Verwijdert een contactpersoon. *Voorbeeld: `#VERWIJDER_CONTACT Jan`* |
+
+---
+
+## 🔦 7. Zoeken & Licht
 
 | Commando | Wat het doet |
 |:---|:---|
-| **`#STATUS`** | Toont batterij %, huidig volume en stil-modus status. |
-| **`#INFO_PLUS`** | Toont vrije opslagruimte, Android-versie en signaalsterkte. |
-| **`#NETWERK`** | Toont de provider (KPN/Vodafone) en het type verbinding (4G/5G). |
-| **`#LAATSTE_OPROEP`**| Toont wie als laatste heeft gebeld en wanneer. |
-| **`#APP_LIJST`** | Geeft een lijst van de belangrijkste apps die op de telefoon staan. |
+| **`LAUN_ZOEK`** | De telefoon roept "Ik ben hier!" en trilt maximaal om hem terug te vinden. |
+| **`#LAMP AAN/UIT`** | Zet de zaklamp aan of uit. |
+| **`#KNIPPER`** | Laat de zaklamp 10 keer knipperen (visueel signaal). |
 
 ---
 
-## 📬 Support & Hulp
-Stuur **`#HELP`** naar de telefoon van de senior om de belangrijkste codes direct op uw eigen telefoon te ontvangen in 4 overzichtelijke berichten.
-
-Heeft u een suggestie voor een nieuw commando? Mail naar [amine.chtaiti@gmail.com](mailto:amine.chtaiti@gmail.com).
+## 📬 Hulp nodig?
+Stuur **`#HELP`** of **`#HULP`** naar de telefoon van de senior om de belangrijkste codes direct op uw eigen telefoon te ontvangen.

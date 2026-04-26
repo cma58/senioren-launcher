@@ -12,8 +12,8 @@ android {
         applicationId = "com.seniorenlauncher"
         minSdk = 26
         targetSdk = 36
-        versionCode = 8
-        versionName = "0.8.1-beta"
+        versionCode = 10
+        versionName = "0.8.3-beta"
     }
 
     buildTypes {
@@ -30,6 +30,7 @@ android {
 
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 }
 
@@ -60,6 +61,11 @@ dependencies {
     implementation(libs.kotlinx.coroutines.play.services)
     implementation(libs.material)
     implementation(libs.coil.compose)
+
+    // Retrofit for Updates
+    implementation(libs.retrofit.core)
+    implementation(libs.retrofit.gson)
+    implementation(libs.okhttp.logging)
 
     // CameraX for Magnifier
     implementation(libs.androidx.camera.core)

@@ -30,6 +30,7 @@ class SettingsRepository(private val context: Context) {
         val VISIBLE_APPS = stringPreferencesKey("visible_apps")
         val APP_MAPPINGS = stringPreferencesKey("app_mappings")
         val HAS_COMPLETED_SETUP = booleanPreferencesKey("has_completed_setup")
+        val PRIVACY_ACCEPTED = booleanPreferencesKey("privacy_accepted")
         val USER_PHONE_NUMBER = stringPreferencesKey("user_phone_number")
         val SOS_PHONE_NUMBER = stringPreferencesKey("sos_phone_number")
     }
@@ -57,6 +58,7 @@ class SettingsRepository(private val context: Context) {
                 } catch(e: Exception) { emptyMap<String, String>() }
             } ?: emptyMap(),
             hasCompletedSetup = prefs[HAS_COMPLETED_SETUP] ?: false,
+            privacyAccepted = prefs[PRIVACY_ACCEPTED] ?: false,
             userPhoneNumber = prefs[USER_PHONE_NUMBER]
         )
     }
@@ -78,11 +80,16 @@ class SettingsRepository(private val context: Context) {
             prefs[SETTINGS_LOCKED] = updated.settingsLocked
             prefs[VISIBLE_APPS] = updated.visibleApps.joinToString(",")
             prefs[HAS_COMPLETED_SETUP] = updated.hasCompletedSetup
+            prefs[PRIVACY_ACCEPTED] = updated.privacyAccepted
             if (updated.userPhoneNumber != null) prefs[USER_PHONE_NUMBER] = updated.userPhoneNumber
         }
     }
 
     val sosPhoneNumberFlow: Flow<String?> = context.dataStore.data.map { it[SOS_PHONE_NUMBER] }
+
+    suspend fun setPrivacyAccepted(accepted: Boolean) {
+        context.dataStore.edit { it[PRIVACY_ACCEPTED] = accepted }
+    }
 
     suspend fun setSosPhoneNumber(number: String?) {
         context.dataStore.edit {

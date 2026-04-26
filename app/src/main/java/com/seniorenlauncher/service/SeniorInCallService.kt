@@ -5,9 +5,15 @@ import android.telecom.Call
 import android.telecom.CallAudioState
 import android.telecom.InCallService
 import android.util.Log
+import com.seniorenlauncher.LauncherApp
 import com.seniorenlauncher.MainActivity
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class SeniorInCallService : InCallService() {
 
@@ -69,7 +75,7 @@ class SeniorInCallService : InCallService() {
             if (state == Call.STATE_ACTIVE && forceSpeakerOnNextCall) {
                 Log.d(TAG, "Call active, forcing speaker route")
                 setAudioRoute(CallAudioState.ROUTE_SPEAKER)
-                forceSpeakerOnNextCall = false // Reset na gebruik
+                forceSpeakerOnNextCall = false 
             }
 
             _currentCall.value = null
@@ -79,22 +85,54 @@ class SeniorInCallService : InCallService() {
 
     override fun onCallAdded(call: Call) {
         super.onCallAdded(call)
-        Log.d(TAG, "Call added: ${call.details.handle}")
-        call.registerCallback(callCallback)
-        _currentCall.value = call
-        _callState.value = call.state
-        instance = this
-        _audioState.value = callAudioState
-        
-        // Android 15/16: Start UI from background
-        try {
-            val intent = Intent(this, MainActivity::class.java).apply {
-                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_REORDER_TO_FRONT or Intent.FLAG_ACTIVITY_SINGLE_TOP)
-                putExtra("NAVIGATE_TO", "incoming_call")
+        val handle = call.details.handle?.schemeSpecificPart ?: ""
+        Log.d(TAG, "Call added from: $handle")
+
+        val scope = CoroutineScope(Dispatchers.IO)
+        scope.launch {
+            val db = LauncherApp.instance.database
+            val settings = LauncherApp.instance.settingsRepository.settingsFlow.first()
+            val sosContacts = db.contactDao().getSosContactsSync()
+            val isSos = sosContacts.any { it.phoneNumber.contains(handle) }
+            val blockedNumbers = db.blockedDao().getAllSync()
+            val isBlocked = blockedNumbers.any { it.phoneNumber.contains(handle) }
+
+            // 1. Check Anti-Scam Filter
+            if (settings.scamProtectionEnabled && !isSos) {
+                val contacts = db.contactDao().getAllSync()
+                val isKnown = contacts.any { it.phoneNumber.contains(handle) }
+                if (!isKnown) {
+                    Log.i(TAG, "Blocking unknown call (Scam Protection)")
+                    call.reject(false, null)
+                    return@launch
+                }
             }
-            startActivity(intent)
-        } catch (e: Exception) {
-            Log.e(TAG, "Failed to start call UI", e)
+
+            // 2. Check Manual Blocklist
+            if (isBlocked) {
+                Log.i(TAG, "Blocking blacklisted number: $handle")
+                call.reject(false, null)
+                return@launch
+            }
+
+            // 3. Normal call flow
+            withContext(Dispatchers.Main) {
+                call.registerCallback(callCallback)
+                _currentCall.value = call
+                _callState.value = call.state
+                instance = this@SeniorInCallService
+                _audioState.value = callAudioState
+                
+                try {
+                    val intent = Intent(this@SeniorInCallService, MainActivity::class.java).apply {
+                        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_REORDER_TO_FRONT or Intent.FLAG_ACTIVITY_SINGLE_TOP)
+                        putExtra("NAVIGATE_TO", "incoming_call")
+                    }
+                    startActivity(intent)
+                } catch (e: Exception) {
+                    Log.e(TAG, "Failed to start call UI", e)
+                }
+            }
         }
     }
 

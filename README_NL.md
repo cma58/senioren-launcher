@@ -1,19 +1,21 @@
-# 📱 Senioren Launcher (0.8.2 Beta)
+# 📱 Senioren Launcher (0.8.3 Bèta)
 
 **De eerlijke, open-source Android launcher voor onze ouderen. Gemaakt om technologie weer toegankelijk, veilig en menselijk te maken.**
 
 [![License: GPL-3.0](https://img.shields.io/badge/License-GPL%20v3-blue.svg)](LICENSE)
 [![Privacy](https://img.shields.io/badge/Privacy-100%25-brightgreen.svg)](PRIVACY.md)
-[![Status: Beta](https://img.shields.io/badge/Status-0.8.2%20Beta-orange.svg)](#)
+[![Status: Beta](https://img.shields.io/badge/Status-0.8.3%20Bèta-orange.svg)](#)
 
 > **⚠️ Bèta Fase:** Dit project wordt in mijn vrije tijd gebouwd. Het is momenteel in bèta, wat betekent dat feedback en hulp bij het testen zeer welkom zijn!
 
 ---
 
-## 📢 Snelkoppelingen naar Documentatie
-- 📖 **[Handleiding voor Beheerders](DOCS_BEHEERDER_NL.md)** — Hoe stel je de app in voor een familielid?
-- 📟 **[Volledig SMS Commando Overzicht](COMMANDS_NL.md)** — Een diepe duik in alle 40+ afstandsbediening-codes.
-- 📬 **Contact & Testers Gezocht:** Ik zoek mensen die de SMS-functies willen testen op verschillende toestellen. Bug? Mail naar [amine.chtaiti@gmail.com](mailto:amine.chtaiti@gmail.com).
+## 🛡️ Veiligheid & Privacy (EU & Android 16 Ready)
+Dit project is bijgewerkt om te voldoen aan de nieuwste Europese veiligheidsnormen (**AVG/GDPR**) en is volledig geoptimaliseerd voor **Android 16 (Baklava)**:
+- **Privacy by Design:** Duidelijke privacy-uitleg bij gevoelige gegevens zoals contacten en locatie.
+- **Veilige Updates:** App-updates worden uitsluitend via versleutelde HTTPS-verbindingen gedownload.
+- **Modern Schermgebruik:** Volledige ondersteuning voor "Edge-to-Edge" weergave conform Android 15/16 eisen.
+- **100% Lokaal:** Uw gegevens verlaten nooit het toestel. Geen cloud, geen tracking, geen advertenties.
 
 ---
 
@@ -31,8 +33,8 @@
 
 ---
 
-## 🌟 Mij Visie: "Senioren-Eerst"
-De meeste smartphones zijn ontworpen voor jonge mensen. Wij draaien het om:
+## 🌟 Onze Visie: "Senioren-Eerst"
+De meeste smartphones zijn ontworpen voor jonge mensen. Wij draaien dat om:
 - **Geen Toetsenborden:** Alles werkt met grote Plus/Min knoppen en simpele lijsten.
 - **Gigantische Elementen:** Teksten zijn minimaal 20-30sp. Knoppen zijn minstens 70dp hoog.
 - **Contrast & Duidelijkheid:** Geen vage icoontjes, maar harde teksten zoals "OPHANGEN" of "OPSLAAN".
@@ -41,17 +43,17 @@ De meeste smartphones zijn ontworpen voor jonge mensen. Wij draaien het om:
 ---
 
 ## ✨ Belangrijkste Functies
-- **📞 Bellen:** Grote dialer met favorieten (foto's) en 112-beveiliging.
-- **💬 Berichten:** Extra grote SMS-weergave met directe tekst-zoom.
-- **🆘 SOS:** Houd de knop 3 seconden vast voor noodoproepen en GPS-locatie SMS.
-- **💊 Medicijnen:** Herinneringen met foto's en voorraadbeheer.
-- **🎮 Remote Support:** Beheer de telefoon volledig via SMS (geen internet nodig).
+- **📞 Bellen:** Grote dialer met favorieten (foto's) en een beveiligde 112-knop.
+- **💬 Berichten:** Extra grote SMS-weergave met directe tekst-zoom functie.
+- **🆘 SOS:** Houd de knop 3 seconden vast voor noodoproepen en een SMS met uw GPS-locatie.
+- **💊 Medicijnen:** Herinneringen met foto's van uw eigen pillen en voorraadbeheer.
+- **🎮 Remote Support:** Beheer de telefoon volledig via eenvoudige SMS-codes (geen internet nodig).
 
 ---
 
-## 🏗️ Technologie & Veiligheid
-- **Kotlin 2.1 & Jetpack Compose:** Moderne en stabiele architectuur.
-- **Android 16 Ready:** Gebruikt de nieuwste API's voor privacy en veiligheid.
-- **100% Lokaal:** Uw data blijft op uw toestel. Geen cloud, geen advertenties.
+## 🏗️ Technologie
+- **Kotlin 2.1 & Jetpack Compose**
+- **Android 16 SDK 36 Klaar**
+- **Material 3 Design**
 
 *"Technologie moet mensen verbinden, niet uitsluiten."* ❤️

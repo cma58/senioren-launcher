@@ -11,11 +11,13 @@ ksp = "2.1.10-1.0.29"
 lifecycle = "2.10.0"
 material = "1.13.0"
 media3 = "1.10.0"
-navigationCompose = "2.9.7"
+navigationCompose = "2.9.8"
 playServicesLocation = "21.3.0"
 room = "2.8.4"
 workRuntimeKtx = "2.11.2"
 composeBom = "2025.02.00"
+retrofit = "2.11.0"
+okhttp = "4.12.0"
 
 [libraries]
 androidx-activity-compose = { group = "androidx.activity", name = "activity-compose", version.ref = "activityCompose" }
@@ -47,6 +49,10 @@ androidx-compose-ui-tooling = { group = "androidx.compose.ui", name = "ui-toolin
 androidx-compose-ui-tooling-preview = { group = "androidx.compose.ui", name = "ui-tooling-preview" }
 androidx-compose-material3 = { group = "androidx.compose.material3", name = "material3" }
 androidx-compose-material-icons-extended = { group = "androidx.compose.material", name = "material-icons-extended" }
+
+retrofit-core = { group = "com.squareup.retrofit2", name = "retrofit", version.ref = "retrofit" }
+retrofit-gson = { group = "com.squareup.retrofit2", name = "converter-gson", version.ref = "retrofit" }
+okhttp-logging = { group = "com.squareup.okhttp3", name = "logging-interceptor", version.ref = "okhttp" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
