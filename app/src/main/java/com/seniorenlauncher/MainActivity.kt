@@ -17,6 +17,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.seniorenlauncher.ui.AppNavigation
+import com.seniorenlauncher.ui.components.RadioMiniPlayer
 import com.seniorenlauncher.ui.screens.*
 import com.seniorenlauncher.ui.theme.SeniorenLauncherTheme
 import com.seniorenlauncher.service.SeniorInCallService
@@ -75,6 +76,8 @@ class MainActivity : ComponentActivity() {
             val shouldNavToWeather by navigateToWeatherAfterAlarm
             
             val currentCall by SeniorInCallService.currentCall.collectAsState()
+            
+            var currentRoute by remember { mutableStateOf<String?>(null) }
 
             // Auto-update check bij opstarten
             LaunchedEffect(Unit) {
@@ -120,16 +123,33 @@ class MainActivity : ComponentActivity() {
                             settingsVm = settingsVm
                         )
                     } else {
-                        AppNavigation(
-                            settingsVm = settingsVm, 
-                            radioVm = radioVm, 
-                            initialSmsAddress = smsAddress,
-                            initialIncomingCall = showIncomingCall || (currentCall != null && currentCall?.state == Call.STATE_RINGING),
-                            initialWeatherNav = shouldNavToWeather,
-                            onNavigatedToSms = { navigateToSmsAddress.value = null },
-                            onNavigatedToCall = { navigateToIncomingCall.value = false },
-                            onNavigatedToWeather = { navigateToWeatherAfterAlarm.value = false }
-                        )
+                        Column(
+                            Modifier
+                                .fillMaxSize()
+                                .navigationBarsPadding()
+                        ) {
+                            Box(Modifier.weight(1f)) {
+                                AppNavigation(
+                                    settingsVm = settingsVm, 
+                                    radioVm = radioVm, 
+                                    initialSmsAddress = smsAddress,
+                                    initialIncomingCall = showIncomingCall || (currentCall != null && currentCall?.state == Call.STATE_RINGING),
+                                    initialWeatherNav = shouldNavToWeather,
+                                    onNavigatedToSms = { navigateToSmsAddress.value = null },
+                                    onNavigatedToCall = { navigateToIncomingCall.value = false },
+                                    onNavigatedToWeather = { navigateToWeatherAfterAlarm.value = false },
+                                    onRouteChanged = { currentRoute = it }
+                                )
+                            }
+                            if (currentRoute != "radio") {
+                                RadioMiniPlayer(
+                                    radioVm = radioVm,
+                                    onOpenRadio = {
+                                        // Optioneel: Navigeer naar radio
+                                    }
+                                )
+                            }
+                        }
                     }
                 }
             }

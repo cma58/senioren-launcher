@@ -1,5 +1,7 @@
 package com.seniorenlauncher.ui.screens
 
+import androidx.compose.ui.tooling.preview.Preview
+import com.seniorenlauncher.ui.theme.SeniorenLauncherTheme
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -33,6 +35,45 @@ import kotlinx.coroutines.launch
 @Composable
 fun SettingsScreen(vm: SettingsViewModel, onNavigate: (String) -> Unit, onBack: () -> Unit) {
     val settings by vm.settings.collectAsState()
+    SettingsScreenContent(
+        settings = settings,
+        onNavigate = onNavigate,
+        onBack = onBack,
+        onVerifyPin = { vm.verifyPin(it) },
+        onUnlockSettings = { vm.unlockSettings() },
+        onUpdateTheme = { vm.updateTheme(it) },
+        onUpdateLayout = { vm.updateLayout(it) },
+        onUpdateFontSize = { vm.updateFontSize(it) },
+        onToggleNightMode = { vm.toggleNightMode() },
+        onUpdateLanguage = { vm.updateLanguage(it) },
+        onToggleAppVisibility = { vm.toggleAppVisibility(it) },
+        onToggleScamProtection = { vm.toggleScamProtection() },
+        onToggleFallDetection = { vm.toggleFallDetection() },
+        onToggleBatteryAlert = { vm.toggleBatteryAlert() },
+        onToggleChargingReminder = { vm.toggleChargingReminder() },
+        onLockSettings = { vm.lockSettings() }
+    )
+}
+
+@Composable
+fun SettingsScreenContent(
+    settings: AppSettings,
+    onNavigate: (String) -> Unit,
+    onBack: () -> Unit,
+    onVerifyPin: (String) -> Boolean,
+    onUnlockSettings: () -> Unit,
+    onUpdateTheme: (AppTheme) -> Unit,
+    onUpdateLayout: (LayoutType) -> Unit,
+    onUpdateFontSize: (Int) -> Unit,
+    onToggleNightMode: () -> Unit,
+    onUpdateLanguage: (String) -> Unit,
+    onToggleAppVisibility: (String) -> Unit,
+    onToggleScamProtection: () -> Unit,
+    onToggleFallDetection: () -> Unit,
+    onToggleBatteryAlert: () -> Unit,
+    onToggleChargingReminder: () -> Unit,
+    onLockSettings: () -> Unit
+) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val haptic = LocalHapticFeedback.current
@@ -65,8 +106,8 @@ fun SettingsScreen(vm: SettingsViewModel, onNavigate: (String) -> Unit, onBack: 
                 } else if (enteredPin.length < 4) {
                     enteredPin += key
                     if (enteredPin.length == 4) {
-                        if (vm.verifyPin(enteredPin)) {
-                            vm.unlockSettings()
+                        if (onVerifyPin(enteredPin)) {
+                            onUnlockSettings()
                             showPinScreen = false
                             enteredPin = ""
                         } else {
@@ -105,7 +146,7 @@ fun SettingsScreen(vm: SettingsViewModel, onNavigate: (String) -> Unit, onBack: 
                                 )
                                 .clickable { 
                                     haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                                    vm.updateTheme(t) 
+                                    onUpdateTheme(t) 
                                 }
                                 .padding(12.dp),
                             horizontalAlignment = Alignment.CenterHorizontally
@@ -134,7 +175,7 @@ fun SettingsScreen(vm: SettingsViewModel, onNavigate: (String) -> Unit, onBack: 
                         Button(
                             onClick = { 
                                 haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                                vm.updateLayout(type) 
+                                onUpdateLayout(type) 
                             },
                             modifier = Modifier.weight(1f),
                             shape = RoundedCornerShape(12.dp),
@@ -152,7 +193,7 @@ fun SettingsScreen(vm: SettingsViewModel, onNavigate: (String) -> Unit, onBack: 
                     Text("A", fontSize = 16.sp)
                     Slider(
                         value = settings.fontSize.toFloat(), 
-                        onValueChange = { vm.updateFontSize(it.toInt()) }, 
+                        onValueChange = { onUpdateFontSize(it.toInt()) }, 
                         valueRange = 16f..36f, 
                         modifier = Modifier.weight(1f)
                     )
@@ -161,7 +202,7 @@ fun SettingsScreen(vm: SettingsViewModel, onNavigate: (String) -> Unit, onBack: 
                 
                 SettToggle("Automatische Nachtmodus", settings.nightModeAuto) { 
                     haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                    vm.toggleNightMode() 
+                    onToggleNightMode() 
                 }
             }
 
@@ -175,7 +216,7 @@ fun SettingsScreen(vm: SettingsViewModel, onNavigate: (String) -> Unit, onBack: 
                         Button(
                             onClick = { 
                                 haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                                vm.updateLanguage(code) 
+                                onUpdateLanguage(code) 
                             },
                             modifier = Modifier.weight(1f),
                             shape = RoundedCornerShape(8.dp),
@@ -193,7 +234,7 @@ fun SettingsScreen(vm: SettingsViewModel, onNavigate: (String) -> Unit, onBack: 
                 ALL_APPS.filter { it.id != "settings" && it.id != "all_apps" }.forEach { app ->
                     SettToggle("${app.emoji} ${app.name}", app.id in settings.visibleApps) { 
                         haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                        vm.toggleAppVisibility(app.id) 
+                        onToggleAppVisibility(app.id) 
                     }
                 }
             }
@@ -212,19 +253,19 @@ fun SettingsScreen(vm: SettingsViewModel, onNavigate: (String) -> Unit, onBack: 
                 HorizontalDivider(Modifier.padding(vertical = 8.dp), thickness = 0.5.dp)
                 SettToggle("🛡️ Anti-Scam Filter", settings.scamProtectionEnabled) { 
                     haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                    vm.toggleScamProtection() 
+                    onToggleScamProtection() 
                 }
                 SettToggle("⚠️ Valdetectie", settings.fallDetectionEnabled) { 
                     haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                    vm.toggleFallDetection() 
+                    onToggleFallDetection() 
                 }
                 SettToggle("🪫 Batterij-SMS (<15%)", settings.batteryAlertEnabled) { 
                     haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                    vm.toggleBatteryAlert() 
+                    onToggleBatteryAlert() 
                 }
                 SettToggle("🔌 Oplaadherinnering (22:00)", settings.chargingReminderEnabled) { 
                     haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                    vm.toggleChargingReminder() 
+                    onToggleChargingReminder() 
                 }
             }
 
@@ -276,7 +317,7 @@ fun SettingsScreen(vm: SettingsViewModel, onNavigate: (String) -> Unit, onBack: 
                 Button(
                     onClick = { 
                         haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                        vm.lockSettings() 
+                        onLockSettings() 
                     },
                     modifier = Modifier.fillMaxWidth().height(64.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error),
@@ -463,4 +504,29 @@ fun Switch(
         modifier = modifier.scale(scale),
         enabled = enabled
     )
+}
+
+@Preview(showBackground = true)
+@Composable
+fun SettingsScreenPreview() {
+    SeniorenLauncherTheme {
+        SettingsScreenContent(
+            settings = AppSettings(),
+            onNavigate = {},
+            onBack = {},
+            onVerifyPin = { true },
+            onUnlockSettings = {},
+            onUpdateTheme = {},
+            onUpdateLayout = {},
+            onUpdateFontSize = {},
+            onToggleNightMode = {},
+            onUpdateLanguage = {},
+            onToggleAppVisibility = {},
+            onToggleScamProtection = {},
+            onToggleFallDetection = {},
+            onToggleBatteryAlert = {},
+            onToggleChargingReminder = {},
+            onLockSettings = {}
+        )
+    }
 }

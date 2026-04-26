@@ -238,12 +238,21 @@ fun ConversationOverview(
     Column(Modifier.fillMaxSize()) {
         Button(
             onClick = onNewMessageClick,
-            modifier = Modifier.fillMaxWidth().height(70.dp).padding(vertical = 8.dp),
-            shape = RoundedCornerShape(16.dp)
+            modifier = Modifier
+                .fillMaxWidth()
+                .heightIn(min = 75.dp)
+                .padding(vertical = 8.dp),
+            shape = RoundedCornerShape(16.dp),
+            contentPadding = PaddingValues(16.dp)
         ) {
             Icon(Icons.Default.Add, null, modifier = Modifier.size(32.dp))
             Spacer(Modifier.width(12.dp))
-            Text("NIEUW BERICHT MAKEN", fontSize = 20.sp, fontWeight = FontWeight.Black)
+            Text(
+                "NIEUW BERICHT", 
+                fontSize = 22.sp, 
+                fontWeight = FontWeight.Black,
+                textAlign = TextAlign.Center
+            )
         }
 
         if (isLoading && conversations.isEmpty()) {
@@ -282,13 +291,20 @@ fun ConversationOverview(
 fun ListSectionHeader(title: String, color: Color) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp)
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(top = 16.dp, bottom = 8.dp)
     ) {
-        Box(Modifier.size(12.dp).clip(CircleShape).background(color))
-        Spacer(Modifier.width(8.dp))
+        Box(
+            Modifier
+                .size(14.dp)
+                .clip(CircleShape)
+                .background(color)
+        )
+        Spacer(Modifier.width(12.dp))
         Text(
             text = title,
-            fontSize = 16.sp,
+            fontSize = 20.sp,
             fontWeight = FontWeight.Black,
             color = color,
             letterSpacing = 1.sp
@@ -299,32 +315,41 @@ fun ListSectionHeader(title: String, color: Color) {
 @Composable
 fun ConversationItem(conv: Conversation, onClick: (Conversation) -> Unit, zoom: Float) {
     Card(
-        modifier = Modifier.fillMaxWidth().clickable { onClick(conv) },
-        shape = RoundedCornerShape(16.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 4.dp)
+            .clickable { onClick(conv) },
+        shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(
             containerColor = if (conv.isRead) MaterialTheme.colorScheme.surfaceVariant else MaterialTheme.colorScheme.primaryContainer
         )
     ) {
-        Row(Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
+        Row(
+            Modifier.padding(16.dp), 
+            verticalAlignment = Alignment.CenterVertically
+        ) {
             Box(
-                Modifier.size((60 * zoom).dp).clip(CircleShape).background(
-                    if (conv.isRead) MaterialTheme.colorScheme.secondaryContainer else MaterialTheme.colorScheme.primary
-                ),
+                Modifier
+                    .size((64 * zoom).dp)
+                    .clip(CircleShape)
+                    .background(
+                        if (conv.isRead) MaterialTheme.colorScheme.secondaryContainer else MaterialTheme.colorScheme.primary
+                    ),
                 contentAlignment = Alignment.Center
             ) {
                 Text(
                     (conv.contactName ?: conv.address).take(1).uppercase(),
-                    fontSize = (28 * zoom).sp,
-                    fontWeight = FontWeight.Bold,
+                    fontSize = (32 * zoom).sp,
+                    fontWeight = FontWeight.Black,
                     color = if (conv.isRead) MaterialTheme.colorScheme.onSecondaryContainer else Color.White
                 )
             }
-            Spacer(Modifier.width(16.dp))
+            Spacer(Modifier.width(20.dp))
             Column(Modifier.weight(1f)) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(
                         conv.contactName ?: conv.address,
-                        fontSize = (22 * zoom).sp,
+                        fontSize = (24 * zoom).sp,
                         fontWeight = if (conv.isRead) FontWeight.Bold else FontWeight.Black,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
@@ -334,17 +359,20 @@ fun ConversationItem(conv: Conversation, onClick: (Conversation) -> Unit, zoom: 
                         Box(Modifier.size(12.dp).clip(CircleShape).background(Color.Red))
                     }
                 }
+                Spacer(Modifier.height(4.dp))
                 Text(
                     conv.snippet,
-                    fontSize = (18 * zoom).sp,
+                    fontSize = (20 * zoom).sp,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
+            Spacer(Modifier.width(8.dp))
             Text(
                 formatTime(conv.date),
-                fontSize = 14.sp,
+                fontSize = (16 * zoom).sp,
+                fontWeight = FontWeight.Bold,
                 color = Color.Gray
             )
         }

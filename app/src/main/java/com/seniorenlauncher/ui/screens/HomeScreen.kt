@@ -55,9 +55,6 @@ fun HomeScreen(onNavigate: (String) -> Unit, settingsVm: SettingsViewModel, radi
     val activeNotifications by NotificationListener.activeNotificationsFlow.collectAsState()
     val badgeCounts by NotificationListener.notifications.collectAsState()
     
-    val currentStation by radioVm.currentStation.collectAsState()
-    val isPlaying by radioVm.isPlaying.collectAsState()
-    
     val weatherVm: WeatherViewModel = viewModel()
     val weatherData by weatherVm.currentWeather.collectAsState()
     
@@ -98,7 +95,9 @@ fun HomeScreen(onNavigate: (String) -> Unit, settingsVm: SettingsViewModel, radi
     }
     val allVisibleApps = (visibleStandardApps + mappedApps).distinctBy { it.id }
     
-    val pageCount = Math.max(1, Math.ceil(allVisibleApps.size.toDouble() / appsPerPage.toDouble()).toInt())
+    // Bereken het totaal aantal items inclusief de "Toevoegen" knop
+    val totalItemsCount = allVisibleApps.size + 1
+    val pageCount = Math.max(1, Math.ceil(totalItemsCount.toDouble() / appsPerPage.toDouble()).toInt())
     val pagerState = rememberPagerState(pageCount = { pageCount })
 
     var showAppPickerFor by remember { mutableStateOf<String?>(null) }
@@ -111,16 +110,13 @@ fun HomeScreen(onNavigate: (String) -> Unit, settingsVm: SettingsViewModel, radi
             onNotificationsClick = { onNavigate("notifications") }
         )
 
-        // Status Card: Radio & Meds
-        HomeStatusCard(
-            currentStation = currentStation?.name,
-            isPlaying = isPlaying,
-            pendingMedsCount = pendingMeds.size,
-            onRadioClick = { onNavigate("radio") },
-            onMedsClick = { onNavigate("meds") },
-            onPlayPause = { if (isPlaying) radioVm.pause() else radioVm.resume() },
-            onStop = { radioVm.stop() }
-        )
+        // Status Card: Alleen nog voor Medicijnen (Radio zit nu in de globale MiniPlayer)
+        if (pendingMeds.size > 0) {
+            HomeStatusCard(
+                pendingMedsCount = pendingMeds.size,
+                onMedsClick = { onNavigate("meds") }
+            )
+        }
 
         // App Grid Pager
         HorizontalPager(
@@ -130,9 +126,7 @@ fun HomeScreen(onNavigate: (String) -> Unit, settingsVm: SettingsViewModel, radi
             pageSpacing = 16.dp
         ) { pageIndex ->
             val startIdx = pageIndex * appsPerPage
-            val endIdx = Math.min(startIdx + appsPerPage, allVisibleApps.size)
-            val pageApps = allVisibleApps.subList(startIdx, endIdx)
-
+            
             LazyVerticalGrid(
                 columns = GridCells.Fixed(cols),
                 modifier = Modifier.fillMaxSize(),
@@ -140,36 +134,45 @@ fun HomeScreen(onNavigate: (String) -> Unit, settingsVm: SettingsViewModel, radi
                 horizontalArrangement = Arrangement.spacedBy(16.dp),
                 userScrollEnabled = false
             ) {
-                items(pageApps) { app ->
-                    BigButton(
-                        emoji = app.emoji,
-                        icon = app.icon,
-                        label = app.name,
-                        color = app.color,
-                        small = settings.layout == LayoutType.GRID_3x4,
-                        badge = if (app.id == "sms" || app.id == "phone") {
-                           NotificationListener.getBadgeCountByAppId(app.id, settings.appMappings, badgeCounts)
-                        } else 0,
-                        weatherText = app.weatherOverlay,
-                        onClick = {
-                            when {
-                                app.id == "camera" -> AppLauncher.openSystemCamera(context)
-                                app.id == "remote_support" -> onNavigate("remote_support")
-                                app.id.startsWith("mapped_") -> {
-                                    val pkg = settings.appMappings[app.id]
-                                    if (pkg != null) AppLauncher.launchApp(context, pkg)
+                // Apps voor deze pagina
+                val endIdx = Math.min(startIdx + appsPerPage, allVisibleApps.size)
+                if (startIdx < allVisibleApps.size) {
+                    val pageApps = allVisibleApps.subList(startIdx, endIdx)
+                    items(pageApps) { app ->
+                        BigButton(
+                            emoji = app.emoji,
+                            icon = app.icon,
+                            label = app.name,
+                            color = app.color,
+                            small = settings.layout == LayoutType.GRID_3x4,
+                            badge = if (app.id == "sms" || app.id == "phone") {
+                               NotificationListener.getBadgeCountByAppId(app.id, settings.appMappings, badgeCounts)
+                            } else 0,
+                            weatherText = app.weatherOverlay,
+                            onClick = {
+                                when {
+                                    app.id == "camera" -> AppLauncher.openSystemCamera(context)
+                                    app.id == "remote_support" -> onNavigate("remote_support")
+                                    app.id.startsWith("mapped_") -> {
+                                        val pkg = settings.appMappings[app.id]
+                                        if (pkg != null) AppLauncher.launchApp(context, pkg)
+                                    }
+                                    else -> onNavigate(app.id)
                                 }
-                                else -> onNavigate(app.id)
+                            },
+                            onLongClick = {
+                                showAppPickerFor = app.id
                             }
-                        },
-                        onLongClick = {
-                            showAppPickerFor = app.id
-                        }
-                    )
+                        )
+                    }
                 }
                 
-                // Add "New App" button if there's space on the last page or on a new page
-                if (pageIndex == pageCount - 1) {
+                // Voeg de "Toevoegen" knop toe als we op de juiste pagina zijn
+                val addBtnIdx = allVisibleApps.size
+                val start = startIdx
+                val limit = startIdx + appsPerPage
+                
+                if (addBtnIdx in start until limit) {
                     item {
                         BigButton(
                             emoji = "➕",
@@ -473,71 +476,28 @@ fun HomeTopBar(notificationCount: Int, onNotificationsClick: () -> Unit) {
 
 @Composable
 fun HomeStatusCard(
-    currentStation: String?,
-    isPlaying: Boolean,
     pendingMedsCount: Int,
-    onRadioClick: () -> Unit,
-    onMedsClick: () -> Unit,
-    onPlayPause: () -> Unit,
-    onStop: () -> Unit
+    onMedsClick: () -> Unit
 ) {
-    if (currentStation == null && pendingMedsCount == 0) return
-
     Card(
         Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 8.dp),
         shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.9f))
     ) {
-        Column(Modifier.padding(16.dp)) {
-            if (currentStation != null) {
-                Row(
-                    Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Row(
-                        Modifier.weight(1f).clickable { onRadioClick() },
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text("📻", fontSize = 24.sp)
-                        Spacer(Modifier.width(12.dp))
-                        Column {
-                            Text("Nu op de radio:", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                            Text(currentStation, fontSize = 18.sp, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                        }
-                    }
-                    
-                    Row {
-                        IconButton(onClick = onPlayPause) {
-                            Icon(if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow, null)
-                        }
-                        IconButton(onClick = onStop) {
-                            Icon(Icons.Default.Stop, null)
-                        }
-                    }
-                }
-            }
-            
-            if (currentStation != null && pendingMedsCount > 0) {
-                HorizontalDivider(Modifier.padding(vertical = 12.dp), color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.1f))
-            }
-            
-            if (pendingMedsCount > 0) {
-                Row(
-                    Modifier.fillMaxWidth().clickable { onMedsClick() },
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text("💊", fontSize = 24.sp)
-                    Spacer(Modifier.width(12.dp))
-                    Text(
-                        "Je hebt nog $pendingMedsCount medicijnen in te nemen", 
-                        fontSize = 16.sp, 
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.error
-                    )
-                }
-            }
+        Row(
+            Modifier.padding(24.dp).fillMaxWidth().clickable { onMedsClick() },
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text("💊", fontSize = 40.sp)
+            Spacer(Modifier.width(16.dp))
+            Text(
+                "Je hebt nog $pendingMedsCount medicijnen in te nemen", 
+                fontSize = 20.sp, 
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onErrorContainer
+            )
         }
     }
 }

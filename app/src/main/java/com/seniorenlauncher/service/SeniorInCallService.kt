@@ -23,7 +23,7 @@ class SeniorInCallService : InCallService() {
         private val _currentCall = MutableStateFlow<Call?>(null)
         val currentCall: StateFlow<Call?> = _currentCall
         
-        private val _callState = MutableStateFlow<Int>(Call.STATE_DISCONNECTED)
+        private val _callState = MutableStateFlow<Int>(Call.STATE_CONNECTING)
         val callState: StateFlow<Int> = _callState
         
         private val _audioState = MutableStateFlow<CallAudioState?>(null)
@@ -78,8 +78,9 @@ class SeniorInCallService : InCallService() {
                 forceSpeakerOnNextCall = false 
             }
 
-            _currentCall.value = null
-            _currentCall.value = call
+            if (call != null) {
+                _currentCall.value = call
+            }
         }
     }
 
@@ -118,10 +119,10 @@ class SeniorInCallService : InCallService() {
             // 3. Normal call flow
             withContext(Dispatchers.Main) {
                 call.registerCallback(callCallback)
-                _currentCall.value = call
-                _callState.value = call.state
                 instance = this@SeniorInCallService
                 _audioState.value = callAudioState
+                _currentCall.value = call
+                _callState.value = call.state
                 
                 try {
                     val intent = Intent(this@SeniorInCallService, MainActivity::class.java).apply {

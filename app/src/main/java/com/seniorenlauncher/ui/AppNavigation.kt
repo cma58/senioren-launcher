@@ -15,9 +15,16 @@ fun AppNavigation(
     initialWeatherNav: Boolean = false,
     onNavigatedToSms: () -> Unit = {},
     onNavigatedToCall: () -> Unit = {},
-    onNavigatedToWeather: () -> Unit = {}
+    onNavigatedToWeather: () -> Unit = {},
+    onRouteChanged: (String?) -> Unit = {}
 ) {
     val navController = rememberNavController()
+
+    LaunchedEffect(navController) {
+        navController.currentBackStackEntryFlow.collect { entry ->
+            onRouteChanged(entry.destination.route)
+        }
+    }
 
     LaunchedEffect(initialSmsAddress) {
         initialSmsAddress?.let {
@@ -71,7 +78,12 @@ fun AppNavigation(
         composable("flashlight") { FlashlightScreen(onBack = { navController.popBackStack() }) }
         composable("magnifier") { MagnifierScreen(onBack = { navController.popBackStack() }) }
         composable("notes") { NotesScreen(onBack = { navController.popBackStack() }) }
-        composable("radio") { RadioScreen(onBack = { navController.popBackStack() }) }
+        composable("radio") { 
+            RadioScreen(
+                onBack = { navController.popBackStack() },
+                radioVm = radioVm
+            ) 
+        }
         composable("steps") { StepsScreen(onBack = { navController.popBackStack() }) }
         composable("emergency") { EmergencyInfoScreen(onBack = { navController.popBackStack() }) }
         composable("sos") { SOSScreen(onBack = { navController.popBackStack() }) }
@@ -91,6 +103,8 @@ fun AppNavigation(
                 onNavigate = { route -> navController.navigate(route) }
             ) 
         }
-        composable("incoming_call") { IncomingCallScreen() }
+        composable("incoming_call") { 
+            IncomingCallScreen(onEnd = { navController.popBackStack() }) 
+        }
     }
 }

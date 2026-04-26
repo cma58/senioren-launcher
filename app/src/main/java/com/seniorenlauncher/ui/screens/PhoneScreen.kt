@@ -19,6 +19,8 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -304,17 +306,27 @@ enum class PhoneTab { Dialer, Recents, Contacts }
 fun PhoneTabButton(icon: androidx.compose.ui.graphics.vector.ImageVector, label: String, isSelected: Boolean, modifier: Modifier, onClick: () -> Unit) {
     Button(
         onClick = onClick,
-        modifier = modifier.height(60.dp),
+        modifier = modifier.height(64.dp),
         colors = ButtonDefaults.buttonColors(
             containerColor = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant,
             contentColor = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant
         ),
         shape = RoundedCornerShape(16.dp),
-        contentPadding = PaddingValues(4.dp)
+        contentPadding = PaddingValues(2.dp)
     ) {
-        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
             Icon(icon, null, modifier = Modifier.size(24.dp))
-            Text(label, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+            Text(
+                label, 
+                fontSize = 12.sp, 
+                fontWeight = FontWeight.Black,
+                textAlign = TextAlign.Center,
+                lineHeight = 13.sp,
+                maxLines = 1
+            )
         }
     }
 }
@@ -445,6 +457,7 @@ fun DialerContent(
 ) {
     val context = LocalContext.current
     var showEmergencyConfirm by remember { mutableStateOf(false) }
+    val scrollState = rememberScrollState()
 
     val suggestions = remember(phoneNumber, allContacts) {
         if (phoneNumber.isEmpty()) emptyList()
@@ -454,31 +467,34 @@ fun DialerContent(
     }
 
     Column(
-        modifier = Modifier.fillMaxSize(),
+        modifier = Modifier
+            .fillMaxSize()
+            .verticalScroll(scrollState),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         // Phone Number Display - Task 4: Readability
         Surface(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(100.dp)
-                .padding(vertical = 8.dp),
+                .heightIn(min = 80.dp)
+                .padding(vertical = 4.dp),
             shape = RoundedCornerShape(16.dp),
             color = MaterialTheme.colorScheme.surfaceVariant
         ) {
             Box(contentAlignment = Alignment.Center) {
                 Text(
                     text = formatPhoneNumberDisplay(phoneNumber),
-                    fontSize = 38.sp,
+                    fontSize = if (phoneNumber.length > 10) 28.sp else 34.sp,
                     fontWeight = FontWeight.Black,
-                    textAlign = TextAlign.Center
+                    textAlign = TextAlign.Center,
+                    maxLines = 1
                 )
                 if (phoneNumber.isNotEmpty()) {
                     IconButton(
                         onClick = { onNumberChange(phoneNumber.dropLast(1)) },
-                        modifier = Modifier.align(Alignment.CenterEnd).padding(end = 16.dp)
+                        modifier = Modifier.align(Alignment.CenterEnd).padding(end = 8.dp)
                     ) {
-                        Icon(Icons.AutoMirrored.Filled.Backspace, "Verwijderen", modifier = Modifier.size(36.dp))
+                        Icon(Icons.AutoMirrored.Filled.Backspace, "Verwijderen", modifier = Modifier.size(32.dp))
                     }
                 }
             }
@@ -487,16 +503,18 @@ fun DialerContent(
         if (matchedContact != null || phoneNumber.isNotEmpty()) {
             Text(
                 text = matchedContact?.name ?: "Onbekend nummer",
-                fontSize = 24.sp,
+                fontSize = 22.sp,
                 color = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.padding(bottom = 8.dp)
+                modifier = Modifier.padding(bottom = 4.dp),
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
             )
         }
 
         // Suggestions row
         if (suggestions.isNotEmpty() && matchedContact == null) {
             LazyRow(
-                modifier = Modifier.fillMaxWidth().height(60.dp),
+                modifier = Modifier.fillMaxWidth().height(55.dp),
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                 contentPadding = PaddingValues(horizontal = 8.dp)
             ) {
@@ -505,7 +523,7 @@ fun DialerContent(
                 }
             }
         } else {
-            Spacer(Modifier.height(60.dp))
+            Spacer(Modifier.height(if (phoneNumber.isEmpty()) 55.dp else 10.dp))
         }
 
         // Keypad
@@ -517,8 +535,8 @@ fun DialerContent(
         )
 
         Column(
-            modifier = Modifier.weight(1f),
-            verticalArrangement = Arrangement.SpaceEvenly
+            modifier = Modifier.padding(vertical = 8.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             keys.forEach { row ->
                 Row(
@@ -537,27 +555,27 @@ fun DialerContent(
             // --- Taak 4: Sneltoetsen ---
             Row(
                 Modifier.fillMaxWidth().padding(horizontal = 16.dp),
-                horizontalArrangement = Arrangement.spacedBy(16.dp)
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 Button(
                     onClick = { showEmergencyConfirm = true },
                     colors = ButtonDefaults.buttonColors(containerColor = Color.Red),
-                    modifier = Modifier.weight(1f).height(65.dp),
-                    shape = RoundedCornerShape(16.dp)
+                    modifier = Modifier.weight(1f).heightIn(min = 65.dp),
+                    shape = RoundedCornerShape(20.dp)
                 ) {
-                    Icon(Icons.Default.Emergency, null)
-                    Spacer(Modifier.width(8.dp))
-                    Text("NOOD 112", fontWeight = FontWeight.Black, fontSize = 18.sp)
+                    Icon(Icons.Default.Emergency, null, modifier = Modifier.size(24.dp))
+                    Spacer(Modifier.width(6.dp))
+                    Text("112", fontWeight = FontWeight.Black, fontSize = 18.sp)
                 }
                 Button(
-                    onClick = { makeDirectCall(context, "1233") }, // Standaard KPN/T-Mobile voicemail
+                    onClick = { makeDirectCall(context, "1233") },
                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2B6CB0)),
-                    modifier = Modifier.weight(1f).height(65.dp),
-                    shape = RoundedCornerShape(16.dp)
+                    modifier = Modifier.weight(1f).heightIn(min = 65.dp),
+                    shape = RoundedCornerShape(20.dp)
                 ) {
-                    Icon(Icons.Default.Voicemail, null)
-                    Spacer(Modifier.width(8.dp))
-                    Text("VOICEMAIL", fontWeight = FontWeight.Black, fontSize = 18.sp)
+                    Icon(Icons.Default.Voicemail, null, modifier = Modifier.size(24.dp))
+                    Spacer(Modifier.width(6.dp))
+                    Text("VOICE", fontWeight = FontWeight.Black, fontSize = 18.sp)
                 }
             }
         }
@@ -566,7 +584,7 @@ fun DialerContent(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(vertical = 16.dp),
+                .padding(vertical = 12.dp),
             horizontalArrangement = Arrangement.SpaceEvenly,
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -575,7 +593,7 @@ fun DialerContent(
                 onClick = onSendMessage,
                 containerColor = Color(0xFF3182CE),
                 contentColor = Color.White,
-                modifier = Modifier.size(70.dp),
+                modifier = Modifier.size(75.dp),
                 shape = CircleShape
             ) {
                 Icon(Icons.AutoMirrored.Filled.Message, "SMS", modifier = Modifier.size(36.dp))
@@ -586,40 +604,40 @@ fun DialerContent(
                 onClick = onCall,
                 containerColor = Color(0xFF38A169),
                 contentColor = Color.White,
-                modifier = Modifier.size(90.dp),
+                modifier = Modifier.size(95.dp),
                 shape = CircleShape
             ) {
                 Icon(Icons.Default.Call, "Bellen", modifier = Modifier.size(48.dp))
             }
         }
-    }
 
-    if (showEmergencyConfirm) {
-        AlertDialog(
-            onDismissRequest = { showEmergencyConfirm = false },
-            title = { Text("Noodnummer bellen?") },
-            text = { Text("Weet u zeker dat u 112 wilt bellen?", fontSize = 20.sp) },
-            confirmButton = {
-                Button(
-                    onClick = {
-                        showEmergencyConfirm = false
-                        makeDirectCall(context, "112")
-                    },
-                    colors = ButtonDefaults.buttonColors(containerColor = Color.Red),
-                    modifier = Modifier.height(60.dp).padding(horizontal = 8.dp)
-                ) {
-                    Text("JA, BEL 112", fontWeight = FontWeight.Black, fontSize = 18.sp)
+        if (showEmergencyConfirm) {
+            AlertDialog(
+                onDismissRequest = { showEmergencyConfirm = false },
+                title = { Text("Noodnummer bellen?") },
+                text = { Text("Weet u zeker dat u 112 wilt bellen?", fontSize = 20.sp) },
+                confirmButton = {
+                    Button(
+                        onClick = {
+                            showEmergencyConfirm = false
+                            makeDirectCall(context, "112")
+                        },
+                        colors = ButtonDefaults.buttonColors(containerColor = Color.Red),
+                        modifier = Modifier.height(60.dp).padding(horizontal = 8.dp)
+                    ) {
+                        Text("JA, BEL 112", fontWeight = FontWeight.Black, fontSize = 18.sp)
+                    }
+                },
+                dismissButton = {
+                    TextButton(
+                        onClick = { showEmergencyConfirm = false },
+                        modifier = Modifier.height(60.dp)
+                    ) {
+                        Text("ANNULEREN", fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                    }
                 }
-            },
-            dismissButton = {
-                TextButton(
-                    onClick = { showEmergencyConfirm = false },
-                    modifier = Modifier.height(60.dp)
-                ) {
-                    Text("ANNULEREN", fontSize = 18.sp, fontWeight = FontWeight.Bold)
-                }
-            }
-        )
+            )
+        }
     }
 }
 
@@ -650,13 +668,17 @@ fun DialerButton(text: String, onClick: () -> Unit) {
             vibrate(context)
             onClick() 
         },
-        modifier = Modifier.size(85.dp),
+        modifier = Modifier.size(80.dp),
         shape = CircleShape,
         color = MaterialTheme.colorScheme.surfaceVariant,
-        tonalElevation = 4.dp
+        tonalElevation = 6.dp
     ) {
         Box(contentAlignment = Alignment.Center) {
-            Text(text = text, fontSize = 36.sp, fontWeight = FontWeight.Bold)
+            Text(
+                text = text, 
+                fontSize = 32.sp,
+                fontWeight = FontWeight.Black
+            )
         }
     }
 }

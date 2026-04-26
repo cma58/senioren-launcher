@@ -48,13 +48,12 @@ fun BigButton(
     val pressed by interactionSource.collectIsPressedAsState()
     val scale by animateFloatAsState(if (pressed) 0.95f else 1f, label = "s")
     
-    val minHeight = if (small) 90.dp else 120.dp
+    val buttonHeight = if (small) 100.dp else 140.dp
 
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .heightIn(min = minHeight)
-            .wrapContentHeight()
+            .height(buttonHeight)
             .scale(scale)
             .shadow(if (pressed) 2.dp else 6.dp, RoundedCornerShape(14.dp))
             .clip(RoundedCornerShape(14.dp))
@@ -179,7 +178,8 @@ fun ScreenHeader(title: String, onBack: () -> Unit) {
     Row(
         Modifier
             .fillMaxWidth()
-            .padding(vertical = 16.dp), 
+            .heightIn(min = 80.dp)
+            .padding(vertical = 12.dp), 
         verticalAlignment = Alignment.CenterVertically
     ) {
         Box(
@@ -195,7 +195,7 @@ fun ScreenHeader(title: String, onBack: () -> Unit) {
         Spacer(Modifier.width(16.dp))
         Text(
             title, 
-            fontSize = 30.sp, 
+            fontSize = 32.sp,
             fontWeight = FontWeight.ExtraBold, 
             color = MaterialTheme.colorScheme.onBackground,
             maxLines = 1,

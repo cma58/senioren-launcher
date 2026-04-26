@@ -170,6 +170,8 @@ fun RadioScreen(onBack: () -> Unit, radioVm: RadioViewModel = viewModel()) {
 
     if (showAddDialog) {
         AddRadioDialog(
+            radioVm = radioVm,
+            dao = dao,
             onDismiss = { showAddDialog = false },
             onSave = { name, url, emoji, cat ->
                 scope.launch {
@@ -182,7 +184,12 @@ fun RadioScreen(onBack: () -> Unit, radioVm: RadioViewModel = viewModel()) {
 }
 
 @Composable
-fun AddRadioDialog(onDismiss: () -> Unit, onSave: (String, String, String, String) -> Unit) {
+fun AddRadioDialog(
+    radioVm: RadioViewModel,
+    dao: com.seniorenlauncher.data.db.RadioDao,
+    onDismiss: () -> Unit, 
+    onSave: (String, String, String, String) -> Unit
+) {
     val scope = rememberCoroutineScope()
     var input by remember { mutableStateOf("") }
     var name by remember { mutableStateOf("") }
@@ -245,27 +252,40 @@ fun AddRadioDialog(onDismiss: () -> Unit, onSave: (String, String, String, Strin
                     LazyColumn(Modifier.weight(1f)) {
                         items(searchResults) { res ->
                             Card(
-                                Modifier.fillMaxWidth().padding(vertical = 4.dp).clickable {
-                                    name = res.name
-                                    url = res.url
-                                    input = ""
-                                },
-                                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+                                Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 4.dp)
+                                    .clickable {
+                                        val newStation = RadioStation(
+                                            name = res.name,
+                                            url = res.url,
+                                            emoji = "📻",
+                                            category = "⭐ Mijn Zenders",
+                                            colorValue = 0xFF3B82F6L,
+                                            isCustom = true
+                                        )
+                                        scope.launch {
+                                            dao.insert(newStation)
+                                            radioVm.playStation(newStation)
+                                            onDismiss()
+                                        }
+                                    },
+                                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)
                             ) {
-                                Column(Modifier.padding(12.dp)) {
-                                    Text(res.name, fontWeight = FontWeight.Bold, fontSize = 18.sp)
-                                    Text(res.country, fontSize = 14.sp)
+                                Row(Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
+                                    Column(Modifier.weight(1f)) {
+                                        Text(res.name, fontWeight = FontWeight.Black, fontSize = 20.sp)
+                                        Text(res.country, fontSize = 16.sp)
+                                    }
+                                    Icon(Icons.Default.AddCircle, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(32.dp))
                                 }
                             }
                         }
                     }
                 }
 
-                if (name.isNotBlank() && url.isNotBlank()) {
-                    Text("Icoontje:", fontWeight = FontWeight.Bold)
-                    OutlinedTextField(value = emoji, onValueChange = { emoji = it }, modifier = Modifier.width(100.dp))
-                    
-                    Spacer(Modifier.weight(1f))
+                if (isUrl && name.isNotBlank() && url.isNotBlank()) {
+                    Spacer(Modifier.height(8.dp))
                     Button(
                         onClick = { onSave(name, url, emoji, "⭐ Mijn Zenders") },
                         modifier = Modifier.fillMaxWidth().height(70.dp),

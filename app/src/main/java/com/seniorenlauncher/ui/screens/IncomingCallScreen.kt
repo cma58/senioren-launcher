@@ -14,8 +14,10 @@ import android.telecom.CallAudioState
 import android.view.WindowManager
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Call
 import androidx.compose.material.icons.filled.CallEnd
@@ -39,12 +41,19 @@ import com.seniorenlauncher.service.SeniorInCallService
  * Vereist permissie: android.permission.WAKE_LOCK in Manifest voor proximity sensor.
  */
 @Composable
-fun IncomingCallScreen() {
+fun IncomingCallScreen(onEnd: () -> Unit = {}) {
     val currentCall by SeniorInCallService.currentCall.collectAsState()
     val callState by SeniorInCallService.callState.collectAsState()
     val audioState by SeniorInCallService.audioState.collectAsState()
     val context = LocalContext.current
     val activity = context as? Activity
+
+    LaunchedEffect(currentCall, callState) {
+        // Alleen afsluiten als het gesprek echt beëindigd is
+        if (callState == Call.STATE_DISCONNECTED) {
+            onEnd()
+        }
+    }
     
     DisposableEffect(activity) {
         activity?.let { act ->
@@ -165,10 +174,12 @@ fun IncomingCallScreen() {
         modifier = Modifier
             .fillMaxSize()
             .background(Color(0xFF1A202C))
+            .verticalScroll(rememberScrollState())
             .padding(24.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.SpaceAround
+        verticalArrangement = Arrangement.Center
     ) {
+        Spacer(Modifier.height(32.dp))
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             Text(
                 text = if (isRinging) "INKOMENDE OPROEP" else "IN GESPREK",
@@ -197,22 +208,31 @@ fun IncomingCallScreen() {
 
         if (isRinging) {
             Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(24.dp)
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 16.dp),
+                horizontalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 // WEIGEREN
                 Button(
                     onClick = { SeniorInCallService.endCall() },
                     modifier = Modifier
                         .weight(1f)
-                        .height(140.dp),
+                        .heightIn(min = 120.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFE53E3E)),
-                    shape = RoundedCornerShape(24.dp)
+                    shape = RoundedCornerShape(24.dp),
+                    contentPadding = PaddingValues(8.dp)
                 ) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Icon(Icons.Default.CallEnd, null, modifier = Modifier.size(48.dp))
-                        Spacer(Modifier.height(8.dp))
-                        Text("WEIGEREN", fontSize = 20.sp, fontWeight = FontWeight.Black)
+                        Icon(Icons.Default.CallEnd, null, modifier = Modifier.size(40.dp))
+                        Spacer(Modifier.height(4.dp))
+                        Text(
+                            "WEIGEREN", 
+                            fontSize = 18.sp, 
+                            fontWeight = FontWeight.Black,
+                            textAlign = TextAlign.Center,
+                            maxLines = 1
+                        )
                     }
                 }
 
@@ -221,14 +241,21 @@ fun IncomingCallScreen() {
                     onClick = { SeniorInCallService.acceptCall() },
                     modifier = Modifier
                         .weight(1f)
-                        .height(140.dp),
+                        .heightIn(min = 120.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF38A169)),
-                    shape = RoundedCornerShape(24.dp)
+                    shape = RoundedCornerShape(24.dp),
+                    contentPadding = PaddingValues(8.dp)
                 ) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Icon(Icons.Default.Call, null, modifier = Modifier.size(48.dp))
-                        Spacer(Modifier.height(8.dp))
-                        Text("OPNEMEN", fontSize = 20.sp, fontWeight = FontWeight.Black)
+                        Icon(Icons.Default.Call, null, modifier = Modifier.size(40.dp))
+                        Spacer(Modifier.height(4.dp))
+                        Text(
+                            "OPNEMEN", 
+                            fontSize = 18.sp, 
+                            fontWeight = FontWeight.Black,
+                            textAlign = TextAlign.Center,
+                            maxLines = 1
+                        )
                     }
                 }
             }
@@ -237,30 +264,34 @@ fun IncomingCallScreen() {
             Column(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(24.dp)
+                verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 // Speaker toggle
                 Button(
                     onClick = { SeniorInCallService.toggleSpeaker() },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(100.dp),
+                        .heightIn(min = 90.dp),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = if (isSpeakerOn) Color(0xFF4A5568) else Color(0xFF2D3748)
                     ),
                     shape = RoundedCornerShape(24.dp)
                 ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.padding(horizontal = 8.dp)
+                    ) {
                         Icon(
                             if (isSpeakerOn) Icons.Default.VolumeUp else Icons.Default.VolumeOff, 
                             null, 
-                            modifier = Modifier.size(40.dp)
+                            modifier = Modifier.size(36.dp)
                         )
-                        Spacer(Modifier.width(16.dp))
+                        Spacer(Modifier.width(12.dp))
                         Text(
                             if (isSpeakerOn) "LUIDSPREKER AAN" else "LUIDSPREKER UIT", 
-                            fontSize = 24.sp, 
-                            fontWeight = FontWeight.Bold
+                            fontSize = 22.sp, 
+                            fontWeight = FontWeight.Bold,
+                            textAlign = TextAlign.Center
                         )
                     }
                 }
@@ -270,18 +301,27 @@ fun IncomingCallScreen() {
                     onClick = { SeniorInCallService.endCall() },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(120.dp),
+                        .heightIn(min = 110.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFE53E3E)),
                     shape = RoundedCornerShape(24.dp)
                 ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(Icons.Default.CallEnd, null, modifier = Modifier.size(48.dp))
-                        Spacer(Modifier.width(16.dp))
-                        Text("OPHANGEN", fontSize = 28.sp, fontWeight = FontWeight.Black)
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.padding(horizontal = 8.dp)
+                    ) {
+                        Icon(Icons.Default.CallEnd, null, modifier = Modifier.size(40.dp))
+                        Spacer(Modifier.width(12.dp))
+                        Text(
+                            "OPHANGEN", 
+                            fontSize = 26.sp, 
+                            fontWeight = FontWeight.Black,
+                            textAlign = TextAlign.Center
+                        )
                     }
                 }
             }
         }
+        Spacer(Modifier.height(32.dp))
     }
 }
 
