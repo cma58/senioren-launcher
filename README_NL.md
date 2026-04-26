@@ -40,12 +40,14 @@ De meeste smartphones zijn ontworpen voor jonge mensen. Wij draaien dat om:
 - **Contrast & Duidelijkheid:** Geen vage icoontjes, maar harde teksten zoals "OPHANGEN" of "OPSLAAN".
 - **Digitale Rust:** Geen onnodige notificaties of ingewikkelde veeg-bewegingen.
 
-## ☕ Steun mijn werk
-Senioren Launcher is een project dat ik volledig gratis aanbied. Jouw steun helpt enorm om de kosten te dekken (zoals voor hosting of testapparatuur) en motiveert mij om in mijn vrije avonden en weekenden door te blijven bouwen aan nieuwe functies.
+## ❤️ Waardering & Toekomst
+Senioren Launcher is en blijft gratis en open-source. Ik bouw dit naast mijn dagelijkse werk omdat ik geloof dat digitale vrijheid voor ouderen een recht is, geen luxe.
 
-**Vind je dit een mooi initiatief?** Elke bijdrage, hoe klein ook, wordt ontzettend gewaardeerd!
+**Wil je meehelpen om dit project duurzaam te houden?**
+- **Feedback:** Test de app en stuur me je bevindingen.
+- **Steun:** Een kleine bijdrage helpt mij om de serverkosten te dekken en nieuwe testtoestellen aan te schaffen, zodat alles perfect blijft werken.
 
-[![Doneer via PayPal](https://img.shields.io/badge/Doneer-PayPal-blue.svg?style=for-the-badge)](https://www.paypal.com/donate/?business=amine.chtaiti@gmail.com&no_recurring=0&currency_code=EUR)
+[![Steun via PayPal](https://img.shields.io/badge/Steun-PayPal-blue.svg?style=for-the-badge)](https://www.paypal.com/donate/?business=amine.chtaiti@gmail.com&no_recurring=0&currency_code=EUR)
 
 ---
 

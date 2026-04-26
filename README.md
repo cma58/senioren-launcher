@@ -44,12 +44,14 @@ Most smartphones are designed for young people. We turn that around. The Senior 
 - **Gigantic Elements:** Texts are at least 20-30sp. Buttons are at least 70dp high.
 - **Digital Peace:** No unnecessary notifications or complicated swipe gestures.
 
-## ☕ Support my work
-Senior Launcher is a project I offer entirely for free. Your support helps enormously to cover costs (such as for hosting or test equipment) and motivates me to keep building new features in my free evenings and weekends.
+## ❤️ Appreciation & Future
+Senior Launcher is and will always remain free and open-source. I build this alongside my daily work because I believe digital freedom for seniors is a right, not a luxury.
 
-**Do you appreciate this initiative?** Every contribution, no matter how small, is greatly appreciated!
+**Want to help keep this project sustainable?**
+- **Feedback:** Test the app and send me your findings.
+- **Support:** A small contribution helps me cover server costs and acquire new test devices to ensure everything keeps working perfectly.
 
-[![Donate via PayPal](https://img.shields.io/badge/Donate-PayPal-blue.svg?style=for-the-badge)](https://www.paypal.com/donate/?business=amine.chtaiti@gmail.com&no_recurring=0&currency_code=EUR)
+[![Support via PayPal](https://img.shields.io/badge/Support-PayPal-blue.svg?style=for-the-badge)](https://www.paypal.com/donate/?business=amine.chtaiti@gmail.com&no_recurring=0&currency_code=EUR)
 
 ---
 

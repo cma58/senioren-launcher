@@ -23,6 +23,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import android.content.Intent
+import android.net.Uri
 import com.seniorenlauncher.data.model.*
 import com.seniorenlauncher.ui.components.ScreenHeader
 import com.seniorenlauncher.util.UpdateManager
@@ -283,6 +285,31 @@ fun SettingsScreen(vm: SettingsViewModel, onNavigate: (String) -> Unit, onBack: 
                     Icon(Icons.Default.Lock, null)
                     Spacer(Modifier.width(12.dp))
                     Text("MENU VERGRENDELEN", fontWeight = FontWeight.Black, fontSize = 18.sp)
+                }
+            }
+
+            // --- GROEP 5: WAARDERING & TOEKOMST ---
+            SettingsGroup(title = "❤️ Waardering", icon = Icons.Default.Favorite) {
+                Text(
+                    "Dit is een open-source project gebouwd met liefde voor onze ouderen. Uw steun helpt bij het dekken van de kosten en het verder verbeteren van de app.",
+                    fontSize = 16.sp,
+                    lineHeight = 22.sp,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Spacer(Modifier.height(16.dp))
+                Button(
+                    onClick = {
+                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                        val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://www.paypal.com/donate/?business=amine.chtaiti@gmail.com&no_recurring=0&currency_code=EUR"))
+                        context.startActivity(intent)
+                    },
+                    modifier = Modifier.fillMaxWidth().height(60.dp),
+                    shape = RoundedCornerShape(16.dp),
+                    colors = ButtonDefaults.filledTonalButtonColors()
+                ) {
+                    Icon(Icons.Default.VolunteerActivism, null) // VolunteerActivism acts as a nice "heart in hand" icon
+                    Spacer(Modifier.width(12.dp))
+                    Text("STEUN HET PROJECT", fontWeight = FontWeight.Bold, fontSize = 16.sp)
                 }
             }
 
