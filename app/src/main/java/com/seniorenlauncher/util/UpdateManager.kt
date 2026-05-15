@@ -42,10 +42,12 @@ class UpdateManager(private val context: Context) {
             val latestRelease = githubService.getLatestRelease()
             val currentVersion = BuildConfig.VERSION_NAME
             
-            // Simpele vergelijking: als de tag op GitHub anders is dan onze versie
-            // Voor productie zou je versie-parsing (semver) kunnen gebruiken
-            if (latestRelease.tagName != currentVersion) {
-                Log.d("UpdateManager", "Nieuwe versie beschikbaar: ${latestRelease.tagName}")
+            // Verwijder 'v' prefix als die er is voor een zuivere vergelijking
+            val remoteTag = latestRelease.tagName.removePrefix("v").trim()
+            val localVersion = currentVersion.removePrefix("v").trim()
+            
+            if (remoteTag != localVersion) {
+                Log.d("UpdateManager", "Nieuwe versie beschikbaar: $remoteTag (Huidig: $localVersion)")
                 return@withContext latestRelease
             }
         } catch (e: Exception) {
@@ -79,9 +81,9 @@ class UpdateManager(private val context: Context) {
             .setTitle("Senioren Launcher Veiligheidsupdate")
             .setDescription("Nieuwe beveiligde versie ${release.tagName}")
             .setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
-            .setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, "senioren-launcher-update.apk")
+            .setDestinationInExternalFilesDir(context, Environment.DIRECTORY_DOWNLOADS, "senioren-launcher-update.apk")
             .setAllowedOverMetered(true)
-            .setAllowedOverRoaming(false) // Bespaar data voor de gebruiker (EU Duurzaamheid)
+            .setAllowedOverRoaming(false)
 
         val downloadManager = context.getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager
         downloadManager.enqueue(request)
