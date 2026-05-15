@@ -1,59 +1,45 @@
 package com.seniorenlauncher.ui.screens
 
+import android.content.Intent
 import android.graphics.drawable.Drawable
-import androidx.compose.ui.window.DialogProperties
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.grid.*
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.viewmodel.compose.viewModel
-import coil.compose.AsyncImage
 import com.seniorenlauncher.LauncherApp
 import com.seniorenlauncher.data.model.*
-import com.seniorenlauncher.ui.components.*
-import com.seniorenlauncher.util.AppLauncher
-import com.seniorenlauncher.util.InstalledApp
 import com.seniorenlauncher.service.NotificationListener
-import java.text.SimpleDateFormat
-import java.util.*
+import com.seniorenlauncher.service.SOSService
+import com.seniorenlauncher.ui.components.*
+import com.seniorenlauncher.ui.screens.home.*
+import com.seniorenlauncher.ui.theme.SeniorenLauncherTheme
+import com.seniorenlauncher.util.AppLauncher
 
 data class HomeApp(
-    val id: String, 
-    val name: String, 
-    val emoji: String? = null, 
+    val id: String,
+    val name: String,
+    val emoji: String? = null,
     val icon: Drawable? = null,
     val color: Color,
-    val weatherOverlay: String? = null 
+    val weatherOverlay: String? = null
 )
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun HomeScreen(onNavigate: (String) -> Unit, settingsVm: SettingsViewModel, radioVm: RadioViewModel) {
-    val context = LocalContext.current
     val settings by settingsVm.settings.collectAsState()
     val activeNotifications by NotificationListener.activeNotificationsFlow.collectAsState()
     val badgeCounts by NotificationListener.notifications.collectAsState()
@@ -63,6 +49,69 @@ fun HomeScreen(onNavigate: (String) -> Unit, settingsVm: SettingsViewModel, radi
     
     val dao = LauncherApp.instance.database.medicationDao()
     val pendingMeds by dao.getPending().collectAsState(initial = emptyList())
+
+    var showAppPickerFor by remember { mutableStateOf<String?>(null) }
+    var showPinDialogForSettings by remember { mutableStateOf(false) }
+
+    HomeScreenContent(
+        settings = settings,
+        activeNotificationsCount = activeNotifications.size,
+        badgeCounts = badgeCounts,
+        weatherData = weatherData,
+        pendingMedsCount = pendingMeds.size,
+        onNavigate = onNavigate,
+        onAddApp = { showAppPickerFor = "new" },
+        onAppLongClick = { id -> showAppPickerFor = id },
+        onSettingsClick = { showPinDialogForSettings = true }
+    )
+
+    if (showAppPickerFor != null) {
+        val pickerAppId = showAppPickerFor!!
+        AppPickerDialog(
+            appId = pickerAppId,
+            onDismiss = { showAppPickerFor = null },
+            onAppsSelected = { pkgs: List<String> ->
+                val newMappings = mutableMapOf<String, String>()
+                pkgs.forEach { pkg ->
+                    val newId = "mapped_${System.currentTimeMillis()}_${pkg.hashCode()}"
+                    newMappings[newId] = pkg
+                }
+                settingsVm.addAppMappingsBulk(newMappings)
+                showAppPickerFor = null
+            },
+            onRemove = {
+                settingsVm.updateVisibleApps(settings.visibleApps - pickerAppId)
+                showAppPickerFor = null
+            }
+        )
+    }
+    
+    if (showPinDialogForSettings) {
+        PinDialog(
+            correctPin = settings.pinCode ?: "1234",
+            onDismiss = { showPinDialogForSettings = false },
+            onSuccess = { 
+                showPinDialogForSettings = false
+                onNavigate("settings")
+            }
+        )
+    }
+}
+
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+fun HomeScreenContent(
+    settings: AppSettings,
+    activeNotificationsCount: Int,
+    badgeCounts: Map<String, Int>,
+    weatherData: WeatherData?,
+    pendingMedsCount: Int,
+    onNavigate: (String) -> Unit,
+    onAddApp: () -> Unit,
+    onAppLongClick: (String) -> Unit,
+    onSettingsClick: () -> Unit
+) {
+    val context = LocalContext.current
     
     // --- Dynamic Layout Logic ---
     val cols = when (settings.layout) {
@@ -90,10 +139,10 @@ fun HomeScreen(onNavigate: (String) -> Unit, settingsVm: SettingsViewModel, radi
         HomeApp(
             id = it.id,
             name = it.name,
-            emoji = if (it.id == "weather" && weatherData != null) getHomeWeatherEmoji(weatherData!!.iconUrl) else it.emoji,
+            emoji = if (it.id == "weather" && weatherData != null) getHomeWeatherEmoji(weatherData.iconUrl) else it.emoji,
             icon = null,
             color = Color(it.color),
-            weatherOverlay = if (it.id == "weather" && weatherData != null) "${weatherData!!.temp.toInt()}°" else null
+            weatherOverlay = if (it.id == "weather" && weatherData != null) "${weatherData.temp.toInt()}°" else null
         )
     }
     val allVisibleApps = (visibleStandardApps + mappedApps).distinctBy { it.id }
@@ -103,20 +152,17 @@ fun HomeScreen(onNavigate: (String) -> Unit, settingsVm: SettingsViewModel, radi
     val pageCount = Math.max(1, Math.ceil(totalItemsCount.toDouble() / appsPerPage.toDouble()).toInt())
     val pagerState = rememberPagerState(pageCount = { pageCount })
 
-    var showAppPickerFor by remember { mutableStateOf<String?>(null) }
-    var showPinDialogForSettings by remember { mutableStateOf(false) }
-
     Column(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
-        // Top Bar: Clock & Notifications
+        // Top Bar: Clock, Battery & Notifications
         HomeTopBar(
-            notificationCount = activeNotifications.size,
+            notificationCount = activeNotificationsCount,
             onNotificationsClick = { onNavigate("notifications") }
         )
 
-        // Status Card: Alleen nog voor Medicijnen (Radio zit nu in de globale MiniPlayer)
-        if (pendingMeds.size > 0) {
+        // Status Card: Alleen nog voor Medicijnen
+        if (pendingMedsCount > 0) {
             HomeStatusCard(
-                pendingMedsCount = pendingMeds.size,
+                pendingMedsCount = pendingMedsCount,
                 onMedsClick = { onNavigate("meds") }
             )
         }
@@ -155,6 +201,7 @@ fun HomeScreen(onNavigate: (String) -> Unit, settingsVm: SettingsViewModel, radi
                             onClick = {
                                 when {
                                     app.id == "camera" -> AppLauncher.openSystemCamera(context)
+                                    app.id == "wifi" -> AppLauncher.openWifiSettings(context)
                                     app.id == "remote_support" -> onNavigate("remote_support")
                                     app.id.startsWith("mapped_") -> {
                                         val pkg = settings.appMappings[app.id]
@@ -164,7 +211,7 @@ fun HomeScreen(onNavigate: (String) -> Unit, settingsVm: SettingsViewModel, radi
                                 }
                             },
                             onLongClick = {
-                                showAppPickerFor = app.id
+                                onAppLongClick(app.id)
                             }
                         )
                     }
@@ -182,362 +229,66 @@ fun HomeScreen(onNavigate: (String) -> Unit, settingsVm: SettingsViewModel, radi
                             label = "Toevoegen",
                             color = Color(0xFF718096),
                             small = settings.layout == LayoutType.GRID_3x4,
-                            onClick = { showAppPickerFor = "new" }
+                            onClick = onAddApp
                         )
                     }
                 }
             }
         }
 
-        // Settings Button at bottom
-        Row(Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 8.dp), horizontalArrangement = Arrangement.End) {
-            FilledIconButton(
-                onClick = { showPinDialogForSettings = true },
-                modifier = Modifier.size(64.dp),
-                colors = IconButtonDefaults.filledIconButtonColors(containerColor = MaterialTheme.colorScheme.secondaryContainer)
-            ) {
-                Icon(Icons.Default.Settings, "Instellingen", modifier = Modifier.size(32.dp))
-            }
-        }
-    }
-
-    if (showAppPickerFor != null) {
-        val pickerAppId = showAppPickerFor!!
-        AppPickerDialog(
-            appId = pickerAppId,
-            onDismiss = { showAppPickerFor = null },
-            onAppsSelected = { pkgs: List<String> ->
-                val newMappings = mutableMapOf<String, String>()
-                pkgs.forEach { pkg ->
-                    val newId = "mapped_${System.currentTimeMillis()}_${pkg.hashCode()}"
-                    newMappings[newId] = pkg
-                }
-                settingsVm.addAppMappingsBulk(newMappings)
-                showAppPickerFor = null
-            },
-            onRemove = {
-                settingsVm.updateVisibleApps(settings.visibleApps - pickerAppId)
-                showAppPickerFor = null
-            }
-        )
-    }
-    
-    if (showPinDialogForSettings) {
-        PinDialog(
-            correctPin = settings.pinCode ?: "1234",
-            onDismiss = { showPinDialogForSettings = false },
-            onSuccess = { 
-                showPinDialogForSettings = false
-                onNavigate("settings")
-            }
-        )
-    }
-}
-
-@Composable
-fun PinDialog(correctPin: String, onDismiss: () -> Unit, onSuccess: () -> Unit) {
-    var input by remember { mutableStateOf("") }
-    var error by remember { mutableStateOf(false) }
-    val scrollState = rememberScrollState()
-
-    Dialog(
-        onDismissRequest = onDismiss,
-        properties = DialogProperties(usePlatformDefaultWidth = false)
-    ) {
-        Card(
-            shape = RoundedCornerShape(24.dp),
-            modifier = Modifier
-                .fillMaxWidth(0.95f) // Gebruik bijna de volledige breedte om hoogte te besparen
-                .padding(8.dp)
-        ) {
-            Column(
-                Modifier
-                    .padding(16.dp)
-                    .verticalScroll(scrollState),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Text("Beveiligde Instellingen", fontSize = 18.sp, fontWeight = FontWeight.Bold)
-                
-                Spacer(Modifier.height(8.dp))
-                
-                Text(
-                    input.replace(Regex("."), "●").ifEmpty { " " },
-                    fontSize = 24.sp,
-                    letterSpacing = 8.sp,
-                    color = if (error) Color.Red else MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.padding(vertical = 4.dp)
-                )
-                
-                Spacer(Modifier.height(8.dp))
-                
-                val rows = listOf(
-                    listOf("1", "2", "3"),
-                    listOf("4", "5", "6"),
-                    listOf("7", "8", "9"),
-                    listOf("C", "0", "OK")
-                )
-
-                Column(
-                    verticalArrangement = Arrangement.spacedBy(6.dp),
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    rows.forEach { rowKeys ->
-                        Row(
-                            horizontalArrangement = Arrangement.spacedBy(6.dp),
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            rowKeys.forEach { key ->
-                                Button(
-                                    onClick = {
-                                        when (key) {
-                                            "C" -> if (input.isNotEmpty()) input = input.dropLast(1)
-                                            "OK" -> {
-                                                if (input == correctPin) onSuccess() else {
-                                                    error = true
-                                                    input = ""
-                                                }
-                                            }
-                                            else -> {
-                                                if (input.length < 8) {
-                                                    error = false
-                                                    input += key
-                                                }
-                                            }
-                                        }
-                                    },
-                                    modifier = Modifier
-                                        .weight(1f)
-                                        .heightIn(min = 50.dp, max = 65.dp), // Vaste hoogte range voor stabiliteit
-                                    shape = RoundedCornerShape(12.dp),
-                                    contentPadding = PaddingValues(0.dp),
-                                    colors = ButtonDefaults.buttonColors(
-                                        containerColor = MaterialTheme.colorScheme.surfaceVariant,
-                                        contentColor = MaterialTheme.colorScheme.onSurfaceVariant
-                                    )
-                                ) {
-                                    Text(key, fontSize = 18.sp, fontWeight = FontWeight.Bold)
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-}
-
-@Composable
-fun AppPickerDialog(
-    appId: String,
-    onDismiss: () -> Unit,
-    onAppsSelected: (List<String>) -> Unit,
-    onRemove: () -> Unit
-) {
-    val context = LocalContext.current
-    val installedApps by produceState<List<InstalledApp>>(initialValue = emptyList(), context) {
-        value = AppLauncher.getInstalledApps(context, includeIcons = true)
-    }
-    var searchQuery by remember { mutableStateOf("") }
-    val selectedPackages = remember { mutableStateListOf<String>() }
-
-    val filteredApps = remember(searchQuery, installedApps) {
-        if (searchQuery.isEmpty()) installedApps
-        else installedApps.filter { it.name.contains(searchQuery, ignoreCase = true) }
-    }
-    
-    Dialog(onDismissRequest = onDismiss) {
-        Card(
-            shape = RoundedCornerShape(24.dp),
-            modifier = Modifier.fillMaxWidth().fillMaxHeight(0.9f).padding(16.dp)
-        ) {
-            Column(Modifier.padding(16.dp)) {
-                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                    Text("Kies Apps", fontSize = 20.sp, fontWeight = FontWeight.Bold)
-                    if (appId.startsWith("mapped_")) {
-                        TextButton(onClick = onRemove) {
-                            Text("Verwijderen", color = Color.Red)
-                        }
-                    }
-                }
-                
-                Spacer(Modifier.height(8.dp))
-
-                OutlinedTextField(
-                    value = searchQuery,
-                    onValueChange = { searchQuery = it },
-                    modifier = Modifier.fillMaxWidth(),
-                    placeholder = { Text("Zoek app...") },
-                    leadingIcon = { Icon(Icons.Default.Search, null) },
-                    shape = RoundedCornerShape(12.dp)
-                )
-
-                Spacer(Modifier.height(12.dp))
-                
-                LazyColumn(Modifier.weight(1f)) {
-                    items(filteredApps) { app ->
-                        val isSelected = selectedPackages.contains(app.packageName)
-                        Row(
-                            Modifier
-                                .fillMaxWidth()
-                                .clickable { 
-                                    if (isSelected) selectedPackages.remove(app.packageName)
-                                    else selectedPackages.add(app.packageName)
-                                }
-                                .padding(vertical = 12.dp, horizontal = 8.dp),
-                            verticalAlignment = Alignment.CenterVertically) {
-                            Checkbox(
-                                checked = isSelected,
-                                onCheckedChange = null // Handled by row click
-                            )
-                            Spacer(Modifier.width(8.dp))
-                            if (app.icon != null) {
-                                AsyncImage(
-                                    model = app.icon,
-                                    contentDescription = null,
-                                    modifier = Modifier.size(48.dp).clip(RoundedCornerShape(8.dp))
-                                )
-                            }
-                            Spacer(Modifier.width(16.dp))
-                            Text(app.name, fontSize = 18.sp, fontWeight = FontWeight.Bold)
-                        }
-                        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
-                    }
-                }
-                
-                Row(Modifier.fillMaxWidth().padding(top = 16.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                    OutlinedButton(
-                        onClick = onDismiss, 
-                        modifier = Modifier.weight(1f).heightIn(min = 60.dp).wrapContentHeight(),
-                        shape = RoundedCornerShape(12.dp)
-                    ) {
-                        Text("ANNULEREN")
-                    }
-                    Button(
-                        onClick = { onAppsSelected(selectedPackages.toList()) }, 
-                        modifier = Modifier.weight(1f).heightIn(min = 60.dp).wrapContentHeight(),
-                        enabled = selectedPackages.isNotEmpty(),
-                        shape = RoundedCornerShape(12.dp)
-                    ) {
-                        Text("VOEG TOE (${selectedPackages.size})")
-                    }
-                }
-            }
-        }
-    }
-}
-
-@Composable
-fun HomeTopBar(notificationCount: Int, onNotificationsClick: () -> Unit) {
-    var currentTime by remember { mutableStateOf(SimpleDateFormat("HH:mm", Locale.getDefault()).format(Date())) }
-    var currentDate by remember { mutableStateOf(SimpleDateFormat("EEEE d MMMM", Locale.getDefault()).format(Date())) }
-    
-    LaunchedEffect(Unit) {
-        while (true) {
-            currentTime = SimpleDateFormat("HH:mm", Locale.getDefault()).format(Date())
-            currentDate = SimpleDateFormat("EEEE d MMMM", Locale.getDefault()).format(Date())
-            kotlinx.coroutines.delay(1000)
-        }
-    }
-
-    Box(
-        Modifier
-            .fillMaxWidth()
-            .padding(24.dp)
-    ) {
+        // Fixed SOS Button & Settings Button at bottom
         Column(
-            modifier = Modifier.align(Alignment.Center),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Text(
-                currentTime, 
-                fontSize = 64.sp, 
-                fontWeight = FontWeight.ExtraBold,
-                color = MaterialTheme.colorScheme.primary
-            )
-            Text(
-                currentDate.replaceFirstChar { it.uppercase() }, 
-                fontSize = 20.sp, 
-                fontWeight = FontWeight.Medium,
-                color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f)
-            )
-        }
-
-        // Notification Bell
-        Box(
             modifier = Modifier
-                .align(Alignment.TopEnd)
-                .size(72.dp)
-                .clip(RoundedCornerShape(16.dp))
-                .background(MaterialTheme.colorScheme.surfaceVariant)
-                .clickable { onNotificationsClick() },
-            contentAlignment = Alignment.Center
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            Icon(
-                Icons.Default.Notifications, 
-                contentDescription = "Meldingen",
-                modifier = Modifier.size(40.dp),
-                tint = if (notificationCount > 0) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
+            HomeSOSButton(
+                onClick = {
+                    val intent = Intent(context, SOSService::class.java)
+                    context.startForegroundService(intent)
+                }
             )
-            if (notificationCount > 0) {
-                Box(
-                    modifier = Modifier
-                        .align(Alignment.TopEnd)
-                        .padding(8.dp)
-                        .size(24.dp)
-                        .clip(CircleShape)
-                        .background(Color.Red),
-                    contentAlignment = Alignment.Center
+            
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.End
+            ) {
+                FilledIconButton(
+                    onClick = onSettingsClick,
+                    modifier = Modifier.size(64.dp),
+                    colors = IconButtonDefaults.filledIconButtonColors(containerColor = MaterialTheme.colorScheme.secondaryContainer)
                 ) {
-                    Text(
-                        "$notificationCount",
-                        color = Color.White,
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.Bold
-                    )
+                    Icon(Icons.Default.Settings, "Instellingen", modifier = Modifier.size(32.dp))
                 }
             }
         }
     }
 }
 
+@Preview(showSystemUi = true)
 @Composable
-fun HomeStatusCard(
-    pendingMedsCount: Int,
-    onMedsClick: () -> Unit
-) {
-    Card(
-        Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 8.dp),
-        shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.9f))
-    ) {
-        Row(
-            Modifier.padding(24.dp).fillMaxWidth().clickable { onMedsClick() },
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text("💊", fontSize = 40.sp)
-            Spacer(Modifier.width(16.dp))
-            Text(
-                "Je hebt nog $pendingMedsCount medicijnen in te nemen", 
-                fontSize = 20.sp, 
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onErrorContainer
-            )
-        }
-    }
-}
-
-private fun getHomeWeatherEmoji(iconUrl: String): String {
-    return when {
-        iconUrl.contains("01d") -> "☀️"
-        iconUrl.contains("01n") -> "🌙"
-        iconUrl.contains("02d") || iconUrl.contains("02n") -> "⛅"
-        iconUrl.contains("03") || iconUrl.contains("04") -> "☁️"
-        iconUrl.contains("09") || iconUrl.contains("10") -> "🌧️"
-        iconUrl.contains("11") -> "⛈️"
-        iconUrl.contains("13") -> "❄️"
-        iconUrl.contains("50") -> "🌫️"
-        else -> "☁️"
+fun PreviewHomeScreen() {
+    SeniorenLauncherTheme {
+        HomeScreenContent(
+            settings = AppSettings(
+                layout = LayoutType.GRID_2x3,
+                visibleApps = setOf("phone", "sms", "camera", "photos", "meds", "weather", "wifi")
+            ),
+            activeNotificationsCount = 2,
+            badgeCounts = mapOf("sms" to 1),
+            weatherData = WeatherData(
+                temp = 21.5,
+                condition = "Partly Cloudy",
+                iconUrl = "02d",
+                humidity = 40,
+                windSpeed = 10.0
+            ),
+            pendingMedsCount = 1,
+            onNavigate = {},
+            onAddApp = {},
+            onAppLongClick = {},
+            onSettingsClick = {}
+        )
     }
 }

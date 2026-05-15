@@ -58,15 +58,12 @@ class FallDetectionService : Service(), SensorEventListener {
     override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {}
     private fun onFall() {
         (getSystemService(Context.VIBRATOR_SERVICE) as Vibrator).vibrate(VibrationEffect.createWaveform(longArrayOf(0,500,200,500),-1))
-        scope.launch { 
-            delay(30_000)
-            val intent = Intent(this@FallDetectionService, SOSService::class.java)
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                startForegroundService(intent)
-            } else {
-                startService(intent)
-            }
+        
+        val intent = Intent(this, com.seniorenlauncher.MainActivity::class.java).apply {
+            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
+            putExtra("NAVIGATE_TO", "fall_detected")
         }
+        startActivity(intent)
     }
     override fun onDestroy() { sensorMgr.unregisterListener(this); scope.cancel(); super.onDestroy() }
 

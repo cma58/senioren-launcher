@@ -86,4 +86,19 @@ object AppLauncher {
             Log.e("AppLauncher", "Error starting remote support", e)
         }
     }
+
+    fun openWifiSettings(context: Context) {
+        try {
+            val intent = if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
+                Intent(android.provider.Settings.Panel.ACTION_WIFI)
+            } else {
+                Intent(android.provider.Settings.ACTION_WIFI_SETTINGS)
+            }
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            context.startActivity(intent)
+        } catch (e: Exception) {
+            Log.e("AppLauncher", "Error opening wifi settings", e)
+            Toast.makeText(context, "Kan wifi-instellingen niet openen", Toast.LENGTH_SHORT).show()
+        }
+    }
 }
