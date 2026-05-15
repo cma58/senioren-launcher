@@ -1,6 +1,9 @@
 package com.seniorenlauncher.ui.screens
 
 import android.graphics.drawable.Drawable
+import androidx.compose.ui.window.DialogProperties
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -235,63 +238,86 @@ fun HomeScreen(onNavigate: (String) -> Unit, settingsVm: SettingsViewModel, radi
 fun PinDialog(correctPin: String, onDismiss: () -> Unit, onSuccess: () -> Unit) {
     var input by remember { mutableStateOf("") }
     var error by remember { mutableStateOf(false) }
+    val scrollState = rememberScrollState()
 
-    Dialog(onDismissRequest = onDismiss) {
+    Dialog(
+        onDismissRequest = onDismiss,
+        properties = DialogProperties(usePlatformDefaultWidth = false)
+    ) {
         Card(
             shape = RoundedCornerShape(24.dp),
-            modifier = Modifier.fillMaxWidth().padding(16.dp)
+            modifier = Modifier
+                .fillMaxWidth(0.95f) // Gebruik bijna de volledige breedte om hoogte te besparen
+                .padding(8.dp)
         ) {
             Column(
-                Modifier.padding(24.dp),
+                Modifier
+                    .padding(16.dp)
+                    .verticalScroll(scrollState),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Text("Beveiligde Instellingen", fontSize = 22.sp, fontWeight = FontWeight.Bold)
-                Spacer(Modifier.height(8.dp))
-                Text("Voer de pincode in om verder te gaan.", textAlign = TextAlign.Center)
+                Text("Beveiligde Instellingen", fontSize = 18.sp, fontWeight = FontWeight.Bold)
                 
-                Spacer(Modifier.height(24.dp))
+                Spacer(Modifier.height(8.dp))
                 
                 Text(
                     input.replace(Regex("."), "●").ifEmpty { " " },
-                    fontSize = 32.sp,
+                    fontSize = 24.sp,
                     letterSpacing = 8.sp,
-                    color = if (error) Color.Red else MaterialTheme.colorScheme.primary
+                    color = if (error) Color.Red else MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.padding(vertical = 4.dp)
                 )
                 
-                Spacer(Modifier.height(24.dp))
+                Spacer(Modifier.height(8.dp))
                 
-                // Numpad
-                val keys = listOf("1", "2", "3", "4", "5", "6", "7", "8", "9", "C", "0", "OK")
-                LazyVerticalGrid(
-                    columns = GridCells.Fixed(3),
-                    modifier = Modifier.height(280.dp),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                val rows = listOf(
+                    listOf("1", "2", "3"),
+                    listOf("4", "5", "6"),
+                    listOf("7", "8", "9"),
+                    listOf("C", "0", "OK")
+                )
+
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(6.dp),
+                    modifier = Modifier.fillMaxWidth()
                 ) {
-                    items(keys) { key ->
-                        Button(
-                            onClick = {
-                                when (key) {
-                                    "C" -> if (input.isNotEmpty()) input = input.dropLast(1)
-                                    "OK" -> {
-                                        if (input == correctPin) onSuccess() else {
-                                            error = true
-                                            input = ""
-                                        }
-                                    }
-                                    else -> {
-                                        if (input.length < 8) {
-                                            error = false
-                                            input += key
-                                        }
-                                    }
-                                }
-                            },
-                            modifier = Modifier.aspectRatio(1f),
-                            shape = CircleShape,
-                            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.surfaceVariant, contentColor = MaterialTheme.colorScheme.onSurfaceVariant)
+                    rows.forEach { rowKeys ->
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(6.dp),
+                            modifier = Modifier.fillMaxWidth()
                         ) {
-                            Text(key, fontSize = 20.sp, fontWeight = FontWeight.Bold)
+                            rowKeys.forEach { key ->
+                                Button(
+                                    onClick = {
+                                        when (key) {
+                                            "C" -> if (input.isNotEmpty()) input = input.dropLast(1)
+                                            "OK" -> {
+                                                if (input == correctPin) onSuccess() else {
+                                                    error = true
+                                                    input = ""
+                                                }
+                                            }
+                                            else -> {
+                                                if (input.length < 8) {
+                                                    error = false
+                                                    input += key
+                                                }
+                                            }
+                                        }
+                                    },
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .heightIn(min = 50.dp, max = 65.dp), // Vaste hoogte range voor stabiliteit
+                                    shape = RoundedCornerShape(12.dp),
+                                    contentPadding = PaddingValues(0.dp),
+                                    colors = ButtonDefaults.buttonColors(
+                                        containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                                        contentColor = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                ) {
+                                    Text(key, fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                                }
+                            }
                         }
                     }
                 }

@@ -2,24 +2,37 @@ package com.seniorenlauncher.service
 import android.app.Service
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.content.pm.ServiceInfo
 import android.hardware.*
 import android.os.Build
 import android.os.IBinder
 import android.os.VibrationEffect
 import android.os.Vibrator
+import android.util.Log
 import androidx.core.app.NotificationCompat
+import androidx.core.content.ContextCompat
 import com.seniorenlauncher.LauncherApp
 import kotlinx.coroutines.*
 import kotlin.math.sqrt
 
 class FallDetectionService : Service(), SensorEventListener {
+    companion object {
+        private const val TAG = "FallDetectionService"
+    }
+
     private lateinit var sensorMgr: SensorManager
     private var freeFall = false
     private val scope = CoroutineScope(Dispatchers.Main + SupervisorJob())
     override fun onBind(intent: Intent?): IBinder? = null
     override fun onCreate() { super.onCreate(); sensorMgr = getSystemService(Context.SENSOR_SERVICE) as SensorManager }
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        if (!hasRequiredPermissions()) {
+            Log.e(TAG, "Missing permissions for FallDetectionService. Stopping service.")
+            stopSelf()
+            return START_NOT_STICKY
+        }
+
         val notification = NotificationCompat.Builder(this, LauncherApp.CH_GENERAL)
             .setContentTitle("Valdetectie actief")
             .setSmallIcon(android.R.drawable.ic_dialog_info)
@@ -56,4 +69,18 @@ class FallDetectionService : Service(), SensorEventListener {
         }
     }
     override fun onDestroy() { sensorMgr.unregisterListener(this); scope.cancel(); super.onDestroy() }
+
+    private fun hasRequiredPermissions(): Boolean {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.ACTIVITY_RECOGNITION) != PackageManager.PERMISSION_GRANTED) {
+                return false
+            }
+        }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+            if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.FOREGROUND_SERVICE_HEALTH) != PackageManager.PERMISSION_GRANTED) {
+                return false
+            }
+        }
+        return true
+    }
 }

@@ -62,6 +62,13 @@ fun SystemPermissionsSetupScreen(onNext: () -> Unit, isSenior: Boolean = false) 
     }
     var hasNotificationAccess by remember { mutableStateOf(false) }
 
+    var isIgnoringBatteryOptimizations by remember {
+        mutableStateOf(
+            (context.getSystemService(Context.POWER_SERVICE) as android.os.PowerManager)
+                .isIgnoringBatteryOptimizations(context.packageName)
+        )
+    }
+
     val lifecycleOwner = LocalLifecycleOwner.current
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
@@ -76,7 +83,9 @@ fun SystemPermissionsSetupScreen(onNext: () -> Unit, isSenior: Boolean = false) 
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                     canRequestPackageInstalls = context.packageManager.canRequestPackageInstalls()
                 }
-                // isNotificationServiceEnabled moet in NotificationsScreen.kt staan in dezelfde package
+                isIgnoringBatteryOptimizations = (context.getSystemService(Context.POWER_SERVICE) as android.os.PowerManager)
+                    .isIgnoringBatteryOptimizations(context.packageName)
+                
                 hasNotificationAccess = isNotificationServiceEnabled(context)
             }
         }
@@ -86,7 +95,8 @@ fun SystemPermissionsSetupScreen(onNext: () -> Unit, isSenior: Boolean = false) 
         }
     }
 
-    val allGranted = canDrawOverlays && canUseFullScreenIntent && canScheduleExactAlarms && hasNotificationAccess
+    val allGranted = canDrawOverlays && canUseFullScreenIntent && canScheduleExactAlarms && 
+                     hasNotificationAccess && isIgnoringBatteryOptimizations && canRequestPackageInstalls
 
     Column(
         modifier = Modifier
@@ -217,6 +227,20 @@ fun SystemPermissionsSetupScreen(onNext: () -> Unit, isSenior: Boolean = false) 
             }
         )
 
+        PermissionRow(
+            title = if (isSenior) "6. Altijd aan blijven" else "Batterij optimalisatie uit",
+            description = if (isSenior) "Zodat de hulp-knop en valdetectie altijd werken." else "Voorkomt dat Android de app afsluit om stroom te besparen.",
+            isGranted = isIgnoringBatteryOptimizations,
+            icon = Icons.Default.BatteryAlert,
+            isSenior = isSenior,
+            onClick = {
+                val intent = Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS).apply {
+                    data = Uri.parse("package:${context.packageName}")
+                }
+                context.startActivity(intent)
+            }
+        )
+
         Spacer(modifier = Modifier.weight(1f))
         Spacer(Modifier.height(32.dp))
 
@@ -226,14 +250,14 @@ fun SystemPermissionsSetupScreen(onNext: () -> Unit, isSenior: Boolean = false) 
                 .fillMaxWidth()
                 .height(if (isSenior) 100.dp else 80.dp),
             shape = RoundedCornerShape(24.dp),
-            enabled = allGranted && canRequestPackageInstalls,
+            enabled = allGranted,
             colors = ButtonDefaults.buttonColors(
-                containerColor = if (allGranted && canRequestPackageInstalls) Color(0xFF10B981) else Color.Gray
+                containerColor = if (allGranted) Color(0xFF10B981) else Color.Gray
             )
         ) {
             Text(
-                text = if (allGranted && canRequestPackageInstalls) (if (isSenior) "HET IS GELUKT, GA VERDER" else "VOLGENDE") 
-                       else (if (isSenior) "ZET DE 5 KNOPPEN AAN" else "STEL ALLES IN OM VERDER TE GAAN"),
+                text = if (allGranted) (if (isSenior) "HET IS GELUKT, GA VERDER" else "VOLGENDE") 
+                       else (if (isSenior) "ZET DE 6 KNOPPEN AAN" else "STEL ALLES IN OM VERDER TE GAAN"),
                 fontSize = if (isSenior) 24.sp else 20.sp,
                 fontWeight = FontWeight.Black,
                 textAlign = TextAlign.Center

@@ -1,16 +1,8 @@
 package com.seniorenlauncher.ui.screens
 
-import android.app.role.RoleManager
 import android.content.Context
-import android.content.Intent
-import android.content.pm.PackageManager
 import android.os.Build
 import android.provider.ContactsContract
-import android.provider.Telephony
-import android.telecom.TelecomManager
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.animation.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -19,7 +11,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -30,19 +21,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import com.seniorenlauncher.LauncherApp
 import com.seniorenlauncher.data.model.*
-import androidx.compose.foundation.BorderStroke
-import androidx.compose.ui.graphics.vector.ImageVector
+import com.seniorenlauncher.ui.screens.setup.*
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 @Composable
@@ -71,23 +57,36 @@ fun SetupWizardScreen(
                 2 -> SystemPermissionsSetupScreen(onNext = { caregiverStep = 3 }, isSenior = false)
                 3 -> DefaultAppsSetupScreen(onNext = { caregiverStep = 4 }, isSenior = false)
                 4 -> SosSetupScreen(onNext = { caregiverStep = 5 }, settingsVm = settingsVm)
-                5 -> SecuritySetupScreen(onNext = { caregiverStep = 6 }, settingsVm = settingsVm)
-                6 -> HandoverScreen(onNext = { flow = WizardSetupFlow.SENIOR })
+                5 -> FallDetectionSetupScreen(onNext = { caregiverStep = 6 }, settingsVm = settingsVm)
+                6 -> SecuritySetupScreen(onNext = { caregiverStep = 7 }, settingsVm = settingsVm)
+                7 -> HandoverScreen(onNext = { 
+                    flow = WizardSetupFlow.SENIOR
+                    seniorStep = 1
+                })
                 else -> {}
             }
         }
         WizardSetupFlow.SENIOR -> {
+            val contactDao = remember { LauncherApp.instance.database.contactDao() }
+            val sosCount by contactDao.getSosContacts().collectAsState(initial = emptyList())
+
             when (seniorStep) {
-                1 -> SeniorWelcomeStep(onNext = { seniorStep = 2 })
-                2 -> PermissionsSetupScreen(onNext = { seniorStep = 3 }, isSenior = true)
-                3 -> SystemPermissionsSetupScreen(onNext = { seniorStep = 4 }, isSenior = true)
-                4 -> DefaultAppsSetupScreen(onNext = { seniorStep = 5 }, isSenior = true)
+                1 -> SeniorWelcomeStep(onNext = { seniorStep = 5 })
                 5 -> SeniorReadingStep(onNext = { seniorStep = 6 }, settingsVm = settingsVm)
                 6 -> SeniorColorsStep(onNext = { seniorStep = 7 }, settingsVm = settingsVm)
-                7 -> SeniorEmergencyStep(onNext = { 
-                    settingsVm.completeSetup()
-                    onFinished()
-                })
+                7 -> {
+                    if (sosCount.isNotEmpty()) {
+                        LaunchedEffect(Unit) {
+                            settingsVm.completeSetup()
+                            onFinished()
+                        }
+                    } else {
+                        SeniorEmergencyStep(onNext = { 
+                            settingsVm.completeSetup()
+                            onFinished()
+                        })
+                    }
+                }
                 else -> {}
             }
         }
@@ -176,18 +175,6 @@ fun PrivacyConsentScreen(onAccepted: () -> Unit) {
 }
 
 @Composable
-fun PrivacyPoint(icon: androidx.compose.ui.graphics.vector.ImageVector, title: String, description: String) {
-    Row(verticalAlignment = Alignment.Top) {
-        Icon(icon, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(28.dp))
-        Spacer(Modifier.width(16.dp))
-        Column {
-            Text(title, fontWeight = FontWeight.Bold, fontSize = 18.sp)
-            Text(description, fontSize = 15.sp, color = MaterialTheme.colorScheme.onSurfaceVariant, lineHeight = 20.sp)
-        }
-    }
-}
-
-@Composable
 fun FlowSelectionScreen(onFlowSelected: (WizardSetupFlow) -> Unit) {
     Column(
         modifier = Modifier
@@ -235,367 +222,6 @@ fun FlowSelectionScreen(onFlowSelected: (WizardSetupFlow) -> Unit) {
             icon = Icons.Default.Person,
             color = Color(0xFF10B981),
             onClick = { onFlowSelected(WizardSetupFlow.SENIOR) }
-        )
-    }
-}
-
-@Composable
-fun SetupOptionCard(
-    title: String,
-    description: String,
-    icon: androidx.compose.ui.graphics.vector.ImageVector,
-    color: Color,
-    onClick: () -> Unit
-) {
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(140.dp)
-            .clickable { onClick() },
-        shape = RoundedCornerShape(24.dp),
-        colors = CardDefaults.cardColors(containerColor = color.copy(alpha = 0.1f)),
-        border = BorderStroke(2.dp, color)
-    ) {
-        Row(
-            modifier = Modifier.padding(24.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Icon(icon, null, modifier = Modifier.size(48.dp), tint = color)
-            Spacer(Modifier.width(20.dp))
-            Column {
-                Text(title, fontSize = 20.sp, fontWeight = FontWeight.Bold, color = color)
-                Text(description, fontSize = 16.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            }
-        }
-    }
-}
-
-@Composable
-fun DefaultAppsSetupScreen(onNext: () -> Unit, isSenior: Boolean = false) {
-    val context = LocalContext.current
-    
-    var isDefaultHome by remember { mutableStateOf(false) }
-    var isDefaultDialer by remember { mutableStateOf(false) }
-    var isDefaultSms by remember { mutableStateOf(false) }
-
-    LaunchedEffect(Unit) {
-        while (true) {
-            isDefaultHome = isLauncherDefault(context)
-            
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                val roleManager = context.getSystemService(Context.ROLE_SERVICE) as RoleManager
-                isDefaultDialer = roleManager.isRoleHeld(RoleManager.ROLE_DIALER)
-                isDefaultSms = roleManager.isRoleHeld(RoleManager.ROLE_SMS)
-            } else {
-                val telecomManager = context.getSystemService(Context.TELECOM_SERVICE) as TelecomManager
-                isDefaultDialer = telecomManager.defaultDialerPackage == context.packageName
-                isDefaultSms = Telephony.Sms.getDefaultSmsPackage(context) == context.packageName
-            }
-            delay(1000)
-        }
-    }
-
-    val roleLauncher = rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) { }
-
-    val allDone = isDefaultHome && isDefaultDialer && isDefaultSms
-
-    Column(
-        modifier = Modifier.fillMaxSize().padding(24.dp).verticalScroll(rememberScrollState()),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Text(
-            text = if (isSenior) "De telefoon veilig maken" else "Standaard Apps",
-            fontSize = if (isSenior) 36.sp else 32.sp,
-            fontWeight = FontWeight.ExtraBold,
-            textAlign = TextAlign.Center,
-            lineHeight = if (isSenior) 42.sp else 38.sp
-        )
-        
-        Spacer(Modifier.height(16.dp))
-        
-        Text(
-            text = if (isSenior) 
-                "We maken de Senioren Launcher uw vaste hulp voor bellen en berichten. Klik op de rode vakken."
-                else "Stel de launcher in als standaard voor Home, Telefoon en SMS om de stabiliteit te garanderen.",
-            fontSize = if (isSenior) 22.sp else 18.sp, 
-            textAlign = TextAlign.Center,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            lineHeight = if (isSenior) 30.sp else 24.sp
-        )
-        
-        Spacer(Modifier.height(32.dp))
-
-        DefaultAppRow(
-            title = if (isSenior) "1. Basis scherm" else "Startscherm (Home)",
-            description = if (isSenior) "Zodat u altijd de grote knoppen ziet." else "Maak dit de standaard launcher.",
-            isGranted = isDefaultHome,
-            icon = Icons.Default.Home,
-            isSenior = isSenior,
-            onClick = {
-                val intent = Intent(Intent.ACTION_MAIN).apply {
-                    addCategory(Intent.CATEGORY_HOME)
-                    flags = Intent.FLAG_ACTIVITY_NEW_TASK
-                }
-                context.startActivity(intent)
-            }
-        )
-
-        Spacer(Modifier.height(16.dp))
-
-        DefaultAppRow(
-            title = if (isSenior) "2. Telefoon knop" else "Telefoon (Bellen)",
-            description = if (isSenior) "Om makkelijk uw familie te kunnen bellen." else "Nodig voor de versimpelde bel-interface.",
-            isGranted = isDefaultDialer,
-            icon = Icons.Default.Phone,
-            isSenior = isSenior,
-            onClick = {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                    val roleManager = context.getSystemService(Context.ROLE_SERVICE) as RoleManager
-                    val intent = roleManager.createRequestRoleIntent(RoleManager.ROLE_DIALER)
-                    roleLauncher.launch(intent)
-                } else {
-                    val intent = Intent(TelecomManager.ACTION_CHANGE_DEFAULT_DIALER).apply {
-                        putExtra(TelecomManager.EXTRA_CHANGE_DEFAULT_DIALER_PACKAGE_NAME, context.packageName)
-                    }
-                    roleLauncher.launch(intent)
-                }
-            }
-        )
-
-        Spacer(Modifier.height(16.dp))
-
-        DefaultAppRow(
-            title = if (isSenior) "3. Berichten knop" else "Berichten (SMS)",
-            description = if (isSenior) "Zodat u veilig berichten kunt ontvangen." else "Nodig voor SOS en batterijmeldingen.",
-            isGranted = isDefaultSms,
-            icon = Icons.Default.Sms,
-            isSenior = isSenior,
-            onClick = {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                    val roleManager = context.getSystemService(Context.ROLE_SERVICE) as RoleManager
-                    val intent = roleManager.createRequestRoleIntent(RoleManager.ROLE_SMS)
-                    roleLauncher.launch(intent)
-                } else {
-                    val intent = Intent(Telephony.Sms.Intents.ACTION_CHANGE_DEFAULT).apply {
-                        putExtra(Telephony.Sms.Intents.EXTRA_PACKAGE_NAME, context.packageName)
-                    }
-                    roleLauncher.launch(intent)
-                }
-            }
-        )
-
-        Spacer(Modifier.weight(1f))
-        Spacer(Modifier.height(32.dp))
-
-        Button(
-            onClick = onNext,
-            modifier = Modifier.fillMaxWidth().height(if (isSenior) 100.dp else 80.dp),
-            shape = RoundedCornerShape(24.dp),
-            enabled = allDone,
-            colors = ButtonDefaults.buttonColors(
-                containerColor = if (allDone) Color(0xFF10B981) else Color.Gray
-            )
-        ) {
-            Text(
-                text = if (allDone) (if (isSenior) "HET IS GELUKT, GA VERDER" else "VOLGENDE") 
-                       else (if (isSenior) "STEL DE 3 KNOPPEN IN" else "STEL ALLES IN"), 
-                fontSize = if (isSenior) 24.sp else 22.sp, 
-                fontWeight = FontWeight.Black,
-                textAlign = TextAlign.Center
-            )
-        }
-    }
-}
-
-@Composable
-fun DefaultAppRow(title: String, description: String, isGranted: Boolean, icon: androidx.compose.ui.graphics.vector.ImageVector, isSenior: Boolean, onClick: () -> Unit) {
-    Card(
-        modifier = Modifier.fillMaxWidth().clickable(enabled = !isGranted) { onClick() },
-        shape = RoundedCornerShape(24.dp),
-        colors = CardDefaults.cardColors(containerColor = if (isGranted) Color(0xFFE8F5E9) else Color(0xFFFEF2F2)),
-        border = BorderStroke(if (isSenior) 4.dp else 2.dp, if (isGranted) Color(0xFF10B981) else Color(0xFFEF4444))
-    ) {
-        Row(Modifier.padding(if (isSenior) 24.dp else 20.dp), verticalAlignment = Alignment.CenterVertically) {
-            Icon(icon, null, modifier = Modifier.size(if (isSenior) 40.dp else 32.dp), tint = if (isGranted) Color(0xFF10B981) else Color(0xFFEF4444))
-            Spacer(Modifier.width(20.dp))
-            Column(Modifier.weight(1f)) {
-                Text(title, fontSize = if (isSenior) 22.sp else 18.sp, fontWeight = FontWeight.Bold, color = if (isGranted) Color(0xFF1B5E20) else Color(0xFF991B1B))
-                Text(description, fontSize = if (isSenior) 18.sp else 14.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            }
-            Text(if (isGranted) "✅" else "❌", fontSize = if (isSenior) 32.sp else 24.sp)
-        }
-    }
-}
-
-private fun isLauncherDefault(context: Context): Boolean {
-    val intent = Intent(Intent.ACTION_MAIN).apply { addCategory(Intent.CATEGORY_HOME) }
-    val resolveInfo = context.packageManager.resolveActivity(intent, PackageManager.MATCH_DEFAULT_ONLY)
-    return resolveInfo?.activityInfo?.packageName == context.packageName
-}
-
-@Composable
-fun SosSetupScreen(onNext: () -> Unit, settingsVm: SettingsViewModel) {
-    val scope = rememberCoroutineScope()
-    val emergencyDao = remember { LauncherApp.instance.database.emergencyDao() }
-    val contactDao = remember { LauncherApp.instance.database.contactDao() }
-    
-    val selectedContacts = remember { mutableStateListOf<Pair<String, String>>() }
-    var showContactPicker by remember { mutableStateOf(false) }
-    var manualName by remember { mutableStateOf("") }
-    var manualPhone by remember { mutableStateOf("") }
-
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
-            .padding(24.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Text(
-            text = "Hoofdcontacten instellen",
-            fontSize = 32.sp,
-            fontWeight = FontWeight.ExtraBold,
-            textAlign = TextAlign.Center
-        )
-        
-        Spacer(Modifier.height(16.dp))
-        
-        Text(
-            text = "Kies tot maximaal 4 contactpersonen. Deze nummers worden direct als favoriet en SOS-contact ingesteld.",
-            fontSize = 18.sp,
-            textAlign = TextAlign.Center,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
-        
-        Spacer(Modifier.height(24.dp))
-
-        Row(verticalAlignment = Alignment.Bottom, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            Column(Modifier.weight(1f)) {
-                OutlinedTextField(
-                    value = manualName,
-                    onValueChange = { manualName = it },
-                    label = { Text("Naam") },
-                    singleLine = true,
-                    shape = RoundedCornerShape(12.dp),
-                    modifier = Modifier.fillMaxWidth()
-                )
-                Spacer(Modifier.height(4.dp))
-                OutlinedTextField(
-                    value = manualPhone,
-                    onValueChange = { manualPhone = it },
-                    label = { Text("Nummer") },
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
-                    singleLine = true,
-                    shape = RoundedCornerShape(12.dp),
-                    modifier = Modifier.fillMaxWidth()
-                )
-            }
-            Button(
-                onClick = {
-                    if (manualName.isNotBlank() && manualPhone.isNotBlank() && selectedContacts.size < 4) {
-                        selectedContacts.add(manualName to manualPhone)
-                        manualName = ""
-                        manualPhone = ""
-                    }
-                },
-                modifier = Modifier.height(110.dp),
-                shape = RoundedCornerShape(12.dp),
-                enabled = manualName.isNotBlank() && manualPhone.isNotBlank() && selectedContacts.size < 4
-            ) {
-                Icon(Icons.Default.Add, null)
-            }
-        }
-
-        Spacer(Modifier.height(16.dp))
-
-        Card(
-            modifier = Modifier.fillMaxWidth().weight(1f),
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)),
-            shape = RoundedCornerShape(20.dp)
-        ) {
-            LazyColumn(Modifier.padding(16.dp)) {
-                if (selectedContacts.isEmpty()) {
-                    item {
-                        Box(Modifier.fillParentMaxSize(), contentAlignment = Alignment.Center) {
-                            Text("Nog geen contacten gekozen", color = Color.Gray)
-                        }
-                    }
-                } else {
-                    items(selectedContacts) { contact ->
-                        Row(
-                            Modifier.fillMaxWidth().padding(vertical = 8.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.SpaceBetween
-                        ) {
-                            Column {
-                                Text(contact.first, fontWeight = FontWeight.Bold, fontSize = 18.sp)
-                                Text(contact.second, fontSize = 14.sp, color = Color.Gray)
-                            }
-                            IconButton(onClick = { selectedContacts.remove(contact) }) {
-                                Icon(Icons.Default.Delete, null, tint = Color.Red)
-                            }
-                        }
-                        HorizontalDivider(color = Color.LightGray.copy(alpha = 0.3f))
-                    }
-                }
-            }
-        }
-
-        Spacer(Modifier.height(16.dp))
-        
-        if (selectedContacts.size < 4) {
-            Button(
-                onClick = { showContactPicker = true },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(70.dp),
-                shape = RoundedCornerShape(20.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondaryContainer, contentColor = MaterialTheme.colorScheme.onSurfaceVariant)
-            ) {
-                Icon(Icons.Default.ContactPhone, null, modifier = Modifier.size(32.dp))
-                Spacer(Modifier.width(16.dp))
-                Text("KIES UIT CONTACTEN", fontSize = 18.sp, fontWeight = FontWeight.Bold)
-            }
-        }
-        
-        Spacer(Modifier.height(16.dp))
-        
-        Button(
-            onClick = {
-                scope.launch {
-                    selectedContacts.forEachIndexed { index, contact ->
-                        if (index == 0) {
-                            emergencyDao.save(EmergencyInfo(iceContactName = contact.first, iceContactPhone = contact.second))
-                        }
-                        contactDao.insert(QuickContact(
-                            name = contact.first, 
-                            phoneNumber = contact.second, 
-                            isSosContact = true, 
-                            emoji = "🆘",
-                            color = 0xFFDC2626
-                        ))
-                    }
-                    onNext()
-                }
-            },
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(70.dp),
-            shape = RoundedCornerShape(20.dp)
-        ) {
-            Text("VOLGENDE", fontSize = 20.sp, fontWeight = FontWeight.Bold)
-        }
-    }
-
-    if (showContactPicker) {
-        ContactPickerDialog(
-            onDismiss = { showContactPicker = false },
-            onContactSelected = { name, phone ->
-                if (!selectedContacts.any { it.second == phone } && selectedContacts.size < 4) {
-                    selectedContacts.add(name to phone)
-                }
-                showContactPicker = false
-            }
         )
     }
 }
@@ -692,312 +318,5 @@ fun ContactPickerDialog(onDismiss: () -> Unit, onContactSelected: (String, Strin
                 }
             }
         }
-    }
-}
-
-@Composable
-fun SecuritySetupScreen(onNext: () -> Unit, settingsVm: SettingsViewModel) {
-    var pin by remember { mutableStateOf("") }
-    var remoteSupportEnabled by remember { mutableStateOf(true) }
-
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
-            .padding(24.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Text(
-            text = "Beveiliging instellen",
-            fontSize = 32.sp,
-            lineHeight = 38.sp,
-            fontWeight = FontWeight.ExtraBold,
-            textAlign = TextAlign.Center
-        )
-        
-        Spacer(Modifier.height(32.dp))
-        
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(20.dp),
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f))
-        ) {
-            Column(Modifier.padding(20.dp)) {
-                Text("4-cijferige PIN", fontSize = 20.sp, fontWeight = FontWeight.Bold)
-                Text("Dit vergrendelt de instellingen voor de senior.", fontSize = 16.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                
-                Spacer(Modifier.height(16.dp))
-                
-                OutlinedTextField(
-                    value = pin,
-                    onValueChange = { if (it.length <= 4 && it.all { char -> char.isDigit() }) pin = it },
-                    modifier = Modifier.fillMaxWidth(),
-                    placeholder = { Text("Bijv. 1234") },
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                    visualTransformation = PasswordVisualTransformation(),
-                    shape = RoundedCornerShape(12.dp)
-                )
-            }
-        }
-        
-        Spacer(Modifier.height(24.dp))
-        
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(20.dp),
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f))
-        ) {
-            Row(
-                modifier = Modifier.padding(20.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Column(Modifier.weight(1f)) {
-                    Text("Hulp op afstand", fontSize = 20.sp, fontWeight = FontWeight.Bold)
-                    Text("Maakt meekijken via RustDesk mogelijk.", fontSize = 16.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                }
-                Switch(
-                    checked = remoteSupportEnabled,
-                    onCheckedChange = { remoteSupportEnabled = it }
-                )
-            }
-        }
-        
-        Spacer(Modifier.weight(1f))
-        
-        Button(
-            onClick = {
-                if (pin.length == 4) {
-                    settingsVm.setPinCode(pin)
-                    settingsVm.lockSettings()
-                }
-                onNext()
-            },
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(70.dp),
-            shape = RoundedCornerShape(20.dp)
-        ) {
-            Text("BEVEILIGING OPSLAAN", fontSize = 20.sp, fontWeight = FontWeight.Bold)
-        }
-    }
-}
-
-@Composable
-fun HandoverScreen(onNext: () -> Unit) {
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
-            .padding(24.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
-    ) {
-        Text("✨", fontSize = 80.sp)
-        
-        Text(
-            text = "De techniek is klaar!",
-            fontSize = 32.sp,
-            fontWeight = FontWeight.ExtraBold,
-            textAlign = TextAlign.Center
-        )
-        
-        Spacer(Modifier.height(24.dp))
-        
-        Text(
-            text = "Geef de telefoon nu aan de gebruiker, zodat zij zelf kunnen kiezen hoe groot de letters en knoppen moeten zijn.",
-            fontSize = 20.sp,
-            textAlign = TextAlign.Center,
-            lineHeight = 28.sp,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
-        
-        Spacer(Modifier.height(64.dp))
-        
-        Button(
-            onClick = onNext,
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(80.dp),
-            shape = RoundedCornerShape(20.dp),
-            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF10B981))
-        ) {
-            Text("START VISUELE INSTELLINGEN", fontSize = 20.sp, fontWeight = FontWeight.Bold)
-        }
-    }
-}
-
-@Composable
-fun SeniorWelcomeStep(onNext: () -> Unit) {
-    Column(
-        modifier = Modifier.fillMaxSize().padding(24.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
-    ) {
-        Text("👋", fontSize = 100.sp)
-        Text("Welkom", fontSize = 40.sp, fontWeight = FontWeight.Bold)
-        Spacer(Modifier.height(24.dp))
-        Text(
-            "We gaan uw telefoon samen heel makkelijk maken. U kunt hierbij niets fout doen.",
-            fontSize = 26.sp,
-            textAlign = TextAlign.Center,
-            lineHeight = 36.sp
-        )
-        Spacer(Modifier.height(64.dp))
-        Button(
-            onClick = onNext,
-            modifier = Modifier.fillMaxWidth().height(80.dp),
-            shape = RoundedCornerShape(20.dp)
-        ) {
-            Text("BEGINNEN", fontSize = 22.sp, fontWeight = FontWeight.Bold)
-        }
-    }
-}
-
-@Composable
-fun SeniorReadingStep(onNext: () -> Unit, settingsVm: SettingsViewModel) {
-    val settings by settingsVm.settings.collectAsState()
-    
-    Column(
-        modifier = Modifier.fillMaxSize().padding(24.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Text("Welkom. Hoe groot wilt u de letters?", fontSize = 26.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center)
-        Spacer(Modifier.height(48.dp))
-        
-        ReadingOptionCard("Dit is normale tekst.", 18, settings.fontSize == 18) { settingsVm.updateFontSize(18) }
-        Spacer(Modifier.height(16.dp))
-        ReadingOptionCard("Dit is grote tekst.", 24, settings.fontSize == 24) { settingsVm.updateFontSize(24) }
-        Spacer(Modifier.height(20.dp))
-        ReadingOptionCard("DIT IS REUSACHTIG.", 30, settings.fontSize == 30) { settingsVm.updateFontSize(30) }
-        
-        Spacer(Modifier.weight(1f))
-        
-        Button(
-            onClick = onNext,
-            modifier = Modifier.fillMaxWidth().height(80.dp),
-            shape = RoundedCornerShape(20.dp)
-        ) {
-            Text("VOLGENDE", fontSize = 22.sp, fontWeight = FontWeight.Bold)
-        }
-    }
-}
-
-@Composable
-fun ReadingOptionCard(label: String, size: Int, selected: Boolean, onClick: () -> Unit) {
-    Surface(
-        onClick = onClick,
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(20.dp),
-        color = if (selected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant,
-        border = if (selected) androidx.compose.foundation.BorderStroke(4.dp, MaterialTheme.colorScheme.primary) else null
-    ) {
-        Text(
-            text = label,
-            fontSize = size.sp,
-            modifier = Modifier.padding(24.dp),
-            textAlign = TextAlign.Center,
-            fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal
-        )
-    }
-}
-
-@Composable
-fun SeniorColorsStep(onNext: () -> Unit, settingsVm: SettingsViewModel) {
-    val settings by settingsVm.settings.collectAsState()
-    
-    Column(
-        modifier = Modifier.fillMaxSize().padding(24.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Text("Welkom. Welke kleuren vindt u het fijnst?", fontSize = 26.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center)
-        Spacer(Modifier.height(48.dp))
-        
-        SeniorThemeCard("Klassiek (Zacht)", AppTheme.CLASSIC, settings.theme == AppTheme.CLASSIC) { settingsVm.updateTheme(AppTheme.CLASSIC) }
-        Spacer(Modifier.height(32.dp))
-        SeniorThemeCard("Hoog Contrast (Fel)", AppTheme.HIGH_CONTRAST, settings.theme == AppTheme.HIGH_CONTRAST) { settingsVm.updateTheme(AppTheme.HIGH_CONTRAST) }
-        
-        Spacer(Modifier.weight(1f))
-        
-        Button(
-            onClick = onNext,
-            modifier = Modifier.fillMaxWidth().height(80.dp),
-            shape = RoundedCornerShape(20.dp)
-        ) {
-            Text("VOLGENDE", fontSize = 22.sp, fontWeight = FontWeight.Bold)
-        }
-    }
-}
-
-@Composable
-fun SeniorThemeCard(label: String, theme: AppTheme, selected: Boolean, onClick: () -> Unit) {
-    val bgColor = if (theme == AppTheme.HIGH_CONTRAST) Color.Black else Color(0xFFF0F2F5)
-    val textColor = if (theme == AppTheme.HIGH_CONTRAST) Color.Yellow else Color.Black
-    
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(140.dp)
-            .clickable { onClick() },
-        shape = RoundedCornerShape(24.dp),
-        border = if (selected) androidx.compose.foundation.BorderStroke(4.dp, MaterialTheme.colorScheme.primary) else null
-    ) {
-        Box(Modifier.fillMaxSize().background(bgColor), contentAlignment = Alignment.Center) {
-            Text(label, color = textColor, fontSize = 26.sp, fontWeight = FontWeight.Bold)
-        }
-    }
-}
-
-@Composable
-fun SeniorEmergencyStep(onNext: () -> Unit) {
-    val scope = rememberCoroutineScope()
-    val contactDao = remember { LauncherApp.instance.database.contactDao() }
-    var name by remember { mutableStateOf("") }
-    var phone by remember { mutableStateOf("") }
-
-    Column(
-        modifier = Modifier.fillMaxSize().padding(24.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Text("🆘", fontSize = 60.sp)
-        Text("Wie wilt u bellen in geval van nood?", fontSize = 26.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center)
-        Spacer(Modifier.height(32.dp))
-        
-        OutlinedTextField(
-            value = name,
-            onValueChange = { name = it },
-            label = { Text("Naam") },
-            modifier = Modifier.fillMaxWidth(),
-            textStyle = LocalTextStyle.current.copy(fontSize = 20.sp)
-        )
-        Spacer(Modifier.height(16.dp))
-        OutlinedTextField(
-            value = phone,
-            onValueChange = { phone = it },
-            label = { Text("Telefoonnummer") },
-            modifier = Modifier.fillMaxWidth(),
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
-            textStyle = LocalTextStyle.current.copy(fontSize = 20.sp)
-        )
-        
-        Spacer(Modifier.height(32.dp))
-        
-        Button(
-            onClick = {
-                if (name.isNotBlank() && phone.isNotBlank()) {
-                    scope.launch {
-                        contactDao.insert(QuickContact(name = name, phoneNumber = phone, isSosContact = true, emoji = "🆘", color = 0xFFDC2626))
-                        onNext()
-                    }
-                }
-            },
-            modifier = Modifier.fillMaxWidth().height(80.dp),
-            enabled = name.isNotBlank() && phone.isNotBlank(),
-            shape = RoundedCornerShape(20.dp)
-        ) {
-            Text("BEWAAR CONTACT", fontSize = 20.sp, fontWeight = FontWeight.Bold)
-        }
-        
-        Spacer(Modifier.height(24.dp))
-        Text("De app zal hierna om toestemming vragen om dit nummer te mogen bellen.", fontSize = 16.sp, textAlign = TextAlign.Center, color = Color.Gray)
     }
 }

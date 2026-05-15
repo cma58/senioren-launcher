@@ -1,9 +1,16 @@
 package com.seniorenlauncher.ui.screens
 
+import android.Manifest
+import android.content.Context
+import android.content.Intent
+import android.content.pm.PackageManager
+import android.os.Build
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.seniorenlauncher.LauncherApp
 import com.seniorenlauncher.data.model.*
+import com.seniorenlauncher.service.FallDetectionService
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
@@ -36,7 +43,40 @@ class SettingsViewModel : ViewModel() {
     }
 
     fun toggleFallDetection() {
-        viewModelScope.launch { repository.setFallDetection(!settings.value.fallDetectionEnabled) }
+        viewModelScope.launch {
+            val newValue = !settings.value.fallDetectionEnabled
+            repository.setFallDetection(newValue)
+            
+            val context = LauncherApp.instance.applicationContext
+            val intent = Intent(context, FallDetectionService::class.java)
+            if (newValue) {
+                if (hasFallDetectionPermissions(context)) {
+                    try {
+                        context.startForegroundService(intent)
+                    } catch (e: Exception) {
+                        e.printStackTrace()
+                        // Revert setting if service failed to start (e.g. background restriction)
+                        repository.setFallDetection(false)
+                    }
+                }
+            } else {
+                context.stopService(intent)
+            }
+        }
+    }
+
+    private fun hasFallDetectionPermissions(context: Context): Boolean {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            if (ContextCompat.checkSelfPermission(context, Manifest.permission.ACTIVITY_RECOGNITION) != PackageManager.PERMISSION_GRANTED) {
+                return false
+            }
+        }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+            if (ContextCompat.checkSelfPermission(context, Manifest.permission.FOREGROUND_SERVICE_HEALTH) != PackageManager.PERMISSION_GRANTED) {
+                return false
+            }
+        }
+        return true
     }
 
     fun toggleScamProtection() {

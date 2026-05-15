@@ -163,9 +163,19 @@
         </service>
 
         <service android:name=".service.SOSService"
-            android:foregroundServiceType="location|specialUse" android:exported="false" />
+            android:foregroundServiceType="location|specialUse"
+            android:exported="false">
+            <property
+                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_TYPE"
+                android:value="This service handles emergency SOS triggers, including location sharing and automated alerts when the user is in distress." />
+        </service>
         <service android:name=".service.FallDetectionService"
-            android:foregroundServiceType="health|specialUse" android:exported="false" />
+            android:foregroundServiceType="health|specialUse"
+            android:exported="false">
+            <property
+                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_TYPE"
+                android:value="This service monitors accelerometer data to detect hard falls and trigger emergency protocols for senior users." />
+        </service>
         <service android:name=".service.RadioService"
             android:foregroundServiceType="mediaPlayback"
             android:exported="true">

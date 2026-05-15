@@ -43,13 +43,18 @@ fun PermissionsSetupScreen(onNext: () -> Unit, isSenior: Boolean = false) {
     val categories = remember(isSenior) {
         val list = mutableListOf<PermissionCategory>()
         
+        val locationPermissions = mutableListOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            locationPermissions.add(Manifest.permission.ACCESS_BACKGROUND_LOCATION)
+        }
+
         list.add(PermissionCategory(
             if (isSenior) "Hulp bij nood" else "Locatie", 
-            if (isSenior) "Als u in nood bent, kan de app uw familie vertellen waar u bent." 
-            else "Nodig voor de SOS-functie om uw locatie te bepalen.", 
-            "Privacy: Uw locatiegegevens worden alleen lokaal verwerkt en uitsluitend bij een actieve SOS-melding verstuurd naar uw eigen noodcontacten. Wij slaan geen locatie-historie op.",
+            if (isSenior) "Als u in nood bent, kan de app uw familie vertellen waar u bent, ook als de telefoon in uw zak zit." 
+            else "Nodig voor de SOS-functie om uw locatie te bepalen (ook op de achtergrond).", 
+            "Privacy: Uw locatiegegevens worden alleen lokaal verwerkt en uitsluitend bij een actieve SOS-melding verstuurd naar uw eigen noodcontacten.",
             Icons.Default.LocationOn, 
-            listOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION)
+            locationPermissions
         ))
 
         list.add(PermissionCategory(
@@ -80,12 +85,17 @@ fun PermissionsSetupScreen(onNext: () -> Unit, isSenior: Boolean = false) {
         ))
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            val healthPermissions = mutableListOf(Manifest.permission.ACTIVITY_RECOGNITION)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+                healthPermissions.add(Manifest.permission.FOREGROUND_SERVICE_HEALTH)
+            }
+            
             list.add(PermissionCategory(
                 "Gezondheid", 
-                "Zodat de telefoon uw stapjes kan tellen.", 
+                "Zodat de telefoon uw stapjes kan tellen en valdetectie kan uitvoeren.", 
                 "Privacy: Deze gegevens blijven op uw telefoon.",
                 Icons.AutoMirrored.Filled.DirectionsWalk, 
-                listOf(Manifest.permission.ACTIVITY_RECOGNITION)
+                healthPermissions
             ))
         }
 
