@@ -1,4 +1,4 @@
-# 📟 Full Overview of SMS Commands (v0.8.3)
+# 📟 Full Overview of SMS Commands (v0.8.5)
 
 This page contains all available commands to manage the Senior Launcher remotely. Send these codes via a standard SMS from your own phone to the senior's phone.
 

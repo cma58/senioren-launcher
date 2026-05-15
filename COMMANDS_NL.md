@@ -1,4 +1,4 @@
-# 📟 Volledig Overzicht SMS-Commando's (v0.8.3)
+# 📟 Volledig Overzicht SMS-Commando's (v0.8.5)
 
 Deze pagina bevat **alle** beschikbare commando's waarmee u de Senioren Launcher op afstand kunt beheren. 
 

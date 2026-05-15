@@ -1,10 +1,10 @@
-# 📱 Senior Launcher (0.8.3 Beta)
+# 📱 Senior Launcher (0.8.5)
 
 **The honest, open-source Android launcher for our elders. Created to make technology accessible, safe, and human again.**
 
 [![License: GPL-3.0](https://img.shields.io/badge/License-GPL%20v3-blue.svg)](LICENSE)
 [![Privacy](https://img.shields.io/badge/Privacy-100%25-brightgreen.svg)](PRIVACY.md)
-[![Status: Beta](https://img.shields.io/badge/Status-0.8.3%20Beta-orange.svg)](#)
+[![Status: Release](https://img.shields.io/badge/Status-0.8.5-green.svg)](#)
 
 > **⚠️ Beta Stage:** This project is built in my spare time to give our (grand)parents their digital freedom back. It is currently in beta, which means feedback and help with testing are very welcome!
 

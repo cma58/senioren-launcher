@@ -1,10 +1,10 @@
-# 📱 Senioren Launcher (0.8.3 Bèta)
+# 📱 Senioren Launcher (0.8.5)
 
 **De eerlijke, open-source Android launcher voor onze ouderen. Gemaakt om technologie weer toegankelijk, veilig en menselijk te maken.**
 
 [![License: GPL-3.0](https://img.shields.io/badge/License-GPL%20v3-blue.svg)](LICENSE)
 [![Privacy](https://img.shields.io/badge/Privacy-100%25-brightgreen.svg)](PRIVACY.md)
-[![Status: Beta](https://img.shields.io/badge/Status-0.8.3%20Bèta-orange.svg)](#)
+[![Status: Release](https://img.shields.io/badge/Status-0.8.5-green.svg)](#)
 
 > **⚠️ Bèta Fase:** Dit project wordt in mijn vrije tijd gebouwd. Het is momenteel in bèta, wat betekent dat feedback en hulp bij het testen zeer welkom zijn!
 
