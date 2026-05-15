@@ -134,6 +134,7 @@ val ALL_APPS = listOf(
     AppInfo("magnifier", "Vergrootglas", "🔍", "🔍", 0xFF6366F1),
     AppInfo("notes", "Notities", "📝", "📝", 0xFF84CC16),
     AppInfo("radio", "Radio", "📻", "📻", 0xFFA855F7),
+    AppInfo("wifi", "Wifi", "📶", "📶", 0xFF4A5568),
     AppInfo("steps", "Stappen", "🚶", "🚶", 0xFF14B8A6),
     AppInfo("emergency", "Noodinfo", "🏥", "🏥", 0xFFEF4444),
     AppInfo("sos", "SOS", "🆘", "🆘", 0xFFDC2626),

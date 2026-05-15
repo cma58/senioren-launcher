@@ -20,6 +20,7 @@ import com.seniorenlauncher.ui.AppNavigation
 import com.seniorenlauncher.ui.components.RadioMiniPlayer
 import com.seniorenlauncher.ui.screens.*
 import com.seniorenlauncher.ui.theme.SeniorenLauncherTheme
+import com.seniorenlauncher.ui.screens.home.*
 import com.seniorenlauncher.service.SeniorInCallService
 import com.seniorenlauncher.util.UpdateManager
 import android.telecom.Call
@@ -34,9 +35,10 @@ class MainActivity : ComponentActivity() {
     private var navigateToSmsAddress = mutableStateOf<String?>(null)
     private var navigateToIncomingCall = mutableStateOf(false)
     private var navigateToWeatherAfterAlarm = mutableStateOf(false)
+    private var fallDetectedTriggered = mutableStateOf(false)
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        if (intent?.getStringExtra("NAVIGATE_TO") == "alarm_trigger") {
+        if (intent?.getStringExtra("NAVIGATE_TO") == "alarm_trigger" || intent?.getStringExtra("NAVIGATE_TO") == "fall_detected") {
             setupLockscreenBypass()
         }
         
@@ -74,6 +76,7 @@ class MainActivity : ComponentActivity() {
             val smsAddress by navigateToSmsAddress
             val showIncomingCall by navigateToIncomingCall
             val shouldNavToWeather by navigateToWeatherAfterAlarm
+            val isFallDetected by fallDetectedTriggered
             
             val currentCall by SeniorInCallService.currentCall.collectAsState()
             
@@ -96,7 +99,18 @@ class MainActivity : ComponentActivity() {
 
             SeniorenLauncherTheme(appTheme = settings.theme, fontSize = settings.fontSize) {
                 Surface(Modifier.fillMaxSize()) {
-                    if (triggerLabel != null) {
+                    if (isFallDetected) {
+                        FallDetectionDialog(
+                            onConfirm = {
+                                fallDetectedTriggered.value = false
+                                val intent = Intent(this@MainActivity, com.seniorenlauncher.service.SOSService::class.java)
+                                startForegroundService(intent)
+                            },
+                            onCancel = {
+                                fallDetectedTriggered.value = false
+                            }
+                        )
+                    } else if (triggerLabel != null) {
                         AlarmTriggerScreen(
                             label = triggerLabel!!,
                             alarmId = alarmId,
@@ -176,7 +190,7 @@ class MainActivity : ComponentActivity() {
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         setIntent(intent)
-        if (intent.getStringExtra("NAVIGATE_TO") == "alarm_trigger") {
+        if (intent.getStringExtra("NAVIGATE_TO") == "alarm_trigger" || intent.getStringExtra("NAVIGATE_TO") == "fall_detected") {
             setupLockscreenBypass()
         }
         handleIntent(intent)
@@ -195,6 +209,8 @@ class MainActivity : ComponentActivity() {
                 currentAlarmId.value = id
                 alarmIsRemote.value = isRemote
                 alarmSoundUri.value = it.getStringExtra("ALARM_SOUND")
+            } else if (navigateTo == "fall_detected") {
+                fallDetectedTriggered.value = true
             } else if (navigateTo == "sms") {
                 navigateToSmsAddress.value = it.getStringExtra("SMS_ADDRESS")
             } else if (navigateTo == "incoming_call") {
