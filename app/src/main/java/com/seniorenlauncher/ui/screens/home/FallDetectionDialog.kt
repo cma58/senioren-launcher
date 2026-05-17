@@ -12,6 +12,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.ui.platform.LocalContext
+import com.seniorenlauncher.util.PermissionUtils
 import kotlinx.coroutines.delay
 
 import androidx.compose.ui.tooling.preview.Preview
@@ -22,7 +26,27 @@ fun FallDetectionDialog(
     onConfirm: () -> Unit,
     onCancel: () -> Unit
 ) {
+    val context = LocalContext.current
     var timeLeft by remember { mutableIntStateOf(30) }
+    var hasPermission by remember { mutableStateOf(PermissionUtils.hasSosPermissions(context)) }
+
+    val permissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestMultiplePermissions()
+    ) { results ->
+        hasPermission = results.values.all { it }
+    }
+
+    if (!hasPermission) {
+        PermissionRequestDialog(
+            title = "SOS Toegang",
+            description = "Om hulp te kunnen inschakelen bij een val hebben we toestemming nodig voor locatie, bellen en SMS.",
+            onDismiss = onCancel,
+            onGrant = {
+                permissionLauncher.launch(PermissionUtils.getRequiredSosPermissions().toTypedArray())
+            }
+        )
+        return
+    }
 
     LaunchedEffect(Unit) {
         while (timeLeft > 0) {
