@@ -101,4 +101,26 @@ object AppLauncher {
             Toast.makeText(context, "Kan wifi-instellingen niet openen", Toast.LENGTH_SHORT).show()
         }
     }
+
+    fun openBluetoothSettings(context: Context) {
+        try {
+            val intent = if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
+                Intent("android.settings.panel.action.BLUETOOTH")
+            } else {
+                Intent(android.provider.Settings.ACTION_BLUETOOTH_SETTINGS)
+            }
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            context.startActivity(intent)
+        } catch (e: Exception) {
+            // Fallback naar volledige instellingen als panel niet ondersteund wordt
+            try {
+                val intent = Intent(android.provider.Settings.ACTION_BLUETOOTH_SETTINGS)
+                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                context.startActivity(intent)
+            } catch (e2: Exception) {
+                Log.e("AppLauncher", "Error opening bluetooth settings", e2)
+                Toast.makeText(context, "Kan bluetooth-instellingen niet openen", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
 }

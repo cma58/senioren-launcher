@@ -1,7 +1,10 @@
 package com.seniorenlauncher.ui.screens.home
 
+import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
 import android.os.BatteryManager
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -34,6 +37,9 @@ fun HomeTopBar(notificationCount: Int, onNotificationsClick: () -> Unit) {
     // Batterij status
     var batteryLevel by remember { mutableIntStateOf(100) }
     var isCharging by remember { mutableStateOf(false) }
+    
+    // Wifi status
+    var isWifiConnected by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
         // Klok update
@@ -50,6 +56,12 @@ fun HomeTopBar(notificationCount: Int, onNotificationsClick: () -> Unit) {
             val status = batteryStatus?.getIntExtra(BatteryManager.EXTRA_STATUS, -1) ?: -1
             isCharging = status == BatteryManager.BATTERY_STATUS_CHARGING || status == BatteryManager.BATTERY_STATUS_FULL
 
+            // Wifi info ophalen
+            val connectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+            val network = connectivityManager.activeNetwork
+            val capabilities = connectivityManager.getNetworkCapabilities(network)
+            isWifiConnected = capabilities?.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) == true
+
             kotlinx.coroutines.delay(30000)
         }
     }
@@ -57,11 +69,11 @@ fun HomeTopBar(notificationCount: Int, onNotificationsClick: () -> Unit) {
     Row(
         Modifier
             .fillMaxWidth()
-            .padding(horizontal = 24.dp, vertical = 16.dp),
+            .padding(horizontal = 24.dp, vertical = 12.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.Top
     ) {
-        // Links: Batterij & Signaal
+        // Links: Batterij & Verbinding
         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
@@ -79,16 +91,17 @@ fun HomeTopBar(notificationCount: Int, onNotificationsClick: () -> Unit) {
                 )
             }
             
-            // Simpele signaal indicator
+            // Signaal & Wifi indicators
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(
-                    Icons.Default.SignalCellularAlt,
+                    imageVector = if (isWifiConnected) Icons.Default.Wifi else Icons.Default.SignalCellularAlt,
                     contentDescription = null,
                     modifier = Modifier.size(24.dp),
                     tint = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f)
                 )
+                Spacer(Modifier.width(4.dp))
                 Text(
-                    "Bereik OK",
+                    if (isWifiConnected) "Wifi OK" else "Bereik OK",
                     fontSize = 14.sp,
                     color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f)
                 )

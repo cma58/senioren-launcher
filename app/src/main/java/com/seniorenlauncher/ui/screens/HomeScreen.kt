@@ -17,6 +17,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.material.icons.filled.Bluetooth
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.seniorenlauncher.LauncherApp
@@ -33,6 +35,7 @@ data class HomeApp(
     val name: String,
     val emoji: String? = null,
     val icon: Drawable? = null,
+    val vectorIcon: ImageVector? = null,
     val color: Color,
     val weatherOverlay: String? = null
 )
@@ -132,15 +135,23 @@ fun HomeScreenContent(
         .map { id ->
             val pkg = settings.appMappings[id] ?: ""
             val info = AppLauncher.getAppInfo(context, pkg)
-            HomeApp(id, info?.name ?: "App", null, info?.icon, Color(0xFF718096))
+            HomeApp(
+                id = id,
+                name = info?.name ?: "App",
+                emoji = null,
+                icon = info?.icon,
+                vectorIcon = null,
+                color = Color(0xFF718096)
+            )
         }
 
-    val visibleStandardApps = ALL_APPS.filter { it.id in settings.visibleApps }.map { 
+    val visibleStandardApps = ALL_APPS.filter { it.id in settings.visibleApps || it.id == "settings" || it.id == "wifi" || it.id == "bluetooth" }.map { 
         HomeApp(
             id = it.id,
             name = it.name,
             emoji = if (it.id == "weather" && weatherData != null) getHomeWeatherEmoji(weatherData.iconUrl) else it.emoji,
             icon = null,
+            vectorIcon = if (it.id == "bluetooth") Icons.Default.Bluetooth else null,
             color = Color(it.color),
             weatherOverlay = if (it.id == "weather" && weatherData != null) "${weatherData.temp.toInt()}°" else null
         )
@@ -152,7 +163,7 @@ fun HomeScreenContent(
     val pageCount = Math.max(1, Math.ceil(totalItemsCount.toDouble() / appsPerPage.toDouble()).toInt())
     val pagerState = rememberPagerState(pageCount = { pageCount })
 
-    Column(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
+    Column(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background).statusBarsPadding()) {
         // Top Bar: Clock, Battery & Notifications
         HomeTopBar(
             notificationCount = activeNotificationsCount,
@@ -191,6 +202,7 @@ fun HomeScreenContent(
                         BigButton(
                             emoji = app.emoji,
                             icon = app.icon,
+                            vectorIcon = app.vectorIcon,
                             label = app.name,
                             color = app.color,
                             small = settings.layout == LayoutType.GRID_3x4,
@@ -202,7 +214,9 @@ fun HomeScreenContent(
                                 when {
                                     app.id == "camera" -> AppLauncher.openSystemCamera(context)
                                     app.id == "wifi" -> AppLauncher.openWifiSettings(context)
+                                    app.id == "bluetooth" -> AppLauncher.openBluetoothSettings(context)
                                     app.id == "remote_support" -> onNavigate("remote_support")
+                                    app.id == "settings" -> onSettingsClick()
                                     app.id.startsWith("mapped_") -> {
                                         val pkg = settings.appMappings[app.id]
                                         if (pkg != null) AppLauncher.launchApp(context, pkg)
@@ -211,7 +225,9 @@ fun HomeScreenContent(
                                 }
                             },
                             onLongClick = {
-                                onAppLongClick(app.id)
+                                if (app.id != "settings" && app.id != "wifi" && app.id != "bluetooth") {
+                                    onAppLongClick(app.id)
+                                }
                             }
                         )
                     }
@@ -236,7 +252,7 @@ fun HomeScreenContent(
             }
         }
 
-        // Fixed SOS Button & Settings Button at bottom
+        // Fixed SOS Button at bottom
         Column(
             modifier = Modifier
                 .fillMaxWidth()
@@ -249,19 +265,6 @@ fun HomeScreenContent(
                     context.startForegroundService(intent)
                 }
             )
-            
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.End
-            ) {
-                FilledIconButton(
-                    onClick = onSettingsClick,
-                    modifier = Modifier.size(64.dp),
-                    colors = IconButtonDefaults.filledIconButtonColors(containerColor = MaterialTheme.colorScheme.secondaryContainer)
-                ) {
-                    Icon(Icons.Default.Settings, "Instellingen", modifier = Modifier.size(32.dp))
-                }
-            }
         }
     }
 }

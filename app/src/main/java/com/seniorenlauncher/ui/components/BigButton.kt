@@ -28,6 +28,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.material3.Icon
 import coil.compose.rememberAsyncImagePainter
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -35,6 +37,7 @@ import coil.compose.rememberAsyncImagePainter
 fun BigButton(
     emoji: String? = null,
     icon: Drawable? = null,
+    vectorIcon: ImageVector? = null,
     label: String, 
     color: Color, 
     onClick: () -> Unit,
@@ -73,7 +76,14 @@ fun BigButton(
             modifier = Modifier.fillMaxWidth()
         ) {
             Box(contentAlignment = Alignment.Center) {
-                if (icon != null) {
+                if (vectorIcon != null) {
+                    Icon(
+                        imageVector = vectorIcon,
+                        contentDescription = null,
+                        modifier = Modifier.size(if (small) 36.dp else 48.dp),
+                        tint = Color.White
+                    )
+                } else if (icon != null) {
                     Image(
                         painter = rememberAsyncImagePainter(icon),
                         contentDescription = null,
