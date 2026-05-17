@@ -43,29 +43,41 @@ data class HomeApp(
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun HomeScreen(onNavigate: (String) -> Unit, settingsVm: SettingsViewModel, radioVm: RadioViewModel) {
-    val settings by settingsVm.settings.collectAsState()
+    val context = LocalContext.current
+    val homeVm: HomeViewModel = viewModel()
+    val uiState by homeVm.state.collectAsState()
+    
     val activeNotifications by NotificationListener.activeNotificationsFlow.collectAsState()
     val badgeCounts by NotificationListener.notifications.collectAsState()
     
     val weatherVm: WeatherViewModel = viewModel()
     val weatherData by weatherVm.currentWeather.collectAsState()
     
-    val dao = LauncherApp.instance.database.medicationDao()
-    val pendingMeds by dao.getPending().collectAsState(initial = emptyList())
+    // Sync weather data to homeViewModel
+    LaunchedEffect(weatherData) {
+        homeVm.setWeatherData(weatherData)
+    }
 
     var showAppPickerFor by remember { mutableStateOf<String?>(null) }
     var showPinDialogForSettings by remember { mutableStateOf(false) }
+    var showWifiDialog by remember { mutableStateOf(false) }
+    var showBluetoothDialog by remember { mutableStateOf(false) }
+    var showSOSCountdown by remember { mutableStateOf(false) }
 
     HomeScreenContent(
-        settings = settings,
+        settings = uiState.settings,
+        allVisibleApps = uiState.allVisibleApps,
         activeNotificationsCount = activeNotifications.size,
         badgeCounts = badgeCounts,
-        weatherData = weatherData,
-        pendingMedsCount = pendingMeds.size,
+        weatherData = uiState.weatherData,
+        pendingMedsCount = uiState.pendingMedsCount,
         onNavigate = onNavigate,
         onAddApp = { showAppPickerFor = "new" },
         onAppLongClick = { id -> showAppPickerFor = id },
-        onSettingsClick = { showPinDialogForSettings = true }
+        onSettingsClick = { showPinDialogForSettings = true },
+        onWifiClick = { showWifiDialog = true },
+        onBluetoothClick = { showBluetoothDialog = true },
+        onSOSClick = { showSOSCountdown = true }
     )
 
     if (showAppPickerFor != null) {
@@ -83,7 +95,7 @@ fun HomeScreen(onNavigate: (String) -> Unit, settingsVm: SettingsViewModel, radi
                 showAppPickerFor = null
             },
             onRemove = {
-                settingsVm.updateVisibleApps(settings.visibleApps - pickerAppId)
+                settingsVm.updateVisibleApps(uiState.settings.visibleApps - pickerAppId)
                 showAppPickerFor = null
             }
         )
@@ -91,11 +103,30 @@ fun HomeScreen(onNavigate: (String) -> Unit, settingsVm: SettingsViewModel, radi
     
     if (showPinDialogForSettings) {
         PinDialog(
-            correctPin = settings.pinCode ?: "1234",
+            correctPin = uiState.settings.pinCode ?: "1234",
             onDismiss = { showPinDialogForSettings = false },
             onSuccess = { 
                 showPinDialogForSettings = false
                 onNavigate("settings")
+            }
+        )
+    }
+
+    if (showWifiDialog) {
+        WifiDialog(onDismiss = { showWifiDialog = false })
+    }
+
+    if (showBluetoothDialog) {
+        BluetoothDialog(onDismiss = { showBluetoothDialog = false })
+    }
+
+    if (showSOSCountdown) {
+        SOSCountdownDialog(
+            onDismiss = { showSOSCountdown = false },
+            onConfirm = {
+                showSOSCountdown = false
+                val intent = Intent(context, SOSService::class.java)
+                context.startForegroundService(intent)
             }
         )
     }
@@ -105,6 +136,7 @@ fun HomeScreen(onNavigate: (String) -> Unit, settingsVm: SettingsViewModel, radi
 @Composable
 fun HomeScreenContent(
     settings: AppSettings,
+    allVisibleApps: List<HomeApp>,
     activeNotificationsCount: Int,
     badgeCounts: Map<String, Int>,
     weatherData: WeatherData?,
@@ -112,7 +144,10 @@ fun HomeScreenContent(
     onNavigate: (String) -> Unit,
     onAddApp: () -> Unit,
     onAppLongClick: (String) -> Unit,
-    onSettingsClick: () -> Unit
+    onSettingsClick: () -> Unit,
+    onWifiClick: () -> Unit,
+    onBluetoothClick: () -> Unit,
+    onSOSClick: () -> Unit
 ) {
     val context = LocalContext.current
     
@@ -129,35 +164,6 @@ fun HomeScreenContent(
         LayoutType.GRID_3x4 -> 12
     }
 
-    // Filter visible apps and include dynamically mapped apps with correct icons
-    val mappedApps = settings.appMappings.keys
-        .filter { it.startsWith("mapped_") && it in settings.visibleApps }
-        .map { id ->
-            val pkg = settings.appMappings[id] ?: ""
-            val info = AppLauncher.getAppInfo(context, pkg)
-            HomeApp(
-                id = id,
-                name = info?.name ?: "App",
-                emoji = null,
-                icon = info?.icon,
-                vectorIcon = null,
-                color = Color(0xFF718096)
-            )
-        }
-
-    val visibleStandardApps = ALL_APPS.filter { it.id in settings.visibleApps || it.id == "settings" || it.id == "wifi" || it.id == "bluetooth" }.map { 
-        HomeApp(
-            id = it.id,
-            name = it.name,
-            emoji = if (it.id == "weather" && weatherData != null) getHomeWeatherEmoji(weatherData.iconUrl) else it.emoji,
-            icon = null,
-            vectorIcon = if (it.id == "bluetooth") Icons.Default.Bluetooth else null,
-            color = Color(it.color),
-            weatherOverlay = if (it.id == "weather" && weatherData != null) "${weatherData.temp.toInt()}°" else null
-        )
-    }
-    val allVisibleApps = (visibleStandardApps + mappedApps).distinctBy { it.id }
-    
     // Bereken het totaal aantal items inclusief de "Toevoegen" knop
     val totalItemsCount = allVisibleApps.size + 1
     val pageCount = Math.max(1, Math.ceil(totalItemsCount.toDouble() / appsPerPage.toDouble()).toInt())
@@ -213,8 +219,8 @@ fun HomeScreenContent(
                             onClick = {
                                 when {
                                     app.id == "camera" -> AppLauncher.openSystemCamera(context)
-                                    app.id == "wifi" -> AppLauncher.openWifiSettings(context)
-                                    app.id == "bluetooth" -> AppLauncher.openBluetoothSettings(context)
+                                    app.id == "wifi" -> onWifiClick()
+                                    app.id == "bluetooth" -> onBluetoothClick()
                                     app.id == "remote_support" -> onNavigate("remote_support")
                                     app.id == "settings" -> onSettingsClick()
                                     app.id.startsWith("mapped_") -> {
@@ -260,10 +266,7 @@ fun HomeScreenContent(
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             HomeSOSButton(
-                onClick = {
-                    val intent = Intent(context, SOSService::class.java)
-                    context.startForegroundService(intent)
-                }
+                onClick = onSOSClick
             )
         }
     }
@@ -278,6 +281,7 @@ fun PreviewHomeScreen() {
                 layout = LayoutType.GRID_2x3,
                 visibleApps = setOf("phone", "sms", "camera", "photos", "meds", "weather", "wifi")
             ),
+            allVisibleApps = emptyList(),
             activeNotificationsCount = 2,
             badgeCounts = mapOf("sms" to 1),
             weatherData = WeatherData(
@@ -291,7 +295,10 @@ fun PreviewHomeScreen() {
             onNavigate = {},
             onAddApp = {},
             onAppLongClick = {},
-            onSettingsClick = {}
+            onSettingsClick = {},
+            onWifiClick = {},
+            onBluetoothClick = {},
+            onSOSClick = {}
         )
     }
 }

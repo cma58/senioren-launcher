@@ -62,7 +62,7 @@ fun HomeTopBar(notificationCount: Int, onNotificationsClick: () -> Unit) {
             val capabilities = connectivityManager.getNetworkCapabilities(network)
             isWifiConnected = capabilities?.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) == true
 
-            kotlinx.coroutines.delay(30000)
+            kotlinx.coroutines.delay(60000)
         }
     }
 

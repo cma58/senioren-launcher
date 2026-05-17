@@ -1,5 +1,6 @@
 package com.seniorenlauncher.ui.screens.home
 
+import android.content.Context
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -8,7 +9,20 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.*
+import android.net.wifi.WifiManager
+import android.bluetooth.BluetoothAdapter
+import android.bluetooth.BluetoothManager
+import android.content.Intent
+import android.net.Uri
+import android.provider.Settings
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.ui.text.style.TextAlign
+import com.seniorenlauncher.util.PermissionUtils
+import kotlinx.coroutines.delay
+import android.media.ToneGenerator
+import android.media.AudioManager
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -239,6 +253,340 @@ fun AppPickerDialog(
                     ) {
                         Text("VOEG TOE (${selectedPackages.size})")
                     }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun WifiDialog(
+    onDismiss: () -> Unit
+) {
+    val context = LocalContext.current
+    val wifiManager = remember { context.applicationContext.getSystemService(Context.WIFI_SERVICE) as WifiManager }
+    
+    var hasPermission by remember { mutableStateOf(PermissionUtils.hasWifiPermissions(context)) }
+    
+    val permissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestMultiplePermissions()
+    ) { results ->
+        hasPermission = results.values.all { it }
+    }
+
+    if (!hasPermission) {
+        PermissionRequestDialog(
+            title = "Wifi Toegang",
+            description = "Om wifi informatie te kunnen tonen, hebben we toestemming nodig om nabijgelegen apparaten te scannen.",
+            onDismiss = onDismiss,
+            onGrant = {
+                permissionLauncher.launch(PermissionUtils.getRequiredWifiPermissions().toTypedArray())
+            }
+        )
+        return
+    }
+
+    val isWifiEnabled = remember { wifiManager.isWifiEnabled }
+    
+    val wifiInfo = if (isWifiEnabled) wifiManager.connectionInfo else null
+    val signalLevel = if (wifiInfo != null) {
+        WifiManager.calculateSignalLevel(wifiInfo.rssi, 5)
+    } else 0
+    
+    val ssid = wifiInfo?.ssid?.removeSurrounding("\"") ?: "Niet verbonden"
+
+    Dialog(onDismissRequest = onDismiss) {
+        Card(
+            shape = RoundedCornerShape(24.dp),
+            modifier = Modifier.fillMaxWidth().padding(16.dp)
+        ) {
+            Column(
+                Modifier.padding(24.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text("Wifi Verbinding", fontSize = 24.sp, fontWeight = FontWeight.Bold)
+                Spacer(Modifier.height(24.dp))
+                
+                val wifiIcon = when {
+                    !isWifiEnabled -> Icons.Default.WifiOff
+                    signalLevel <= 1 -> Icons.Default.Wifi1Bar
+                    signalLevel == 2 -> Icons.Default.Wifi2Bar
+                    else -> Icons.Default.Wifi
+                }
+
+                Icon(
+                    wifiIcon,
+                    contentDescription = null,
+                    modifier = Modifier.size(80.dp),
+                    tint = if (isWifiEnabled) MaterialTheme.colorScheme.primary else Color.Gray
+                )
+                
+                Spacer(Modifier.height(16.dp))
+                
+                if (isWifiEnabled) {
+                    Text(
+                        "Verbonden met:",
+                        fontSize = 16.sp,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Text(
+                        ssid,
+                        fontSize = 22.sp,
+                        fontWeight = FontWeight.Bold,
+                        textAlign = TextAlign.Center
+                    )
+                    
+                    val strengthText = when(signalLevel) {
+                        0 -> "Geen signaal"
+                        1 -> "Zwak signaal"
+                        2 -> "Matig signaal"
+                        3 -> "Goed signaal"
+                        else -> "Uitstekend signaal"
+                    }
+                    Text(
+                        "Signaalsterkte: $strengthText",
+                        fontSize = 16.sp,
+                        modifier = Modifier.padding(top = 8.dp)
+                    )
+                } else {
+                    Text(
+                        "Uw Wifi staat UIT",
+                        fontSize = 20.sp,
+                        textAlign = TextAlign.Center
+                    )
+                }
+                
+                Spacer(Modifier.height(32.dp))
+                
+                Button(
+                    onClick = {
+                        AppLauncher.openWifiSettings(context)
+                        onDismiss()
+                    },
+                    modifier = Modifier.fillMaxWidth().height(70.dp),
+                    shape = RoundedCornerShape(16.dp)
+                ) {
+                    Text("Wifi Instellingen Openen", fontSize = 18.sp)
+                }
+                
+                Spacer(Modifier.height(16.dp))
+                
+                OutlinedButton(
+                    onClick = onDismiss,
+                    modifier = Modifier.fillMaxWidth().height(60.dp),
+                    shape = RoundedCornerShape(16.dp)
+                ) {
+                    Text("TERUG", fontSize = 16.sp)
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun PermissionRequestDialog(
+    title: String,
+    description: String,
+    onDismiss: () -> Unit,
+    onGrant: () -> Unit
+) {
+    val context = LocalContext.current
+    Dialog(onDismissRequest = onDismiss) {
+        Card(
+            shape = RoundedCornerShape(24.dp),
+            modifier = Modifier.fillMaxWidth().padding(16.dp)
+        ) {
+            Column(
+                Modifier.padding(24.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Icon(
+                    Icons.Default.Security,
+                    contentDescription = null,
+                    modifier = Modifier.size(64.dp),
+                    tint = MaterialTheme.colorScheme.primary
+                )
+                Spacer(Modifier.height(16.dp))
+                Text(title, fontSize = 22.sp, fontWeight = FontWeight.Bold)
+                Spacer(Modifier.height(12.dp))
+                Text(
+                    description,
+                    fontSize = 16.sp,
+                    textAlign = TextAlign.Center,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Spacer(Modifier.height(24.dp))
+                Button(
+                    onClick = onGrant,
+                    modifier = Modifier.fillMaxWidth().height(60.dp),
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    Text("TOESTAAN", fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                }
+                Spacer(Modifier.height(12.dp))
+                TextButton(onClick = {
+                    val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+                        data = Uri.fromParts("package", context.packageName, null)
+                    }
+                    context.startActivity(intent)
+                }) {
+                    Text("Handmatig instellen")
+                }
+                TextButton(onClick = onDismiss) {
+                    Text("ANNULEREN", color = Color.Gray)
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun SOSCountdownDialog(
+    onDismiss: () -> Unit,
+    onConfirm: () -> Unit
+) {
+    val context = LocalContext.current
+    var secondsLeft by remember { mutableIntStateOf(5) }
+    var hasPermission by remember { mutableStateOf(PermissionUtils.hasSosPermissions(context)) }
+
+    val permissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestMultiplePermissions()
+    ) { results ->
+        hasPermission = results.values.all { it }
+    }
+
+    if (!hasPermission) {
+        PermissionRequestDialog(
+            title = "SOS Toegang",
+            description = "Om hulp te kunnen inschakelen hebben we toestemming nodig voor locatie, bellen en SMS.",
+            onDismiss = onDismiss,
+            onGrant = {
+                permissionLauncher.launch(PermissionUtils.getRequiredSosPermissions().toTypedArray())
+            }
+        )
+        return
+    }
+    
+    LaunchedEffect(Unit) {
+        val toneG = ToneGenerator(AudioManager.STREAM_ALARM, 100)
+        while (secondsLeft > 0) {
+            toneG.startTone(ToneGenerator.TONE_CDMA_PIP, 200)
+            delay(1000)
+            secondsLeft--
+        }
+        onConfirm()
+    }
+
+    Dialog(
+        onDismissRequest = onDismiss,
+        properties = DialogProperties(dismissOnBackPress = false, dismissOnClickOutside = false)
+    ) {
+        Card(
+            shape = RoundedCornerShape(28.dp),
+            colors = CardDefaults.cardColors(containerColor = Color.Red),
+            modifier = Modifier.fillMaxWidth().padding(16.dp)
+        ) {
+            Column(
+                Modifier.padding(32.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Icon(
+                    Icons.Default.Warning,
+                    contentDescription = null,
+                    modifier = Modifier.size(100.dp),
+                    tint = Color.White
+                )
+                
+                Spacer(Modifier.height(24.dp))
+                
+                Text(
+                    "SOS ALARM WORDT VERSTUURD OVER:",
+                    fontSize = 22.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White,
+                    textAlign = TextAlign.Center
+                )
+                
+                Spacer(Modifier.height(16.dp))
+                
+                Text(
+                    "$secondsLeft",
+                    fontSize = 120.sp,
+                    fontWeight = FontWeight.ExtraBold,
+                    color = Color.White
+                )
+                
+                Spacer(Modifier.height(32.dp))
+                
+                Button(
+                    onClick = onDismiss,
+                    modifier = Modifier.fillMaxWidth().height(80.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = Color.White, contentColor = Color.Red),
+                    shape = RoundedCornerShape(20.dp)
+                ) {
+                    Text("STOP / ANNULEER", fontSize = 24.sp, fontWeight = FontWeight.ExtraBold)
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun BluetoothDialog(
+    onDismiss: () -> Unit
+) {
+    val context = LocalContext.current
+    val bluetoothManager = remember { context.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager }
+    val isBluetoothEnabled = remember { bluetoothManager.adapter?.isEnabled == true }
+
+    Dialog(onDismissRequest = onDismiss) {
+        Card(
+            shape = RoundedCornerShape(24.dp),
+            modifier = Modifier.fillMaxWidth().padding(16.dp)
+        ) {
+            Column(
+                Modifier.padding(24.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text("Bluetooth", fontSize = 24.sp, fontWeight = FontWeight.Bold)
+                Spacer(Modifier.height(24.dp))
+                
+                Icon(
+                    if (isBluetoothEnabled) Icons.Default.Bluetooth else Icons.Default.BluetoothDisabled,
+                    contentDescription = null,
+                    modifier = Modifier.size(80.dp),
+                    tint = if (isBluetoothEnabled) Color(0xFF3F51B5) else Color.Gray
+                )
+                
+                Spacer(Modifier.height(24.dp))
+                
+                Text(
+                    if (isBluetoothEnabled) "Bluetooth staat AAN" else "Bluetooth staat UIT",
+                    fontSize = 20.sp,
+                    textAlign = TextAlign.Center
+                )
+                
+                Spacer(Modifier.height(32.dp))
+                
+                Button(
+                    onClick = {
+                        AppLauncher.openBluetoothSettings(context)
+                        onDismiss()
+                    },
+                    modifier = Modifier.fillMaxWidth().height(70.dp),
+                    shape = RoundedCornerShape(16.dp)
+                ) {
+                    Text("Bluetooth Instellingen", fontSize = 18.sp)
+                }
+                
+                Spacer(Modifier.height(16.dp))
+                
+                OutlinedButton(
+                    onClick = onDismiss,
+                    modifier = Modifier.fillMaxWidth().height(60.dp),
+                    shape = RoundedCornerShape(16.dp)
+                ) {
+                    Text("TERUG", fontSize = 16.sp)
                 }
             }
         }
