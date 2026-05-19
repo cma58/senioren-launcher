@@ -1,12 +1,31 @@
-# 📱 Senior Launcher (0.8.5)
+# 📱 Senior Launcher (0.8.7)
 
 **The honest, open-source Android launcher for our elders. Created to make technology accessible, safe, and human again.**
 
 [![License: GPL-3.0](https://img.shields.io/badge/License-GPL%20v3-blue.svg)](LICENSE)
 [![Privacy](https://img.shields.io/badge/Privacy-100%25-brightgreen.svg)](PRIVACY.md)
-[![Status: Release](https://img.shields.io/badge/Status-0.8.5-green.svg)](#)
+[![Status: Release](https://img.shields.io/badge/Status-0.8.7-green.svg)](#)
 
-> **⚠️ Beta Stage:** This project is built in my spare time to give our (grand)parents their digital freedom back. It is currently in beta, which means feedback and help with testing are very welcome!
+> **⚠️ Beta Stage:** This project is built in my spare time to give our (grand)parents their digital freedom back. It is currently in beta, which means feedback and help with testing are very welcome.
+
+---
+
+## 🟢 What's new — Recent updates (v0.8.6 → v0.8.7)
+A short summary of the most important changes since v0.8.5 — based on recent commits and release preparation.
+
+- v0.8.7 (2026-05-17)
+  - Added permission checks to the FallDetection dialog and finalized release refinements.
+- v0.8.6 (2026-05-17)
+  - Stabilized the SOS flow, fixed security exceptions and optimized battery usage for background services.
+
+Other notable improvements added recently:
+- Wi‑Fi quick action: a Wi‑Fi button on the home screen that opens the system Wi‑Fi panel.
+- Permanent home actions: Make Settings, Wi‑Fi and Bluetooth permanent on the home screen and improved the Bluetooth icon.
+- Setup Wizard refactor: separated caregiver and senior flows and refreshed the setup experience (Android 16 readiness).
+- Remote Support: full Remote Support suite with expanded SMS commands and documentation updates — manage phones via SMS codes (no internet required).
+- Release automation: automatic release notes generation and GitHub release flow that can attach APKs.
+- UI & accessibility fixes: global Radio MiniPlayer with marquee text, HomeScreen layout improvements and fixes for large-font scaling.
+- Various bug fixes & CI improvements: magnifier navigation, PhoneScreen fixes, corrected README screenshots, and added missing Gradle wrapper files for CI.
 
 ---
 
