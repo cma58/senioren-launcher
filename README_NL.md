@@ -6,6 +6,16 @@
 [![Privacy](https://img.shields.io/badge/Privacy-100%25-brightgreen.svg)](PRIVACY.md)
 [![Status: Release](https://img.shields.io/badge/Status-0.8.7-green.svg)](#)
 
+---
+
+## 🔗 Het Ecosysteem: Hoe het werkt
+De **Senioren Launcher** is onderdeel van een ecosysteem van twee apps die samenwerken voor maximale veiligheid.
+
+1.  **Senioren Launcher** (deze app): Wordt geïnstalleerd op de **telefoon van de senior**. Het biedt een vereenvoudigde interface en voert commando's uit.
+2.  **[Senioren Beheerder](https://github.com/cma58/SeniorenBeheerder)**: Wordt geïnstalleerd op de **telefoon van de mantelzorger**. Hiermee kunt u op afstand de status, locatie en instellingen beheren via SMS.
+
+---
+
 > **⚠️ Bèta Fase:** Dit project wordt in mijn vrije tijd ontwikkeld om onze (groot)ouders hun digitale vrijheid terug te geven. Het is momenteel in bèta, dus feedback en hulp bij het testen zijn zeer welkom.
 
 ---
@@ -67,7 +77,7 @@ De meeste smartphones zijn ontworpen voor jonge mensen. Wij draaien dat om. Seni
 Senioren Launcher blijft gratis en open-source. Ik bouw dit naast mijn dagelijkse werk omdat ik geloof dat digitale vrijheid voor ouderen een recht is, geen luxe.
 
 **Wil je meehelpen om dit project duurzaam te houden?**
-- **Feedback:** Test de app en stuur je bevindingen.
+- **Feedback:** Test the app en stuur je bevindingen.
 - **Steun:** Een kleine bijdrage helpt serverkosten te dekken en nieuwe testtoestellen aan te schaffen.
 
 [![Steun via PayPal](https://img.shields.io/badge/Steun-PayPal-blue.svg?style=for-the-badge)](https://www.paypal.com/donate/?business=amine.chtaiti@gmail.com&no_recurring=0&currency_code=EUR)

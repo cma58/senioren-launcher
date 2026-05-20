@@ -6,6 +6,16 @@
 [![Privacy](https://img.shields.io/badge/Privacy-100%25-brightgreen.svg)](PRIVACY.md)
 [![Status: Release](https://img.shields.io/badge/Status-0.8.7-green.svg)](#)
 
+---
+
+## 🔗 The Ecosystem: How it works
+The **Senioren Launcher** is part of a 2-app ecosystem designed for maximum safety.
+
+1.  **Senioren Launcher** (this app): Installed on the **senior's phone**. It provides a simple interface and executes commands.
+2.  **[Senioren Beheerder](https://github.com/cma58/SeniorenBeheerder)**: Installed on the **caregiver's phone**. It acts as a remote control to monitor battery, location, and settings via SMS.
+
+---
+
 > **⚠️ Beta Stage:** This project is built in my spare time to give our (grand)parents their digital freedom back. It is currently in beta, which means feedback and help with testing are very welcome.
 
 ---
