@@ -6,7 +6,6 @@ import com.seniorenlauncher.LauncherApp
 import com.seniorenlauncher.data.model.AppSettings
 import com.seniorenlauncher.data.model.WeatherData
 import com.seniorenlauncher.data.model.ALL_APPS
-import com.seniorenlauncher.ui.screens.HomeApp
 import com.seniorenlauncher.util.AppLauncher
 import kotlinx.coroutines.flow.*
 import androidx.compose.material.icons.Icons

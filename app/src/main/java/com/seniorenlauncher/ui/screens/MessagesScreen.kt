@@ -108,82 +108,94 @@ fun MessagesScreen(
         }
     }
 
-    Column(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background).padding(horizontal = 12.dp, vertical = 8.dp)) {
-        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
-            Box(Modifier.weight(1f)) {
-                ScreenHeader(
-                    title = when (activeView) {
-                        MessageView.Overview -> "Berichten"
-                        MessageView.Chat -> selectedName ?: selectedAddress ?: "Chat"
-                        MessageView.NewMessage -> "Nieuw Bericht"
-                    },
-                    onBack = backHandler
-                )
+    Scaffold(
+        modifier = Modifier.fillMaxSize(),
+        containerColor = MaterialTheme.colorScheme.background
+    ) { innerPadding ->
+        Column(
+            Modifier
+                .fillMaxSize()
+                .padding(innerPadding)
+                .padding(horizontal = 16.dp)
+        ) {
+            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
+                Box(Modifier.weight(1f)) {
+                    ScreenHeader(
+                        title = when (activeView) {
+                            MessageView.Overview -> "Berichten"
+                            MessageView.Chat -> selectedName ?: selectedAddress ?: "Chat"
+                            MessageView.NewMessage -> "Nieuw Bericht"
+                        },
+                        onBack = backHandler
+                    )
+                }
+                
+                // Zoom Controls
+                IconButton(onClick = { if (textZoom > 0.8f) textZoom -= 0.2f }) {
+                    Icon(Icons.Default.TextFormat, "Kleiner", modifier = Modifier.size(32.dp))
+                }
+                IconButton(onClick = { if (textZoom < 2.0f) textZoom += 0.2f }) {
+                    Icon(Icons.Default.TextFormat, "Groter", modifier = Modifier.size(44.dp))
+                }
             }
             
-            // Zoom Controls
-            IconButton(onClick = { if (textZoom > 0.8f) textZoom -= 0.2f }) {
-                Icon(Icons.Default.TextFormat, "Kleiner", modifier = Modifier.size(24.dp))
-            }
-            IconButton(onClick = { if (textZoom < 2.0f) textZoom += 0.2f }) {
-                Icon(Icons.Default.TextFormat, "Groter", modifier = Modifier.size(36.dp))
-            }
-        }
+            Spacer(Modifier.height(8.dp))
 
-        if (!hasSmsPermissions) {
-            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.padding(24.dp)) {
-                    Text("De app heeft toestemming nodig om uw berichten te tonen.", textAlign = TextAlign.Center, fontSize = 20.sp)
-                    Spacer(Modifier.height(16.dp))
-                    Button(onClick = { 
-                        permissionLauncher.launch(arrayOf(Manifest.permission.READ_SMS, Manifest.permission.RECEIVE_SMS, Manifest.permission.SEND_SMS, Manifest.permission.READ_CONTACTS)) 
-                    }) {
-                        Text("GEEF TOESTEMMING", fontSize = 18.sp, fontWeight = FontWeight.Bold)
-                    }
-                }
-            }
-        } else {
-            if (!isDefaultSms) {
-                DefaultSmsBanner {
-                    val intent = messagesVm.createDefaultSmsIntent()
-                    if (intent != null) roleLauncher.launch(intent)
-                }
-            }
-
-            Box(Modifier.weight(1f)) {
-                when (activeView) {
-                    MessageView.Overview -> {
-                        ConversationOverview(
-                            messagesVm = messagesVm,
-                            onConversationClick = { conv ->
-                                selectedAddress = conv.address
-                                selectedName = conv.contactName
-                                activeView = MessageView.Chat
-                            },
-                            onNewMessageClick = { activeView = MessageView.NewMessage },
-                            zoom = textZoom
-                        )
-                    }
-                    MessageView.Chat -> {
-                        if (selectedAddress != null) {
-                            ChatScreen(
-                                address = selectedAddress!!,
-                                messagesVm = messagesVm,
-                                zoom = textZoom
-                            )
-                        } else {
-                            activeView = MessageView.Overview
+            if (!hasSmsPermissions) {
+                Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.padding(24.dp)) {
+                        Text("De app heeft toestemming nodig om uw berichten te tonen.", textAlign = TextAlign.Center, fontSize = 20.sp)
+                        Spacer(Modifier.height(16.dp))
+                        Button(onClick = { 
+                            permissionLauncher.launch(arrayOf(Manifest.permission.READ_SMS, Manifest.permission.RECEIVE_SMS, Manifest.permission.SEND_SMS, Manifest.permission.READ_CONTACTS)) 
+                        }, shape = RoundedCornerShape(24.dp), modifier = Modifier.height(70.dp).fillMaxWidth()) {
+                            Text("GEEF TOESTEMMING", fontSize = 18.sp, fontWeight = FontWeight.Bold)
                         }
                     }
-                    MessageView.NewMessage -> {
-                        NewMessageScreen(
-                            messagesVm = messagesVm,
-                            onContactSelected = { name, phone ->
-                                selectedAddress = phone
-                                selectedName = name
-                                activeView = MessageView.Chat
+                }
+            } else {
+                if (!isDefaultSms) {
+                    DefaultSmsBanner {
+                        val intent = messagesVm.createDefaultSmsIntent()
+                        if (intent != null) roleLauncher.launch(intent)
+                    }
+                }
+
+                Box(Modifier.weight(1f)) {
+                    when (activeView) {
+                        MessageView.Overview -> {
+                            ConversationOverview(
+                                messagesVm = messagesVm,
+                                onConversationClick = { conv ->
+                                    selectedAddress = conv.address
+                                    selectedName = conv.contactName
+                                    activeView = MessageView.Chat
+                                },
+                                onNewMessageClick = { activeView = MessageView.NewMessage },
+                                zoom = textZoom
+                            )
+                        }
+                        MessageView.Chat -> {
+                            if (selectedAddress != null) {
+                                ChatScreen(
+                                    address = selectedAddress!!,
+                                    messagesVm = messagesVm,
+                                    zoom = textZoom
+                                )
+                            } else {
+                                activeView = MessageView.Overview
                             }
-                        )
+                        }
+                        MessageView.NewMessage -> {
+                            NewMessageScreen(
+                                messagesVm = messagesVm,
+                                onContactSelected = { name, phone ->
+                                    selectedAddress = phone
+                                    selectedName = name
+                                    activeView = MessageView.Chat
+                                }
+                            )
+                        }
                     }
                 }
             }
@@ -197,20 +209,23 @@ enum class MessageView { Overview, Chat, NewMessage }
 fun DefaultSmsBanner(onSetDefault: () -> Unit) {
     Card(
         modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
+        shape = RoundedCornerShape(24.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer)
     ) {
-        Column(Modifier.padding(16.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+        Column(Modifier.padding(24.dp), horizontalAlignment = Alignment.CenterHorizontally) {
             Text(
-                "De app is niet de standaard SMS-app. U kunt geen berichten ontvangen of wissen.",
-                fontSize = 18.sp,
-                fontWeight = FontWeight.Bold,
+                "De app is niet de standaard SMS-app.",
+                fontSize = 20.sp,
+                fontWeight = FontWeight.Black,
                 textAlign = TextAlign.Center,
                 color = MaterialTheme.colorScheme.onErrorContainer
             )
             Spacer(Modifier.height(12.dp))
             Button(
                 onClick = onSetDefault,
-                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
+                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error),
+                shape = RoundedCornerShape(16.dp),
+                modifier = Modifier.fillMaxWidth().height(60.dp)
             ) {
                 Text("MAAK STANDAARD", fontSize = 18.sp, fontWeight = FontWeight.Black)
             }
@@ -240,16 +255,16 @@ fun ConversationOverview(
             onClick = onNewMessageClick,
             modifier = Modifier
                 .fillMaxWidth()
-                .heightIn(min = 75.dp)
-                .padding(vertical = 8.dp),
-            shape = RoundedCornerShape(16.dp),
+                .heightIn(min = 85.dp)
+                .padding(vertical = 12.dp),
+            shape = RoundedCornerShape(28.dp),
             contentPadding = PaddingValues(16.dp)
         ) {
-            Icon(Icons.Default.Add, null, modifier = Modifier.size(32.dp))
+            Icon(Icons.Default.Add, null, modifier = Modifier.size(36.dp))
             Spacer(Modifier.width(12.dp))
             Text(
                 "NIEUW BERICHT", 
-                fontSize = 22.sp, 
+                fontSize = 24.sp, 
                 fontWeight = FontWeight.Black,
                 textAlign = TextAlign.Center
             )
@@ -264,7 +279,7 @@ fun ConversationOverview(
                 Text("Geen berichten gevonden.", fontSize = 20.sp, color = Color.Gray)
             }
         } else {
-            LazyColumn(verticalArrangement = Arrangement.spacedBy(10.dp), contentPadding = PaddingValues(bottom = 20.dp)) {
+            LazyColumn(verticalArrangement = Arrangement.spacedBy(12.dp), contentPadding = PaddingValues(bottom = 24.dp)) {
                 if (unreadConversations.isNotEmpty()) {
                     item {
                         ListSectionHeader("NIEUWE BERICHTEN", Color.Red)
@@ -297,14 +312,14 @@ fun ListSectionHeader(title: String, color: Color) {
     ) {
         Box(
             Modifier
-                .size(14.dp)
+                .size(16.dp)
                 .clip(CircleShape)
                 .background(color)
         )
         Spacer(Modifier.width(12.dp))
         Text(
             text = title,
-            fontSize = 20.sp,
+            fontSize = 22.sp,
             fontWeight = FontWeight.Black,
             color = color,
             letterSpacing = 1.sp
@@ -317,20 +332,19 @@ fun ConversationItem(conv: Conversation, onClick: (Conversation) -> Unit, zoom: 
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 4.dp)
             .clickable { onClick(conv) },
-        shape = RoundedCornerShape(20.dp),
+        shape = RoundedCornerShape(28.dp),
         colors = CardDefaults.cardColors(
             containerColor = if (conv.isRead) MaterialTheme.colorScheme.surfaceVariant else MaterialTheme.colorScheme.primaryContainer
         )
     ) {
         Row(
-            Modifier.padding(16.dp), 
+            Modifier.padding(20.dp), 
             verticalAlignment = Alignment.CenterVertically
         ) {
             Box(
                 Modifier
-                    .size((64 * zoom).dp)
+                    .size((72 * zoom).dp)
                     .clip(CircleShape)
                     .background(
                         if (conv.isRead) MaterialTheme.colorScheme.secondaryContainer else MaterialTheme.colorScheme.primary
@@ -339,7 +353,7 @@ fun ConversationItem(conv: Conversation, onClick: (Conversation) -> Unit, zoom: 
             ) {
                 Text(
                     (conv.contactName ?: conv.address).take(1).uppercase(),
-                    fontSize = (32 * zoom).sp,
+                    fontSize = (36 * zoom).sp,
                     fontWeight = FontWeight.Black,
                     color = if (conv.isRead) MaterialTheme.colorScheme.onSecondaryContainer else Color.White
                 )
@@ -349,20 +363,20 @@ fun ConversationItem(conv: Conversation, onClick: (Conversation) -> Unit, zoom: 
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(
                         conv.contactName ?: conv.address,
-                        fontSize = (24 * zoom).sp,
+                        fontSize = (26 * zoom).sp,
                         fontWeight = if (conv.isRead) FontWeight.Bold else FontWeight.Black,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
                     if (!conv.isRead) {
-                        Spacer(Modifier.width(8.dp))
-                        Box(Modifier.size(12.dp).clip(CircleShape).background(Color.Red))
+                        Spacer(Modifier.width(10.dp))
+                        Box(Modifier.size(14.dp).clip(CircleShape).background(Color.Red))
                     }
                 }
                 Spacer(Modifier.height(4.dp))
                 Text(
                     conv.snippet,
-                    fontSize = (20 * zoom).sp,
+                    fontSize = (22 * zoom).sp,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -417,17 +431,17 @@ fun ChatScreen(address: String, messagesVm: MessagesViewModel, zoom: Float) {
         }
 
         Row(
-            Modifier.padding(vertical = 12.dp),
+            Modifier.padding(vertical = 16.dp),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(10.dp)
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             OutlinedTextField(
                 value = newMessageBody,
                 onValueChange = { newMessageBody = it },
                 modifier = Modifier.weight(1f),
-                placeholder = { Text("Schrijf bericht...", fontSize = (20 * zoom).sp) },
-                shape = RoundedCornerShape(24.dp),
-                textStyle = LocalTextStyle.current.copy(fontSize = (20 * zoom).sp)
+                placeholder = { Text("Schrijf bericht...", fontSize = (22 * zoom).sp) },
+                shape = RoundedCornerShape(32.dp),
+                textStyle = LocalTextStyle.current.copy(fontSize = (22 * zoom).sp)
             )
             FloatingActionButton(
                 onClick = {
@@ -437,10 +451,10 @@ fun ChatScreen(address: String, messagesVm: MessagesViewModel, zoom: Float) {
                     }
                 },
                 containerColor = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.size(60.dp),
+                modifier = Modifier.size(70.dp),
                 shape = CircleShape
             ) {
-                Icon(Icons.Default.Send, null, modifier = Modifier.size(32.dp))
+                Icon(Icons.Default.Send, null, modifier = Modifier.size(36.dp))
             }
         }
     }
@@ -449,21 +463,23 @@ fun ChatScreen(address: String, messagesVm: MessagesViewModel, zoom: Float) {
         AlertDialog(
             onDismissRequest = { messageToDelete = null },
             title = { Text("Bericht wissen?") },
-            text = { Text("Weet u zeker dat u dit bericht wilt verwijderen?") },
+            text = { Text("Weet u zeker dat u dit bericht wilt verwijderen?", fontSize = 20.sp) },
             confirmButton = {
                 Button(
                     onClick = {
                         messagesVm.deleteMessage(messageToDelete!!.id)
                         messageToDelete = null
                     },
-                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error),
+                    shape = RoundedCornerShape(12.dp),
+                    modifier = Modifier.height(60.dp)
                 ) {
-                    Text("WISSEN")
+                    Text("WISSEN", fontWeight = FontWeight.Black)
                 }
             },
             dismissButton = {
-                TextButton(onClick = { messageToDelete = null }) {
-                    Text("ANNULEREN")
+                TextButton(onClick = { messageToDelete = null }, modifier = Modifier.height(60.dp)) {
+                    Text("ANNULEREN", fontSize = 18.sp, fontWeight = FontWeight.Bold)
                 }
             }
         )
@@ -472,16 +488,16 @@ fun ChatScreen(address: String, messagesVm: MessagesViewModel, zoom: Float) {
 
 @Composable
 fun DateHeader(date: String) {
-    Box(Modifier.fillMaxWidth().padding(vertical = 8.dp), contentAlignment = Alignment.Center) {
+    Box(Modifier.fillMaxWidth().padding(vertical = 12.dp), contentAlignment = Alignment.Center) {
         Surface(
-            color = Color.Gray.copy(alpha = 0.2f),
-            shape = RoundedCornerShape(12.dp)
+            color = Color.Gray.copy(alpha = 0.15f),
+            shape = RoundedCornerShape(16.dp)
         ) {
             Text(
                 text = date,
-                modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
-                fontSize = 14.sp,
-                fontWeight = FontWeight.Bold,
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp),
+                fontSize = 16.sp,
+                fontWeight = FontWeight.Black,
                 color = Color.DarkGray
             )
         }
@@ -497,31 +513,31 @@ fun MessageBubble(message: SmsMessage, onDelete: () -> Unit, zoom: Float) {
         Surface(
             color = color,
             shape = RoundedCornerShape(
-                topStart = 20.dp,
-                topEnd = 20.dp,
-                bottomStart = if (message.isSent) 20.dp else 0.dp,
-                bottomEnd = if (message.isSent) 0.dp else 20.dp
+                topStart = 24.dp,
+                topEnd = 24.dp,
+                bottomStart = if (message.isSent) 24.dp else 4.dp,
+                bottomEnd = if (message.isSent) 4.dp else 24.dp
             ),
-            modifier = Modifier.padding(horizontal = 8.dp).widthIn(max = 320.dp)
+            modifier = Modifier.padding(horizontal = 8.dp).widthIn(max = 340.dp)
         ) {
-            Column(Modifier.padding(12.dp)) {
+            Column(Modifier.padding(16.dp)) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(
                         text = message.body,
-                        fontSize = (22 * zoom).sp,
+                        fontSize = (24 * zoom).sp,
                         fontWeight = FontWeight.Medium,
-                        lineHeight = (28 * zoom).sp,
+                        lineHeight = (30 * zoom).sp,
                         modifier = Modifier.weight(1f)
                     )
-                    IconButton(onClick = onDelete, modifier = Modifier.size(30.dp)) {
-                        Icon(Icons.Default.Delete, null, tint = Color.Gray.copy(alpha = 0.6f), modifier = Modifier.size(20.dp))
+                    IconButton(onClick = onDelete, modifier = Modifier.size(36.dp)) {
+                        Icon(Icons.Default.Delete, null, tint = Color.Gray.copy(alpha = 0.5f), modifier = Modifier.size(24.dp))
                     }
                 }
-                Spacer(Modifier.height(4.dp))
+                Spacer(Modifier.height(6.dp))
                 Text(
                     text = formatMessageTime(message.timestamp),
-                    fontSize = 12.sp,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
+                    fontSize = 14.sp,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
                     textAlign = if (message.isSent) TextAlign.End else TextAlign.Start,
                     modifier = Modifier.fillMaxWidth()
                 )
@@ -563,9 +579,9 @@ fun NewMessageScreen(messagesVm: MessagesViewModel, onContactSelected: (String, 
             value = searchQuery,
             onValueChange = { searchQuery = it },
             modifier = Modifier.fillMaxWidth(),
-            placeholder = { Text("Typ naam of nummer...", fontSize = 20.sp) },
+            placeholder = { Text("Typ naam of nummer...", fontSize = 22.sp) },
             leadingIcon = { Icon(Icons.Default.Search, null) },
-            shape = RoundedCornerShape(12.dp)
+            shape = RoundedCornerShape(16.dp)
         )
         
         Spacer(Modifier.height(16.dp))
@@ -573,28 +589,30 @@ fun NewMessageScreen(messagesVm: MessagesViewModel, onContactSelected: (String, 
         if (searchQuery.length >= 3 && searchQuery.all { it.isDigit() || it == '+' }) {
             Button(
                 onClick = { onContactSelected(searchQuery, searchQuery) },
-                modifier = Modifier.fillMaxWidth().height(60.dp),
+                modifier = Modifier.fillMaxWidth().height(75.dp),
+                shape = RoundedCornerShape(20.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary)
             ) {
-                Text("STUUR NAAR $searchQuery", fontWeight = FontWeight.Black)
+                Text("STUUR NAAR $searchQuery", fontWeight = FontWeight.Black, fontSize = 20.sp)
             }
             Spacer(Modifier.height(16.dp))
         }
 
-        LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        LazyColumn(verticalArrangement = Arrangement.spacedBy(12.dp)) {
             items(contacts.filter { it.first.contains(searchQuery, true) || it.second.contains(searchQuery) }) { contact ->
                 Card(
                     Modifier.fillMaxWidth().clickable { onContactSelected(contact.first, contact.second) },
+                    shape = RoundedCornerShape(24.dp),
                     colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
                 ) {
-                    Row(Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
-                        Box(Modifier.size(50.dp).clip(CircleShape).background(MaterialTheme.colorScheme.primaryContainer), contentAlignment = Alignment.Center) {
-                            Text(contact.first.take(1).uppercase(), fontWeight = FontWeight.Bold, fontSize = 22.sp)
+                    Row(Modifier.padding(20.dp), verticalAlignment = Alignment.CenterVertically) {
+                        Box(Modifier.size(60.dp).clip(CircleShape).background(MaterialTheme.colorScheme.primaryContainer), contentAlignment = Alignment.Center) {
+                            Text(contact.first.take(1).uppercase(), fontWeight = FontWeight.Black, fontSize = 28.sp)
                         }
-                        Spacer(Modifier.width(16.dp))
+                        Spacer(Modifier.width(20.dp))
                         Column {
-                            Text(contact.first, fontSize = 20.sp, fontWeight = FontWeight.Bold)
-                            Text(contact.second, fontSize = 16.sp, color = Color.Gray)
+                            Text(contact.first, fontSize = 22.sp, fontWeight = FontWeight.Bold)
+                            Text(contact.second, fontSize = 18.sp, color = Color.Gray)
                         }
                     }
                 }

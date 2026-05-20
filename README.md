@@ -28,11 +28,17 @@ Most smartphones are designed for young people. We turn that around. The Seniore
 ## ✨ Key Features
 | Feature | Description |
 | :--- | :--- |
+| **🏠 Dynamic Home** | Paginated app grid with customizable layouts (1x1, 2x3, 3x4). |
 | **📞 Simplified Calling** | Large dialer with photo favorites and a secure 112 emergency confirmation. |
-| **💬 Message Center** | Extra-large SMS view with instant font size adjustment. |
-| **🆘 Smart SOS** | Hold for 3 seconds to trigger emergency calls and GPS location sharing. |
+| **💬 Message Center** | Extra-large SMS view with instant font size adjustment and unread badges. |
+| **🆘 Smart SOS** | Dedicated SOS button with countdown to trigger emergency calls and GPS sharing. |
 | **💊 Medication Tracker** | Reminders with pill photos and automated stock tracking. |
 | **🎮 Remote Support** | Allow caregivers to manage the phone via [Senioren Beheerder](https://github.com/cma58/SeniorenBeheerder). |
+
+## 🛠️ Recent Technical Updates
+- **Improved Performance:** Optimized `HomeScreen` rendering with better state management and decoupled data models.
+- **Enhanced Stability:** Resolved circular dependencies and improved class loading for a smoother user experience.
+- **Modern Architecture:** Fully migrated to Jetpack Compose with clean separation of concerns and optimized UI components.
 
 ## 🛡️ Security & Privacy (Android 17 Ready)
 Fully optimized for the latest Android standards and GDPR compliant:

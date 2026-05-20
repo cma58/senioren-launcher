@@ -66,98 +66,107 @@ fun HomeTopBar(notificationCount: Int, onNotificationsClick: () -> Unit) {
         }
     }
 
-    Row(
-        Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 24.dp, vertical = 12.dp),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.Top
+    Surface(
+        color = Color.Transparent,
+        modifier = Modifier.fillMaxWidth()
     ) {
-        // Links: Batterij & Verbinding
-        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(
-                    text = if (isCharging) "⚡$batteryLevel%" else "$batteryLevel%",
-                    fontSize = 24.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = if (batteryLevel < 20 && !isCharging) Color.Red else MaterialTheme.colorScheme.onBackground
-                )
-                Spacer(Modifier.width(4.dp))
-                Icon(
-                    imageVector = if (isCharging) Icons.Default.BatteryChargingFull else if (batteryLevel < 20) Icons.Default.BatteryAlert else Icons.Default.BatteryFull,
-                    contentDescription = null,
-                    modifier = Modifier.size(28.dp),
-                    tint = if (batteryLevel < 20 && !isCharging) Color.Red else MaterialTheme.colorScheme.primary
-                )
-            }
-            
-            // Signaal & Wifi indicators
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(
-                    imageVector = if (isWifiConnected) Icons.Default.Wifi else Icons.Default.SignalCellularAlt,
-                    contentDescription = null,
-                    modifier = Modifier.size(24.dp),
-                    tint = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f)
-                )
-                Spacer(Modifier.width(4.dp))
-                Text(
-                    if (isWifiConnected) "Wifi OK" else "Bereik OK",
-                    fontSize = 14.sp,
-                    color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f)
-                )
-            }
-        }
-
-        // Midden: Klok
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            modifier = Modifier.offset(y = 8.dp)
+        Row(
+            Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 24.dp, vertical = 20.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Text(
-                currentTime, 
-                fontSize = 54.sp, 
-                fontWeight = FontWeight.ExtraBold,
-                color = MaterialTheme.colorScheme.primary
-            )
-            Text(
-                currentDate.replaceFirstChar { it.uppercase() }, 
-                fontSize = 18.sp, 
-                fontWeight = FontWeight.Medium,
-                color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f)
-            )
-        }
-
-        // Rechts: Notificaties
-        Box(
-            modifier = Modifier
-                .size(72.dp)
-                .clip(RoundedCornerShape(16.dp))
-                .background(MaterialTheme.colorScheme.surfaceVariant)
-                .clickable { onNotificationsClick() },
-            contentAlignment = Alignment.Center
-        ) {
-            Icon(
-                Icons.Default.Notifications, 
-                contentDescription = "Meldingen",
-                modifier = Modifier.size(40.dp),
-                tint = if (notificationCount > 0) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
-            )
-            if (notificationCount > 0) {
-                Box(
-                    modifier = Modifier
-                        .align(Alignment.TopEnd)
-                        .padding(8.dp)
-                        .size(24.dp)
-                        .clip(CircleShape)
-                        .background(Color.Red),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        "$notificationCount",
-                        color = Color.White,
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.Bold
+            // Links: Batterij & Verbinding
+            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        imageVector = if (isCharging) Icons.Default.BatteryChargingFull else if (batteryLevel < 20) Icons.Default.BatteryAlert else Icons.Default.BatteryFull,
+                        contentDescription = null,
+                        modifier = Modifier.size(32.dp),
+                        tint = if (batteryLevel < 20 && !isCharging) Color.Red else MaterialTheme.colorScheme.primary
                     )
+                    Spacer(Modifier.width(8.dp))
+                    Text(
+                        text = "$batteryLevel%",
+                        fontSize = 24.sp,
+                        fontWeight = FontWeight.Black,
+                        color = if (batteryLevel < 20 && !isCharging) Color.Red else MaterialTheme.colorScheme.onBackground
+                    )
+                }
+                
+                // Signaal & Wifi indicators
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        imageVector = if (isWifiConnected) Icons.Default.Wifi else Icons.Default.SignalCellularAlt,
+                        contentDescription = null,
+                        modifier = Modifier.size(24.dp),
+                        tint = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f)
+                    )
+                    Spacer(Modifier.width(8.dp))
+                    Text(
+                        if (isWifiConnected) "WIFI" else "MOBIEL",
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Bold,
+                        letterSpacing = 1.sp,
+                        color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f)
+                    )
+                }
+            }
+
+            // Midden: Klok
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text(
+                    currentTime, 
+                    fontSize = 64.sp, 
+                    fontWeight = FontWeight.Black,
+                    color = MaterialTheme.colorScheme.onBackground,
+                    letterSpacing = (-2).sp
+                )
+                Text(
+                    currentDate.replaceFirstChar { it.uppercase() }, 
+                    fontSize = 18.sp, 
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.primary
+                )
+            }
+
+            // Rechts: Notificaties
+            Box(
+                modifier = Modifier
+                    .size(80.dp)
+                    .clip(RoundedCornerShape(24.dp))
+                    .background(MaterialTheme.colorScheme.surfaceColorAtElevation(4.dp))
+                    .clickable { onNotificationsClick() },
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    Icons.Default.Notifications, 
+                    contentDescription = "Meldingen",
+                    modifier = Modifier.size(44.dp),
+                    tint = if (notificationCount > 0) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                if (notificationCount > 0) {
+                    Surface(
+                        modifier = Modifier
+                            .align(Alignment.TopEnd)
+                            .padding(8.dp)
+                            .size(28.dp),
+                        shape = CircleShape,
+                        color = Color.Red,
+                        tonalElevation = 4.dp
+                    ) {
+                        Box(contentAlignment = Alignment.Center) {
+                            Text(
+                                "$notificationCount",
+                                color = Color.White,
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.Black
+                            )
+                        }
+                    }
                 }
             }
         }
@@ -169,24 +178,34 @@ fun HomeSOSButton(onClick: () -> Unit, modifier: Modifier = Modifier) {
     Button(
         onClick = onClick,
         modifier = modifier
-            .height(80.dp)
+            .height(90.dp)
             .fillMaxWidth(),
-        colors = ButtonDefaults.buttonColors(containerColor = Color.Red),
-        shape = RoundedCornerShape(20.dp),
-        elevation = ButtonDefaults.buttonElevation(defaultElevation = 8.dp)
+        colors = ButtonDefaults.buttonColors(
+            containerColor = Color(0xFFEF4444),
+            contentColor = Color.White
+        ),
+        shape = RoundedCornerShape(28.dp),
+        elevation = ButtonDefaults.buttonElevation(
+            defaultElevation = 8.dp,
+            pressedElevation = 2.dp
+        ),
+        contentPadding = PaddingValues(16.dp)
     ) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Center
+        ) {
             Icon(
                 Icons.Default.Warning,
                 contentDescription = null,
-                modifier = Modifier.size(40.dp),
+                modifier = Modifier.size(48.dp),
                 tint = Color.White
             )
-            Spacer(Modifier.width(16.dp))
+            Spacer(Modifier.width(20.dp))
             Text(
                 "SOS HULP NODIG",
-                fontSize = 24.sp,
-                fontWeight = FontWeight.ExtraBold,
+                fontSize = 28.sp,
+                fontWeight = FontWeight.Black,
                 color = Color.White
             )
         }

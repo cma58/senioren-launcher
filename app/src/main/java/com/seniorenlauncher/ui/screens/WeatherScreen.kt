@@ -70,71 +70,85 @@ fun WeatherScreen(onBack: () -> Unit, viewModel: WeatherViewModel = viewModel())
         onDispose { tts?.stop(); tts?.shutdown() }
     }
 
-    Column(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background).padding(12.dp)) {
-        ScreenHeader(title = "Weer in ${selectedLocation?.cityName ?: "uw regio"}", onBack = onBack)
+    Scaffold(
+        modifier = Modifier.fillMaxSize(),
+        containerColor = MaterialTheme.colorScheme.background
+    ) { innerPadding ->
+        Column(
+            Modifier
+                .fillMaxSize()
+                .padding(innerPadding)
+                .padding(horizontal = 16.dp)
+        ) {
+            ScreenHeader(title = "Weer in ${selectedLocation?.cityName ?: "uw regio"}", onBack = onBack)
 
-        if (!hasLocationPermission) {
-            Card(
-                modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp).clickable {
-                    context.startActivity(Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply { data = Uri.fromParts("package", context.packageName, null) })
-                },
-                colors = CardDefaults.cardColors(containerColor = Color(0xFFEF4444)),
-                shape = RoundedCornerShape(16.dp)
-            ) {
-                Row(Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
-                    Icon(Icons.Default.LocationOff, null, tint = Color.White)
-                    Spacer(Modifier.width(16.dp))
-                    Text("⚠️ Locatie uit. Klik hier om in te stellen.", color = Color.White, fontWeight = FontWeight.Bold)
-                }
-            }
-        }
-
-        Button(onClick = { showLocationDialog = true }, modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp)) {
-            Icon(Icons.Default.LocationOn, null)
-            Spacer(Modifier.width(8.dp))
-            Text("ANDERE STAD KIEZEN", fontSize = 18.sp, fontWeight = FontWeight.Bold)
-        }
-
-        if (weatherData == null) {
-            Box(Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
-        } else {
-            val data = weatherData!!
-            Column(Modifier.weight(1f).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                SafetyTrafficLight(safetyStatus, data.temp)
-                
-                Card(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(24.dp)) {
-                    Column(Modifier.padding(20.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text("KLEDINGADVIES", fontSize = 14.sp, fontWeight = FontWeight.Black, color = Color.Gray)
-                        Text(data.clothingIcons, fontSize = 60.sp)
+            if (!hasLocationPermission) {
+                Card(
+                    modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp).clickable {
+                        context.startActivity(Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply { data = Uri.fromParts("package", context.packageName, null) })
+                    },
+                    colors = CardDefaults.cardColors(containerColor = Color(0xFFEF4444)),
+                    shape = RoundedCornerShape(24.dp)
+                ) {
+                    Row(Modifier.padding(20.dp), verticalAlignment = Alignment.CenterVertically) {
+                        Icon(Icons.Default.LocationOff, null, tint = Color.White, modifier = Modifier.size(32.dp))
+                        Spacer(Modifier.width(16.dp))
+                        Text("⚠️ Locatie uit. Klik hier.", color = Color.White, fontWeight = FontWeight.Black, fontSize = 20.sp)
                     }
                 }
+            }
 
-                Button(
-                    onClick = {
-                        val statusText = when(safetyStatus) {
-                            SafetyStatus.RED -> if (data.temp > 30) "Blijf binnen, extreem warm." else "Blijf binnen, gevaarlijk weer."
-                            SafetyStatus.ORANGE -> "Let op, kans op regen of wind."
-                            SafetyStatus.GREEN -> "Heerlijk weer om buiten te komen!"
+            Button(
+                onClick = { showLocationDialog = true }, 
+                modifier = Modifier.fillMaxWidth().height(70.dp).padding(vertical = 4.dp),
+                shape = RoundedCornerShape(20.dp)
+            ) {
+                Icon(Icons.Default.LocationOn, null)
+                Spacer(Modifier.width(12.dp))
+                Text("STAD KIEZEN", fontSize = 20.sp, fontWeight = FontWeight.Black)
+            }
+
+            if (weatherData == null) {
+                Box(Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
+            } else {
+                val data = weatherData!!
+                Column(Modifier.weight(1f).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                    SafetyTrafficLight(safetyStatus, data.temp)
+                    
+                    Card(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(32.dp)) {
+                        Column(Modifier.padding(24.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                            Text("KLEDINGADVIES", fontSize = 16.sp, fontWeight = FontWeight.Black, color = Color.Gray)
+                            Text(data.clothingIcons, fontSize = 72.sp)
                         }
-                        val speech = "Het is nu ${data.temp.toInt()} graden. $statusText ${data.gardenAdvice} ${data.windowAdvice} ${data.activityAdvice} ${data.uvAdvice}"
-                        tts?.speak(speech, TextToSpeech.QUEUE_FLUSH, null, "WeatherSpeak")
-                    },
-                    modifier = Modifier.fillMaxWidth().height(90.dp),
-                    shape = RoundedCornerShape(20.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.tertiary)
-                ) {
-                    Icon(Icons.AutoMirrored.Filled.VolumeUp, null, modifier = Modifier.size(32.dp))
-                    Spacer(Modifier.width(12.dp))
-                    Text("LEES ALLES VOOR", fontSize = 22.sp, fontWeight = FontWeight.Black)
+                    }
+
+                    Button(
+                        onClick = {
+                            val statusText = when(safetyStatus) {
+                                SafetyStatus.RED -> if (data.temp > 30) "Blijf binnen, extreem warm." else "Blijf binnen, gevaarlijk weer."
+                                SafetyStatus.ORANGE -> "Let op, kans op regen of wind."
+                                SafetyStatus.GREEN -> "Heerlijk weer om buiten te komen!"
+                            }
+                            val speech = "Het is nu ${data.temp.toInt()} graden. $statusText ${data.gardenAdvice} ${data.windowAdvice} ${data.activityAdvice} ${data.uvAdvice}"
+                            tts?.speak(speech, TextToSpeech.QUEUE_FLUSH, null, "WeatherSpeak")
+                        },
+                        modifier = Modifier.fillMaxWidth().height(100.dp),
+                        shape = RoundedCornerShape(28.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.tertiary)
+                    ) {
+                        Icon(Icons.AutoMirrored.Filled.VolumeUp, null, modifier = Modifier.size(40.dp))
+                        Spacer(Modifier.width(16.dp))
+                        Text("LEES VOOR", fontSize = 26.sp, fontWeight = FontWeight.Black)
+                    }
+
+                    if (data.gardenAdvice.isNotEmpty()) AdviceCard(data.gardenAdvice, Color(0xFFE8F5E9), "🌱")
+                    if (data.windowAdvice.isNotEmpty()) AdviceCard(data.windowAdvice, Color(0xFFE3F2FD), "🪟")
+                    if (data.activityAdvice.isNotEmpty()) AdviceCard(data.activityAdvice, Color(0xFFE0F2F1), "🚶")
+                    if (data.uvAdvice.isNotEmpty()) AdviceCard(data.uvAdvice, Color(0xFFFFF3E0), "☀️")
+
+                    Text("Delen van de dag", fontSize = 24.sp, fontWeight = FontWeight.Black)
+                    dayParts.forEach { part -> DayPartCard(part) }
                 }
-
-                if (data.gardenAdvice.isNotEmpty()) AdviceCard(data.gardenAdvice, Color(0xFFE8F5E9), "🌱")
-                if (data.windowAdvice.isNotEmpty()) AdviceCard(data.windowAdvice, Color(0xFFE3F2FD), "🪟")
-                if (data.activityAdvice.isNotEmpty()) AdviceCard(data.activityAdvice, Color(0xFFE0F2F1), "🚶")
-                if (data.uvAdvice.isNotEmpty()) AdviceCard(data.uvAdvice, Color(0xFFFFF3E0), "☀️")
-
-                Text("Vandaag in delen", fontSize = 22.sp, fontWeight = FontWeight.Bold)
-                dayParts.forEach { part -> DayPartCard(part) }
             }
         }
     }

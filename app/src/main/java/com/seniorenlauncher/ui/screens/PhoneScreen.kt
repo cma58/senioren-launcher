@@ -127,74 +127,78 @@ fun PhoneScreen(onNavigate: (String) -> Unit, onBack: () -> Unit, settingsVm: Se
     
     val matchedContact = favorieten.find { isNumberMatch(it.phoneNumber, phoneNumber) }
 
-    Column(
-        Modifier
-            .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
-            .padding(horizontal = 16.dp, vertical = 8.dp)
-    ) {
-        ScreenHeader(
-            title = when(activeTab) {
-                PhoneTab.Dialer -> "Telefoon"
-                PhoneTab.Recents -> "Recent"
-                PhoneTab.Contacts -> "Kies Contact"
-            }, 
-            onBack = { 
-                if (activeTab != PhoneTab.Dialer) activeTab = PhoneTab.Dialer 
-                else onBack() 
-            }
-        )
-        
-        if (!isDefaultDialer) {
-            DefaultDialerBanner {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                    val roleManager = localContext.getSystemService(RoleManager::class.java)
-                    val intent = roleManager.createRequestRoleIntent(RoleManager.ROLE_DIALER)
-                    roleLauncher.launch(intent)
-                }
-            }
-        }
-
-        // Tab Switcher
-        Row(
-            modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
+    Scaffold(
+        modifier = Modifier.fillMaxSize(),
+        containerColor = MaterialTheme.colorScheme.background
+    ) { innerPadding ->
+        Column(
+            Modifier
+                .fillMaxSize()
+                .padding(innerPadding)
+                .padding(horizontal = 20.dp)
         ) {
-            PhoneTabButton(
-                icon = Icons.Default.Dialpad,
-                label = "TOETSEN",
-                isSelected = activeTab == PhoneTab.Dialer,
-                modifier = Modifier.weight(1f),
-                onClick = { activeTab = PhoneTab.Dialer }
+            ScreenHeader(
+                title = when(activeTab) {
+                    PhoneTab.Dialer -> "Telefoon"
+                    PhoneTab.Recents -> "Recent"
+                    PhoneTab.Contacts -> "Kies Contact"
+                }, 
+                onBack = { 
+                    if (activeTab != PhoneTab.Dialer) activeTab = PhoneTab.Dialer 
+                    else onBack() 
+                }
             )
-            PhoneTabButton(
-                icon = Icons.Default.History,
-                label = "RECENT",
-                isSelected = activeTab == PhoneTab.Recents,
-                modifier = Modifier.weight(1f),
-                onClick = { activeTab = PhoneTab.Recents }
-            )
-            PhoneTabButton(
-                icon = Icons.Default.Person,
-                label = "CONTACTEN",
-                isSelected = activeTab == PhoneTab.Contacts,
-                modifier = Modifier.weight(1f),
-                onClick = { activeTab = PhoneTab.Contacts }
-            )
-        }
-
-        if (!permissionsGranted) {
-            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                Button(
-                    onClick = { permissionLauncher.launch(requiredPermissions) },
-                    modifier = Modifier.fillMaxWidth().height(100.dp).padding(16.dp),
-                    shape = RoundedCornerShape(16.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
-                ) {
-                    Text("GEEF TOESTEMMING VOOR TELEFOON", fontSize = 20.sp, fontWeight = FontWeight.Black, textAlign = TextAlign.Center)
+            
+            if (!isDefaultDialer) {
+                DefaultDialerBanner {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                        val roleManager = localContext.getSystemService(RoleManager::class.java)
+                        val intent = roleManager.createRequestRoleIntent(RoleManager.ROLE_DIALER)
+                        roleLauncher.launch(intent)
+                    }
                 }
             }
-        } else {
+
+            // Tab Switcher
+            Row(
+                modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp),
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                PhoneTabButton(
+                    icon = Icons.Default.Dialpad,
+                    label = "TOETSEN",
+                    isSelected = activeTab == PhoneTab.Dialer,
+                    modifier = Modifier.weight(1f),
+                    onClick = { activeTab = PhoneTab.Dialer }
+                )
+                PhoneTabButton(
+                    icon = Icons.Default.History,
+                    label = "RECENT",
+                    isSelected = activeTab == PhoneTab.Recents,
+                    modifier = Modifier.weight(1f),
+                    onClick = { activeTab = PhoneTab.Recents }
+                )
+                PhoneTabButton(
+                    icon = Icons.Default.Person,
+                    label = "CONTACTEN",
+                    isSelected = activeTab == PhoneTab.Contacts,
+                    modifier = Modifier.weight(1f),
+                    onClick = { activeTab = PhoneTab.Contacts }
+                )
+            }
+
+            if (!permissionsGranted) {
+                Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    Button(
+                        onClick = { permissionLauncher.launch(requiredPermissions) },
+                        modifier = Modifier.fillMaxWidth().height(100.dp).padding(16.dp),
+                        shape = RoundedCornerShape(24.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
+                    ) {
+                        Text("GEEF TOESTEMMING", fontSize = 24.sp, fontWeight = FontWeight.Black, textAlign = TextAlign.Center)
+                    }
+                }
+            } else {
             Box(Modifier.weight(1f)) {
                 when (activeTab) {
                     PhoneTab.Dialer -> {
@@ -244,6 +248,7 @@ fun PhoneScreen(onNavigate: (String) -> Unit, onBack: () -> Unit, settingsVm: Se
             }
         }
     }
+}
 }
 
 // --- Taak 4: Nummer Opmaak ---

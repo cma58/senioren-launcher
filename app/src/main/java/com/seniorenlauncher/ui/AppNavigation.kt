@@ -51,8 +51,7 @@ fun AppNavigation(
         composable("home") {
             HomeScreen(
                 onNavigate = { route -> navController.navigate(route) },
-                settingsVm = settingsVm,
-                radioVm = radioVm
+                settingsVm = settingsVm
             )
         }
         composable("phone") { 

@@ -28,11 +28,17 @@ De meeste smartphones zijn ontworpen voor jonge mensen. Wij draaien dat om. De S
 ## ✨ Belangrijkste Functies
 | Functie | Beschrijving |
 | :--- | :--- |
+| **🏠 Dynamisch Startscherm** | Pagina-gebaseerd app-raster met aanpasbare lay-outs (1x1, 2x3, 3x4). |
 | **📞 Simpel Bellen** | Grote dialer met favorieten (foto's) en een beveiligde 112-bevestiging. |
-| **💬 Berichten Center** | Extra grote SMS-weergave met directe optie om tekst te vergroten. |
-| **🆘 Slimme SOS** | Houd 3 seconden vast voor noodoproepen en automatische GPS-locatie via SMS. |
+| **💬 Berichten Center** | Extra grote SMS-weergave met directe optie om tekst te vergroten en melding-badges. |
+| **🆘 Slimme SOS** | Speciale SOS-knop met aftelmechanisme voor noodoproepen en GPS-locatie via SMS. |
 | **💊 Medicijnbeheer** | Herinneringen met pillenfoto's en automatisch voorraadbeheer. |
 | **🎮 Remote Support** | Laat mantelzorgers instellingen beheren via de [Senioren Beheerder](https://github.com/cma58/SeniorenBeheerder) app. |
+
+## 🛠️ Recente Technische Updates
+- **Betere Prestaties:** Geoptimaliseerde rendering van het startscherm met verbeterd statusbeheer.
+- **Verhoogde Stabiliteit:** Problemen met afhankelijkheden opgelost voor een soepelere gebruikerservaring.
+- **Moderne Architectuur:** Volledig overgestapt naar Jetpack Compose met een schone scheiding van taken.
 
 ## 🛡️ Veiligheid & Privacy (Android 17 Klaar)
 Volledig geoptimaliseerd voor de nieuwste Android standaarden en AVG/GDPR compliant:

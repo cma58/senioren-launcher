@@ -14,6 +14,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -30,6 +31,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.material3.Icon
+import androidx.compose.material3.Surface
 import coil.compose.rememberAsyncImagePainter
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -49,25 +51,33 @@ fun BigButton(
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val pressed by interactionSource.collectIsPressedAsState()
-    val scale by animateFloatAsState(if (pressed) 0.95f else 1f, label = "s")
+    val scale by animateFloatAsState(if (pressed) 0.94f else 1f, label = "s")
     
-    val buttonHeight = if (small) 100.dp else 140.dp
+    val buttonHeight = if (small) 110.dp else 150.dp
+    val cornerRadius = if (small) 24.dp else 32.dp
 
     Box(
         modifier = modifier
             .fillMaxWidth()
             .height(buttonHeight)
             .scale(scale)
-            .shadow(if (pressed) 2.dp else 6.dp, RoundedCornerShape(14.dp))
-            .clip(RoundedCornerShape(14.dp))
-            .background(Brush.linearGradient(listOf(color.copy(alpha = 0.85f), color.copy(alpha = 0.65f))))
+            .shadow(if (pressed) 2.dp else 10.dp, RoundedCornerShape(cornerRadius))
+            .clip(RoundedCornerShape(cornerRadius))
+            .background(
+                Brush.verticalGradient(
+                    colors = listOf(
+                        color.copy(alpha = 0.95f),
+                        color.copy(alpha = 0.75f)
+                    )
+                )
+            )
             .combinedClickable(
                 interactionSource = interactionSource,
                 indication = null,
                 onClick = onClick,
                 onLongClick = onLongClick
             )
-            .padding(8.dp), 
+            .padding(12.dp), 
         contentAlignment = Alignment.Center
     ) {
         Column(
@@ -80,73 +90,75 @@ fun BigButton(
                     Icon(
                         imageVector = vectorIcon,
                         contentDescription = null,
-                        modifier = Modifier.size(if (small) 36.dp else 48.dp),
+                        modifier = Modifier.size(if (small) 44.dp else 60.dp),
                         tint = Color.White
                     )
                 } else if (icon != null) {
                     Image(
                         painter = rememberAsyncImagePainter(icon),
                         contentDescription = null,
-                        modifier = Modifier.size(if (small) 36.dp else 48.dp),
+                        modifier = Modifier.size(if (small) 44.dp else 60.dp),
                         contentScale = ContentScale.Fit
                     )
                 } else if (emoji != null) {
                     Text(
                         emoji, 
-                        fontSize = if (small) 24.sp else 36.sp,
-                        lineHeight = if (small) 28.sp else 40.sp
+                        fontSize = if (small) 32.sp else 44.sp,
+                        lineHeight = if (small) 36.sp else 48.sp
                     )
                 }
                 
                 // Weather overlay (Temperature)
                 if (weatherText != null) {
-                    Box(
+                    Surface(
                         Modifier
                             .align(Alignment.BottomEnd)
-                            .offset(x = 8.dp, y = 8.dp)
-                            .background(Color.Black.copy(alpha = 0.4f), RoundedCornerShape(4.dp))
-                            .padding(horizontal = 2.dp)
+                            .offset(x = 12.dp, y = 12.dp),
+                        shape = RoundedCornerShape(8.dp),
+                        color = Color.Black.copy(alpha = 0.5f)
                     ) {
                         Text(
                             weatherText, 
                             color = Color.White, 
-                            fontSize = 12.sp, 
-                            fontWeight = FontWeight.Black
+                            fontSize = 14.sp, 
+                            fontWeight = FontWeight.Black,
+                            modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp)
                         )
                     }
                 }
             }
             
-            Spacer(Modifier.height(4.dp))
+            Spacer(Modifier.height(8.dp))
             
             Text(
                 label, 
-                fontSize = if (small) 14.sp else 18.sp, 
-                fontWeight = FontWeight.Bold,
+                fontSize = if (small) 16.sp else 22.sp, 
+                fontWeight = FontWeight.Black,
                 color = Color.White, 
                 textAlign = TextAlign.Center, 
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis,
-                lineHeight = if (small) 16.sp else 22.sp
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
             )
         }
         
         if (badge != null && badge > 0) {
-            Box(
+            Surface(
                 Modifier
                     .align(Alignment.TopEnd)
-                    .offset(x = (-2).dp, y = 2.dp)
-                    .size(28.dp)
-                    .clip(CircleShape)
-                    .background(Color(0xFFEF4444)), 
-                contentAlignment = Alignment.Center
+                    .offset(x = 4.dp, y = (-4).dp)
+                    .size(36.dp),
+                shape = CircleShape,
+                color = Color(0xFFEF4444),
+                shadowElevation = 4.dp
             ) {
-                Text(
-                    badge.toString(), 
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.Bold, 
-                    color = Color.White
-                )
+                Box(contentAlignment = Alignment.Center) {
+                    Text(
+                        badge.toString(), 
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Black, 
+                        color = Color.White
+                    )
+                }
             }
         }
     }
@@ -185,32 +197,45 @@ fun SOSButton(onClick: () -> Unit, modifier: Modifier = Modifier) {
 
 @Composable
 fun ScreenHeader(title: String, onBack: () -> Unit) {
-    Row(
-        Modifier
+    Surface(
+        modifier = Modifier
             .fillMaxWidth()
-            .heightIn(min = 80.dp)
-            .padding(vertical = 12.dp), 
-        verticalAlignment = Alignment.CenterVertically
+            .padding(bottom = 16.dp),
+        color = Color.Transparent
     ) {
-        Box(
+        Row(
             Modifier
-                .size(72.dp)
-                .clip(RoundedCornerShape(16.dp))
-                .background(MaterialTheme.colorScheme.surfaceVariant)
-                .clickable { onBack() },
-            contentAlignment = Alignment.Center
+                .fillMaxWidth()
+                .heightIn(min = 90.dp),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Text("←", fontSize = 40.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
+            Surface(
+                modifier = Modifier
+                    .size(80.dp)
+                    .clickable { onBack() },
+                shape = RoundedCornerShape(24.dp),
+                color = MaterialTheme.colorScheme.surfaceColorAtElevation(4.dp),
+                tonalElevation = 2.dp
+            ) {
+                Box(contentAlignment = Alignment.Center) {
+                    Text(
+                        "←", 
+                        fontSize = 44.sp, 
+                        fontWeight = FontWeight.Black, 
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                }
+            }
+            Spacer(Modifier.width(20.dp))
+            Text(
+                title, 
+                fontSize = 36.sp,
+                fontWeight = FontWeight.Black, 
+                color = MaterialTheme.colorScheme.onBackground,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.weight(1f)
+            )
         }
-        Spacer(Modifier.width(16.dp))
-        Text(
-            title, 
-            fontSize = 32.sp,
-            fontWeight = FontWeight.ExtraBold, 
-            color = MaterialTheme.colorScheme.onBackground,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-            modifier = Modifier.weight(1f)
-        )
     }
 }

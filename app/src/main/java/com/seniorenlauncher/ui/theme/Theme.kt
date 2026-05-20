@@ -1,9 +1,12 @@
 package com.seniorenlauncher.ui.theme
 
+import android.os.Build
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.sp
@@ -32,8 +35,21 @@ val LightColors = lightColorScheme(
 fun SeniorenLauncherTheme(
     appTheme: AppTheme = AppTheme.CLASSIC, 
     fontSize: Int = 18,
+    dynamicColor: Boolean = true,
     content: @Composable () -> Unit
 ) {
+    val context = LocalContext.current
+    val darkTheme = isSystemInDarkTheme() || appTheme != AppTheme.LIGHT
+    
+    val colorScheme = when {
+        appTheme == AppTheme.HIGH_CONTRAST -> HighContrastColors
+        dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
+            if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
+        }
+        appTheme == AppTheme.LIGHT -> LightColors
+        else -> ClassicColors
+    }
+
     val scaleFactor = fontSize / 18f
     
     val currentDensity = LocalDensity.current
@@ -44,11 +60,7 @@ fun SeniorenLauncherTheme(
 
     CompositionLocalProvider(LocalDensity provides customDensity) {
         MaterialTheme(
-            colorScheme = when (appTheme) {
-                AppTheme.CLASSIC -> ClassicColors
-                AppTheme.HIGH_CONTRAST -> HighContrastColors
-                AppTheme.LIGHT -> LightColors
-            },
+            colorScheme = colorScheme,
             typography = Typography(),
             content = content
         )

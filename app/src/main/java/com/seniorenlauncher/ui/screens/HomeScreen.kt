@@ -1,9 +1,7 @@
 package com.seniorenlauncher.ui.screens
 
 import android.content.Intent
-import android.graphics.drawable.Drawable
 import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.*
 import androidx.compose.foundation.pager.HorizontalPager
@@ -17,8 +15,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.material.icons.filled.Bluetooth
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.seniorenlauncher.LauncherApp
@@ -29,20 +25,12 @@ import com.seniorenlauncher.ui.components.*
 import com.seniorenlauncher.ui.screens.home.*
 import com.seniorenlauncher.ui.theme.SeniorenLauncherTheme
 import com.seniorenlauncher.util.AppLauncher
-
-data class HomeApp(
-    val id: String,
-    val name: String,
-    val emoji: String? = null,
-    val icon: Drawable? = null,
-    val vectorIcon: ImageVector? = null,
-    val color: Color,
-    val weatherOverlay: String? = null
-)
+import kotlin.math.ceil
+import kotlin.math.max
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun HomeScreen(onNavigate: (String) -> Unit, settingsVm: SettingsViewModel, radioVm: RadioViewModel) {
+fun HomeScreen(onNavigate: (String) -> Unit, settingsVm: SettingsViewModel) {
     val context = LocalContext.current
     val homeVm: HomeViewModel = viewModel()
     val uiState by homeVm.state.collectAsState()
@@ -69,7 +57,6 @@ fun HomeScreen(onNavigate: (String) -> Unit, settingsVm: SettingsViewModel, radi
         allVisibleApps = uiState.allVisibleApps,
         activeNotificationsCount = activeNotifications.size,
         badgeCounts = badgeCounts,
-        weatherData = uiState.weatherData,
         pendingMedsCount = uiState.pendingMedsCount,
         onNavigate = onNavigate,
         onAddApp = { showAppPickerFor = "new" },
@@ -139,7 +126,6 @@ fun HomeScreenContent(
     allVisibleApps: List<HomeApp>,
     activeNotificationsCount: Int,
     badgeCounts: Map<String, Int>,
-    weatherData: WeatherData?,
     pendingMedsCount: Int,
     onNavigate: (String) -> Unit,
     onAddApp: () -> Unit,
@@ -166,31 +152,52 @@ fun HomeScreenContent(
 
     // Bereken het totaal aantal items inclusief de "Toevoegen" knop
     val totalItemsCount = allVisibleApps.size + 1
-    val pageCount = Math.max(1, Math.ceil(totalItemsCount.toDouble() / appsPerPage.toDouble()).toInt())
+    val pageCount = max(1, ceil(totalItemsCount.toDouble() / appsPerPage.toDouble()).toInt())
     val pagerState = rememberPagerState(pageCount = { pageCount })
 
-    Column(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background).statusBarsPadding()) {
-        // Top Bar: Clock, Battery & Notifications
-        HomeTopBar(
-            notificationCount = activeNotificationsCount,
-            onNotificationsClick = { onNavigate("notifications") }
-        )
-
-        // Status Card: Alleen nog voor Medicijnen
-        if (pendingMedsCount > 0) {
-            HomeStatusCard(
-                pendingMedsCount = pendingMedsCount,
-                onMedsClick = { onNavigate("meds") }
-            )
+    Scaffold(
+        modifier = Modifier.fillMaxSize(),
+        containerColor = MaterialTheme.colorScheme.background,
+        bottomBar = {
+            // Fixed SOS Button at bottom
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(24.dp)
+                    .navigationBarsPadding()
+            ) {
+                HomeSOSButton(
+                    onClick = onSOSClick
+                )
+            }
         }
+    ) { innerPadding ->
+        Column(
+            Modifier
+                .fillMaxSize()
+                .padding(innerPadding)
+        ) {
+            // Top Bar: Clock, Battery & Notifications
+            HomeTopBar(
+                notificationCount = activeNotificationsCount,
+                onNotificationsClick = { onNavigate("notifications") }
+            )
 
-        // App Grid Pager
-        HorizontalPager(
-            state = pagerState,
-            modifier = Modifier.weight(1f).fillMaxWidth(),
-            contentPadding = PaddingValues(16.dp),
-            pageSpacing = 16.dp
-        ) { pageIndex ->
+            // Status Card: Alleen nog voor Medicijnen
+            if (pendingMedsCount > 0) {
+                HomeStatusCard(
+                    pendingMedsCount = pendingMedsCount,
+                    onMedsClick = { onNavigate("meds") }
+                )
+            }
+
+            // App Grid Pager
+            HorizontalPager(
+                state = pagerState,
+                modifier = Modifier.weight(1f).fillMaxWidth(),
+                contentPadding = PaddingValues(horizontal = 24.dp, vertical = 16.dp),
+                pageSpacing = 24.dp
+            ) { pageIndex ->
             val startIdx = pageIndex * appsPerPage
             
             LazyVerticalGrid(
@@ -257,19 +264,8 @@ fun HomeScreenContent(
                 }
             }
         }
-
-        // Fixed SOS Button at bottom
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            HomeSOSButton(
-                onClick = onSOSClick
-            )
-        }
     }
+}
 }
 
 @Preview(showSystemUi = true)
@@ -284,13 +280,6 @@ fun PreviewHomeScreen() {
             allVisibleApps = emptyList(),
             activeNotificationsCount = 2,
             badgeCounts = mapOf("sms" to 1),
-            weatherData = WeatherData(
-                temp = 21.5,
-                condition = "Partly Cloudy",
-                iconUrl = "02d",
-                humidity = 40,
-                windSpeed = 10.0
-            ),
             pendingMedsCount = 1,
             onNavigate = {},
             onAddApp = {},
