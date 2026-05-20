@@ -1,101 +1,63 @@
-# 📱 Senioren Launcher (0.8.7)
+# 📱 Senioren Launcher 🛡️
+
+[![Open Source Love](https://badges.frapsoft.com/os/v1/open-source.svg?v=103)](https://github.com/cma58/senioren-launcher)
+[![License: GPL-3.0](https://img.shields.io/badge/License-GPL%20v3-blue.svg)](LICENSE)
+[![Privacy](https://img.shields.io/badge/Privacy-100%25-brightgreen.svg)](PRIVACY.md)
+[![Android 15+](https://img.shields.io/badge/Android-15%2B-green.svg)](https://developer.android.com)
 
 **De eerlijke, open-source Android launcher voor onze ouderen. Gemaakt om technologie weer toegankelijk, veilig en menselijk te maken.**
 
-[![License: GPL-3.0](https://img.shields.io/badge/License-GPL%20v3-blue.svg)](LICENSE)
-[![Privacy](https://img.shields.io/badge/Privacy-100%25-brightgreen.svg)](PRIVACY.md)
-[![Status: Release](https://img.shields.io/badge/Status-0.8.7-green.svg)](#)
+100% Gratis & Open Source – Geen trackers, geen cloud, gewoon digitale vrijheid.
 
 ---
 
 ## 🔗 Het Ecosysteem: Hoe het werkt
-De **Senioren Launcher** is onderdeel van een ecosysteem van twee apps die samenwerken voor maximale veiligheid.
+De **Senioren Launcher** is onderdeel van een ecosysteem van twee apps die samenwerken voor maximale veiligheid en rust.
 
-1.  **Senioren Launcher** (deze app): Wordt geïnstalleerd op de **telefoon van de senior**. Het biedt een vereenvoudigde interface en voert commando's uit.
-2.  **[Senioren Beheerder](https://github.com/cma58/SeniorenBeheerder)**: Wordt geïnstalleerd op de **telefoon van de mantelzorger**. Hiermee kunt u op afstand de status, locatie en instellingen beheren via SMS.
-
----
-
-> **⚠️ Bèta Fase:** Dit project wordt in mijn vrije tijd ontwikkeld om onze (groot)ouders hun digitale vrijheid terug te geven. Het is momenteel in bèta, dus feedback en hulp bij het testen zijn zeer welkom.
+1.  **Senioren Launcher** (deze app): Wordt geïnstalleerd op de **telefoon van de senior**. Het biedt een veilige interface en voert commando's op afstand uit.
+2.  **[Senioren Beheerder](https://github.com/cma58/SeniorenBeheerder)**: Wordt geïnstalleerd op de **telefoon van de mantelzorger**. Hiermee kunt u op afstand de status, locatie en instellingen beheren.
 
 ---
 
-## 🟢 Wat is nieuw — Recente updates (v0.8.6 → v0.8.7)
-Een korte samenvatting van de belangrijkste wijzigingen sinds v0.8.5 — gebaseerd op recente commits en release-voorbereidingen.
+## 🌟 Senioren-Eerst Design
+De meeste smartphones zijn ontworpen voor jonge mensen. Wij draaien dat om. De Senioren Launcher is gebouwd volgens strikte UX-regels voor ouderen:
+- **Geen Toetsenborden:** Alles werkt met grote knoppen en simpele lijsten.
+- **Gigantische Elementen:** Teksten met hoog contrast (20-30sp) en extra grote knoppen (70dp+).
+- **Digitale Rust:** Geen onnodige notificaties of ingewikkelde veeg-bewegingen.
 
-- v0.8.7 (2026-05-17)
-  - Permissiecontroles toegevoegd aan de FallDetection dialoog en laatste release-fijnslijningen afgerond.
-- v0.8.6 (2026-05-17)
-  - SOS-flow gestabiliseerd, security-excepties opgelost en batterijgebruik van achtergrondservices geoptimaliseerd.
+## ✨ Belangrijkste Functies
+| Functie | Beschrijving |
+| :--- | :--- |
+| **📞 Simpel Bellen** | Grote dialer met favorieten (foto's) en een beveiligde 112-bevestiging. |
+| **💬 Berichten Center** | Extra grote SMS-weergave met directe optie om tekst te vergroten. |
+| **🆘 Slimme SOS** | Houd 3 seconden vast voor noodoproepen en automatische GPS-locatie via SMS. |
+| **💊 Medicijnbeheer** | Herinneringen met pillenfoto's en automatisch voorraadbeheer. |
+| **🎮 Remote Support** | Laat mantelzorgers instellingen beheren via de [Senioren Beheerder](https://github.com/cma58/SeniorenBeheerder) app. |
 
-Andere recente verbeteringen:
-- Wi‑Fi snelknop: een Wi‑Fi-knop op het startscherm die het systeem Wi‑Fi-paneel opent.
-- Permanente start-acties: Maak Instellingen, Wi‑Fi en Bluetooth permanent zichtbaar op het startscherm en verbeter het Bluetooth-icoon.
-- Setup Wizard refactor: caregiver- en senior-flow gescheiden en de setup-ervaring vernieuwd (Android 16 gereed).
-- Remote Support: volledige Remote Support-suite met uitgebreide SMS-commando's en documentatie — beheer telefoons via SMS-codes (geen internet nodig).
-- Release-automatisering: automatische release-notes generatie en GitHub-releaseflow met APK-attach mogelijkheid.
-- UI & toegankelijkheid: globale Radio MiniPlayer met marquee-tekst, HomeScreen layout verbeteringen en schaling voor grote letters gefixt.
-- Diverse bugfixes & CI-verbeteringen: vergrootglas-navigatie, PhoneScreen fixes, bijgewerkte screenshots in READMEs en ontbrekende Gradle wrapper-bestanden voor CI toegevoegd.
-
----
-
-## 🛡️ Veiligheid & Privacy (EU & Android 16 Ready)
-Dit project is bijgewerkt om te voldoen aan de nieuwste Europese veiligheidsnormen (**AVG/GDPR**) en is volledig geoptimaliseerd voor **Android 16 (Baklava)**:
-- **Privacy by Design:** Duidelijke privacylabels voor gevoelige gegevens (Contacten, GPS).
-- **Veilige updates:** App-updates via versleutelde HTTPS-verbindingen.
-- **Modern Schermgebruik:** Volledige Edge-to-Edge ondersteuning voor Android 15/16.
-- **100% Lokaal:** Uw gegevens verlaten het toestel nooit. Geen cloud, geen tracking.
-
----
-
-## 🇬🇧 English version
-Zie de **[README.md](README.md)** voor de Engelstalige hoofdreadme.
-
----
+## 🛡️ Veiligheid & Privacy (Android 17 Klaar)
+Volledig geoptimaliseerd voor de nieuwste Android standaarden en AVG/GDPR compliant:
+- **Privacy by Design:** Duidelijke afhandeling van machtigingen voor Contacten en GPS.
+- **100% Lokaal:** Uw gegevens verlaten het toestel nooit. Geen tracking of data-mining.
+- **Modern Schermgebruik:** Volledige Edge-to-Edge ondersteuning voor de nieuwste Android-toestellen.
 
 ## 📸 Screenshots
 <p align="center">
   <img src="screenshots/screenshot_home.jpeg" width="250" title="Startscherm">
   <img src="screenshots/screenshot_phone.jpeg" width="250" title="Telefoon">
-  <img src="screenshots/screenshot_weather.jpeg" width="250" title="Weer & Advies">
-</p>
-<p align="center">
-  <img src="screenshots/screenshot_medication.jpeg" width="250" title="Medicijnen">
-  <img src="screenshots/screenshot_emergency.jpeg" width="250" title="Noodinfo">
-  <img src="screenshots/screenshot_remote_support.jpeg" width="250" title="Hulp op Afstand">
+  <img src="screenshots/screenshot_weather.jpeg" width="250" title="Weer">
 </p>
 
 ---
 
-## 🌟 Onze Visie: "Senioren-Eerst"
-De meeste smartphones zijn ontworpen voor jonge mensen. Wij draaien dat om. Senioren Launcher is gebouwd volgens strikte UX-regels voor ouderen:
-- **Geen toetsenborden:** Alles werkt met grote Plus/Min knoppen en simpele lijsten.
-- **Gigantische elementen:** Teksten minimaal 20–30sp. Knoppen minstens 70dp hoog.
-- **Digitale rust:** Geen onnodige notificaties of ingewikkelde veeg-bewegingen.
+## 🇬🇧 English Version
+Zie de **[README.md](README.md)** voor de Engelstalige versie.
 
 ## ❤️ Waardering & Toekomst
-Senioren Launcher blijft gratis en open-source. Ik bouw dit naast mijn dagelijkse werk omdat ik geloof dat digitale vrijheid voor ouderen een recht is, geen luxe.
+Senioren Launcher is en blijft gratis en open-source. Digitale vrijheid voor ouderen is een recht, geen luxe.
 
-**Wil je meehelpen om dit project duurzaam te houden?**
-- **Feedback:** Test the app en stuur je bevindingen.
-- **Steun:** Een kleine bijdrage helpt serverkosten te dekken en nieuwe testtoestellen aan te schaffen.
+Vindt u dit project waardevol? Overweeg dan een kleine donatie om de verdere ontwikkeling en testtoestellen te ondersteunen.
 
-[![Steun via PayPal](https://img.shields.io/badge/Steun-PayPal-blue.svg?style=for-the-badge)](https://www.paypal.com/donate/?business=amine.chtaiti@gmail.com&no_recurring=0&currency_code=EUR)
+[![Steun via PayPal](https://img.shields.io/badge/Steun-PayPal-blue.svg?style=for-the-badge&logo=paypal)](https://www.paypal.com/donate/?business=amine.chtaiti@gmail.com&no_recurring=0&currency_code=EUR)
 
 ---
-
-## ✨ Belangrijkste Functies
-- **📞 Bellen:** Grote dialer met favorieten (foto's) en beveiligde 112-knop.
-- **💬 Berichten:** Extra grote SMS-weergave met directe tekst-zoom.
-- **🆘 SOS:** Houd 3 seconden vast voor noodoproepen en een SMS met GPS-locatie.
-- **💊 Medicijnen:** Herinneringen met foto's van pillen en voorraadbeheer.
-- **🎮 Remote Support:** Beheer de telefoon via eenvoudige SMS-codes (geen internet).
-
----
-
-## 🏗️ Technologie
-- **Kotlin 2.1 & Jetpack Compose**
-- **Android 16 SDK 36 Klaar**
-- **Material 3 Design**
-
-*"Technologie moet mensen verbinden, niet uitsluiten."* ❤️
+*Gemaakt met zorg om generaties te verbinden en mantelzorgers rust te geven.*
