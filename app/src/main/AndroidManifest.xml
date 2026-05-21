@@ -176,14 +176,14 @@
             android:exported="false">
             <property
                 android:name="android.app.PROPERTY_SPECIAL_USE_FGS_TYPE"
-                android:value="This service handles emergency SOS triggers, including location sharing and automated alerts when the user is in distress." />
+                android:value="This service handles emergency SOS triggers, including location sharing and automated alerts via SMS when the senior user is in distress, providing peace of mind for caregivers." />
         </service>
         <service android:name=".service.FallDetectionService"
             android:foregroundServiceType="health|specialUse"
             android:exported="false">
             <property
                 android:name="android.app.PROPERTY_SPECIAL_USE_FGS_TYPE"
-                android:value="This service monitors accelerometer data to detect hard falls and trigger emergency protocols for senior users." />
+                android:value="This service monitors accelerometer data to detect hard falls and automatically trigger emergency protocols, ensuring rapid assistance for seniors." />
         </service>
         <service android:name=".service.RadioService"
             android:foregroundServiceType="mediaPlayback"

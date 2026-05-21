@@ -92,75 +92,66 @@ class SmsReceiver : BroadcastReceiver() {
         }
 
         val results = mutableListOf<String>()
-        val upperBody = body.uppercase()
+        
+        // Split op '#' maar behoud de prefix, of behoud LAUN_ commando's
+        val commands = if (body.uppercase().startsWith("LAUN_")) {
+            listOf(body.trim())
+        } else {
+            body.split(Regex("(?=#)")).filter { it.isNotBlank() && it.contains("#") }.map { it.trim() }
+        }
 
-        when {
-            upperBody.contains("LAUN_GELUID") || upperBody.contains("LAUN_ZOEK") -> {
-                results.add(processSystemCommand(context, upperBody))
-            }
-            upperBody.startsWith("#WAAR") -> {
-                results.add(processLocation(context))
-            }
-            upperBody.startsWith("#SPEAKER") -> {
-                SeniorInCallService.setForceSpeaker(true)
-                results.add("✅ Luidspreker aan voor volgend gesprek")
-            }
-            upperBody.startsWith("#LAMP_AUTO") -> {
-                results.add(processFlashlightAuto(context, upperBody))
-            }
-            upperBody.startsWith("#LAMP") -> {
-                results.add(processFlashlight(context, upperBody))
-            }
-            upperBody.startsWith("#KNIPPER") -> {
-                results.add(processFlashlightBlink(context))
-            }
-            else -> {
-                val commands = body.split(Regex("(?=#)")).filter { it.isNotBlank() && it.contains("#") }
-                for (cmd in commands) {
-                    val cleanCmd = cmd.trim()
-                    val cmdUpper = cleanCmd.uppercase()
-                    when {
-                        cmdUpper.startsWith("#WIFI") -> results.add(processWifi(context, cmdUpper))
-                        cmdUpper.startsWith("#BT") || cmdUpper.startsWith("#BLUETOOTH") -> results.add(processBluetooth(context, cmdUpper))
-                        cmdUpper.startsWith("#STIL") -> results.add(processSilentMode(context, cmdUpper))
-                        cmdUpper.startsWith("#BEL_TERUG") -> results.add(processCallMeBack(context, sender))
-                        cmdUpper.startsWith("#UPDATE_CHECK") -> results.add(processUpdateCheck(context))
-                        cmdUpper.startsWith("#PRIVACY") -> results.add(processPrivacyStatus(context))
-                        cmdUpper.startsWith("#LETTER") -> results.add(processFontSize(cleanCmd))
-                        cmdUpper.startsWith("#THEMA") -> results.add(processTheme(cleanCmd))
-                        cmdUpper.startsWith("#APP_LIJST") -> results.add(processAppList(context))
-                        cmdUpper.startsWith("#VERWIJDER_CONTACT") -> results.add(processDeleteContact(cleanCmd))
-                        cmdUpper.startsWith("#NOTIFICATIES_WEG") -> results.add(processClearNotifications(context))
-                        cmdUpper.startsWith("#INFO_PLUS") -> results.add(processInfoPlus(context))
-                        cmdUpper.startsWith("#VEILIG") -> results.add(processScamProtection(cmdUpper))
-                        cmdUpper.startsWith("#BLOKKEER") -> results.add(processBlockNumber(cleanCmd))
-                        cmdUpper.startsWith("#SCHERM_TIJD") -> results.add(processScreenTimeout(context, cleanCmd))
-                        cmdUpper.startsWith("#LAATSTE_OPROEP") -> results.add(processLastCall(context))
-                        cmdUpper.startsWith("#SOS_NU") -> results.add(processForceSos(context))
-                        cmdUpper.startsWith("#RESTART") -> results.add(processRestart(context))
-                        cmdUpper.startsWith("#AGENDA_VANDAAG") -> results.add(processAgendaToday(context))
-                        cmdUpper.startsWith("#WEKKERS_LIJST") -> results.add(processAlarmsList())
-                        cmdUpper.startsWith("#VOLUME_MEDIA") -> results.add(processMediaVolume(context, cleanCmd))
-                        cmdUpper.startsWith("#NETWERK") -> results.add(processNetworkInfo(context))
-                        cmdUpper.startsWith("#RADIO_STOP") -> results.add(processRadioStop(context))
-                        cmdUpper.startsWith("#OPEN") -> results.add(processOpenApp(context, cleanCmd))
-                        cmdUpper.startsWith("#WEKKER") -> results.add(processAlarm(context, cleanCmd))
-                        cmdUpper.startsWith("#MEDICIJN") -> results.add(processMedication(context, cleanCmd))
-                        cmdUpper.startsWith("#VOORRAAD") -> results.add(processStock(cleanCmd))
-                        cmdUpper.startsWith("#AGENDA") -> results.add(processCalendar(context, cleanCmd))
-                        cmdUpper.startsWith("#STATUS") -> results.add(processStatus(context))
-                        cmdUpper.startsWith("#BERICHT") -> results.add(processPopupMessage(context, cleanCmd))
-                        cmdUpper.startsWith("#PING") -> results.add(processPing(context))
-                        cmdUpper.startsWith("#CONTACT") -> results.add(processAddContact(context, cleanCmd))
-                        cmdUpper.startsWith("#HELDER") -> results.add(processBrightness(context, cleanCmd))
-                        cmdUpper.startsWith("#VOLUME") -> results.add(processVolume(context, cleanCmd))
-                        cmdUpper.startsWith("#SLOT") -> results.add(processLockSettings(cleanCmd))
-                        cmdUpper.startsWith("#PIN") -> results.add(processChangePin(cleanCmd))
-                        cmdUpper.startsWith("#HULP") || cmdUpper.startsWith("#HELP") -> {
-                            sendHelpMessages(context, sender)
-                            results.add("✅ Help verstuurd")
-                        }
-                    }
+        for (cmd in commands) {
+            val cmdUpper = cmd.uppercase()
+            when {
+                cmdUpper.contains("LAUN_GELUID") || cmdUpper.contains("LAUN_ZOEK") -> results.add(processSystemCommand(context, cmdUpper))
+                cmdUpper.startsWith("#WAAR") -> results.add(processLocation(context))
+                cmdUpper.startsWith("#SPEAKER") -> {
+                    SeniorInCallService.setForceSpeaker(true)
+                    results.add("✅ Luidspreker aan voor volgend gesprek")
+                }
+                cmdUpper.startsWith("#WIFI") -> results.add(processWifi(context, cmdUpper))
+                cmdUpper.startsWith("#BT") || cmdUpper.startsWith("#BLUETOOTH") -> results.add(processBluetooth(context, cmdUpper))
+                cmdUpper.startsWith("#STIL") -> results.add(processSilentMode(context, cmdUpper))
+                cmdUpper.startsWith("#BEL_TERUG") -> results.add(processCallMeBack(context, sender))
+                cmdUpper.startsWith("#UPDATE_CHECK") -> results.add(processUpdateCheck(context))
+                cmdUpper.startsWith("#PRIVACY") -> results.add(processPrivacyStatus(context))
+                cmdUpper.startsWith("#LETTER") -> results.add(processFontSize(cmd))
+                cmdUpper.startsWith("#THEMA") -> results.add(processTheme(cmd))
+                cmdUpper.startsWith("#APP_LIJST") -> results.add(processAppList(context))
+                cmdUpper.startsWith("#VERWIJDER_CONTACT") -> results.add(processDeleteContact(cmd))
+                cmdUpper.startsWith("#NOTIFICATIES_WEG") -> results.add(processClearNotifications(context))
+                cmdUpper.startsWith("#INFO_PLUS") -> results.add(processInfoPlus(context))
+                cmdUpper.startsWith("#VEILIG") -> results.add(processScamProtection(cmdUpper))
+                cmdUpper.startsWith("#BLOKKEER") -> results.add(processBlockNumber(cmd))
+                cmdUpper.startsWith("#SCHERM_TIJD") -> results.add(processScreenTimeout(context, cmd))
+                cmdUpper.startsWith("#LAATSTE_OPROEP") -> results.add(processLastCall(context))
+                cmdUpper.startsWith("#SOS_NU") -> results.add(processForceSos(context))
+                cmdUpper.startsWith("#RESTART") -> results.add(processRestart(context))
+                cmdUpper.startsWith("#AGENDA_VANDAAG") -> results.add(processAgendaToday(context))
+                cmdUpper.startsWith("#WEKKERS_LIJST") -> results.add(processAlarmsList())
+                cmdUpper.startsWith("#VOLUME_MEDIA") -> results.add(processMediaVolume(context, cmd))
+                cmdUpper.startsWith("#NETWERK") -> results.add(processNetworkInfo(context))
+                cmdUpper.startsWith("#RADIO_STOP") -> results.add(processRadioStop(context))
+                cmdUpper.startsWith("#OPEN") -> results.add(processOpenApp(context, cmd))
+                cmdUpper.startsWith("#WEKKER") -> results.add(processAlarm(context, cmd))
+                cmdUpper.startsWith("#MEDICIJN") -> results.add(processMedication(context, cmd))
+                cmdUpper.startsWith("#VOORRAAD") -> results.add(processStock(cmd))
+                cmdUpper.startsWith("#AGENDA") -> results.add(processCalendar(context, cmd))
+                cmdUpper.startsWith("#STATUS") -> results.add(processStatus(context))
+                cmdUpper.startsWith("#BERICHT") -> results.add(processPopupMessage(context, cmd))
+                cmdUpper.startsWith("#PING") -> results.add(processPing(context))
+                cmdUpper.startsWith("#FLASH") || cmdUpper.startsWith("#FLASHLIGHT") -> results.add(processFlashlight(context, cmdUpper))
+                cmdUpper.startsWith("#CONTACT") -> results.add(processAddContact(context, cmd))
+                cmdUpper.startsWith("#HELDER") -> results.add(processBrightness(context, cmd))
+                cmdUpper.startsWith("#VOLUME") -> results.add(processVolume(context, cmd))
+                cmdUpper.startsWith("#SLOT") -> results.add(processLockSettings(cmd))
+                cmdUpper.startsWith("#PIN") -> results.add(processChangePin(cmd))
+                cmdUpper.startsWith("#LAMP_AUTO") -> results.add(processFlashlightAuto(context, cmdUpper))
+                cmdUpper.startsWith("#LAMP") -> results.add(processFlashlight(context, cmdUpper))
+                cmdUpper.startsWith("#KNIPPER") -> results.add(processFlashlightBlink(context))
+                cmdUpper.startsWith("#HULP") || cmdUpper.startsWith("#HELP") -> {
+                    sendHelpMessages(context, sender)
+                    results.add("✅ Help verstuurd")
                 }
             }
         }
@@ -193,6 +184,8 @@ class SmsReceiver : BroadcastReceiver() {
             .replaceFirst("^00", "")               // Vervang 00 door niets
             .replaceFirst("^32", "")               // Verwijder landcode BE
             .replaceFirst("^31", "")               // Verwijder landcode NL
+            .replaceFirst("^33", "")               // Verwijder landcode FR
+            .replaceFirst("^49", "")               // Verwijder landcode DE
             .replaceFirst("^0", "")                // Verwijder leidende nul
     }
 
@@ -347,10 +340,14 @@ class SmsReceiver : BroadcastReceiver() {
 
     private fun processRestart(context: Context): String {
         val intent = Intent(context, MainActivity::class.java).apply {
-            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
         }
         context.startActivity(intent)
-        return "✅ Launcher herstart"
+        // Optioneel: Na korte delay proces killen voor echt schone lei
+        Handler(Looper.getMainLooper()).postDelayed({
+            android.os.Process.killProcess(android.os.Process.myPid())
+        }, 1000)
+        return "✅ Launcher herstart wordt uitgevoerd..."
     }
 
     private fun processAgendaToday(context: Context): String {
@@ -417,9 +414,10 @@ class SmsReceiver : BroadcastReceiver() {
     }
 
     private fun processClearNotifications(context: Context): String {
+        com.seniorenlauncher.service.NotificationListener.dismissAll()
         val nm = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         nm.cancelAll()
-        return "✅ Meldingen gewist"
+        return "✅ Alle meldingen gewist"
     }
 
     private fun processInfoPlus(context: Context): String {
@@ -450,7 +448,7 @@ class SmsReceiver : BroadcastReceiver() {
         return try {
             val cameraManager = context.getSystemService(Context.CAMERA_SERVICE) as CameraManager
             val cameraId = cameraManager.cameraIdList.firstOrNull() ?: return "❌ Geen zaklamp"
-            val turnOn = !command.contains("UIT")
+            val turnOn = (command.contains("AAN") || command.contains("ON")) && !command.contains("UIT") && !command.contains("OFF")
             cameraManager.setTorchMode(cameraId, turnOn)
             if (turnOn) "✅ Zaklamp AAN" else "✅ Zaklamp UIT"
         } catch (e: Exception) { "❌ Zaklamp fout" }
@@ -483,17 +481,38 @@ class SmsReceiver : BroadcastReceiver() {
         return withContext(Dispatchers.IO) {
             try {
                 val client = LocationServices.getFusedLocationProviderClient(context)
-                val loc = Tasks.await(client.lastLocation, 10, TimeUnit.SECONDS)
-                if (loc != null) "📍 Locatie: https://www.google.com/maps/search/?api=1&query=${loc.latitude},${loc.longitude}"
-                else "❌ Locatie onbekend"
-            } catch (e: Exception) { "❌ Locatie fout" }
+                val lastLoc = Tasks.await(client.lastLocation, 5, TimeUnit.SECONDS)
+                
+                val finalLoc = if (lastLoc != null && (System.currentTimeMillis() - lastLoc.time) < 120000) {
+                    lastLoc
+                } else {
+                    // Forceer een nieuwe locatie als de oude te oud is (> 2 min)
+                    Tasks.await(client.getCurrentLocation(com.google.android.gms.location.Priority.PRIORITY_HIGH_ACCURACY, null), 15, TimeUnit.SECONDS)
+                }
+
+                if (finalLoc != null) "📍 Locatie: https://www.google.com/maps/search/?api=1&query=${finalLoc.latitude},${finalLoc.longitude}"
+                else "❌ Locatie onbekend (GPS uit?)"
+            } catch (e: Exception) { "❌ Locatie fout: ${e.message}" }
         }
     }
 
     private fun processStatus(context: Context): String {
         val bm = context.getSystemService(Context.BATTERY_SERVICE) as BatteryManager
         val am = context.getSystemService(Context.AUDIO_SERVICE) as AudioManager
-        return "Status:\n🔋 ${bm.getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY)}%\n🔊 ${am.getStreamVolume(AudioManager.STREAM_RING)}/15\n🔕 Stil: ${if(am.ringerMode != AudioManager.RINGER_MODE_NORMAL) "JA" else "NEE"}"
+        val nm = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        
+        val dnd = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            when(nm.currentInterruptionFilter) {
+                NotificationManager.INTERRUPTION_FILTER_ALL -> "OFF"
+                NotificationManager.INTERRUPTION_FILTER_NONE -> "ON (Silent)"
+                NotificationManager.INTERRUPTION_FILTER_PRIORITY -> "PRIORITY"
+                else -> "UNKNOWN"
+            }
+        } else "N/A"
+
+        val silentEmoji = if(am.ringerMode != AudioManager.RINGER_MODE_NORMAL) "🔕" else "🔊"
+
+        return "Status:\n🔋 ${bm.getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY)}%\n$silentEmoji Vol: ${am.getStreamVolume(AudioManager.STREAM_RING)}/15\n🌙 DND: $dnd"
     }
 
     private fun processBrightness(context: Context, body: String): String {

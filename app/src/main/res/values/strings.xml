@@ -8,4 +8,15 @@
     <string name="flashlight">Zaklamp</string>
     <string name="contacts">Contacten</string>
     <string name="back">Terug</string>
+    <string name="privacy_title">Privacy &amp; AVG</string>
+    <string name="privacy_gent_support">Ondersteund voor Gentse Senioren</string>
+    <string name="gdpr_compliant">AVG/GDPR Compliant</string>
+    <string name="privacy_promise_title">Onze Belofte</string>
+    <string name="privacy_promise_desc">Senioren Launcher is ontworpen met privacy als fundament. In samenwerking met initiatieven voor digitale inclusie in Gent, garanderen wij dat uw gegevens lokaal blijven.</string>
+    <string name="privacy_processing_title">Gegevensverwerking</string>
+    <string name="privacy_processing_desc">• Geen Cloud: Uw data blijft op dit toestel.\n• SMS Beheer: Alleen geautoriseerde mantelzorgers.\n• Geen Tracking: Geen advertenties of analyse.</string>
+    <string name="privacy_rights_title">Uw Rechten</string>
+    <string name="privacy_rights_desc">U heeft volledige controle. U kunt beheerders direct verwijderen en alle data wordt gewist bij verwijdering van de app.</string>
+    <string name="privacy_accept">IK GA AKKOORD</string>
+    <string name="privacy_version_label">Versie 0.8.8 - Project Senioren Gent</string>
 </resources>

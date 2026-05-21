@@ -88,6 +88,7 @@ fun AppNavigation(
         composable("sos") { SOSScreen(onBack = { navController.popBackStack() }) }
         composable("sos_settings") { SosContactSettingsScreen(onBack = { navController.popBackStack() }) }
         composable("remote_support") { RemoteSupportScreen(onBack = { navController.popBackStack() }) }
+        composable("privacy") { PrivacyScreen(onBack = { navController.popBackStack() }) }
         composable("all_apps") { AllAppsScreen(onBack = { navController.popBackStack() }) }
         composable("settings") { 
             SettingsScreen(

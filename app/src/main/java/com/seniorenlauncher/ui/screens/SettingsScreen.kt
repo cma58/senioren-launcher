@@ -312,6 +312,12 @@ fun SettingsScreenContent(
                     onNavigate("remote_support") 
                 }
                 
+                HorizontalDivider(Modifier.padding(vertical = 8.dp), thickness = 0.5.dp)
+
+                SettRow("🛠️ Geavanceerde Instellingen") {
+                    // Placeholder voor toekomstige systeem-integraties
+                }
+                
                 Spacer(Modifier.height(16.dp))
                 
                 Button(
@@ -329,7 +335,22 @@ fun SettingsScreenContent(
                 }
             }
 
-            // --- GROEP 5: WAARDERING & TOEKOMST ---
+            // --- GROEP 5: OVER & PRIVACY ---
+            SettingsGroup(title = "ℹ️ Over & Privacy", icon = Icons.Default.Info) {
+                Text(
+                    "Senioren Launcher is een open-source initiatief om digitale inclusie te bevorderen, met speciale aandacht voor de noden van senioren in Gent. Wij respecteren uw privacy volledig.",
+                    fontSize = 16.sp,
+                    lineHeight = 22.sp,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Spacer(Modifier.height(12.dp))
+                SettRow("🛡️ Privacy & AVG Details") {
+                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                    onNavigate("privacy")
+                }
+            }
+
+            // --- GROEP 6: WAARDERING & TOEKOMST ---
             SettingsGroup(title = "❤️ Waardering", icon = Icons.Default.Favorite) {
                 Text(
                     "Dit is een open-source project gebouwd met liefde voor onze ouderen. Uw steun helpt bij het dekken van de kosten en het verder verbeteren van de app.",

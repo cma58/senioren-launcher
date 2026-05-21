@@ -30,6 +30,8 @@ import com.seniorenlauncher.data.model.*
 import com.seniorenlauncher.ui.screens.setup.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import androidx.compose.ui.res.stringResource
+import com.seniorenlauncher.R
 
 @Composable
 fun SetupWizardScreen(
@@ -113,7 +115,7 @@ fun PrivacyConsentScreen(onAccepted: () -> Unit) {
         Spacer(Modifier.height(24.dp))
         
         Text(
-            text = "Privacy & Veiligheid",
+            text = stringResource(R.string.privacy_title),
             fontSize = 32.sp,
             fontWeight = FontWeight.ExtraBold,
             textAlign = TextAlign.Center
@@ -129,24 +131,24 @@ fun PrivacyConsentScreen(onAccepted: () -> Unit) {
             Column(Modifier.padding(20.dp)) {
                 PrivacyPoint(
                     icon = Icons.Default.Lock,
-                    title = "Uw data blijft van u",
-                    description = "Alle contacten, SOS-nummers en instellingen worden alleen veilig op dít toestel opgeslagen. Wij verzamelen geen persoonlijke gegevens."
+                    title = stringResource(R.string.privacy_promise_title),
+                    description = stringResource(R.string.privacy_promise_desc)
                 )
                 
                 Spacer(Modifier.height(16.dp))
                 
                 PrivacyPoint(
-                    icon = Icons.Default.CloudOff,
-                    title = "Geen Cloud-opslag",
-                    description = "Er wordt geen data naar externe servers of de cloud gestuurd. Uw privacy is 100% gewaarborgd volgens de Europese AVG/GDPR normen."
+                    icon = Icons.Default.Gavel,
+                    title = stringResource(R.string.privacy_processing_title),
+                    description = stringResource(R.string.privacy_processing_desc)
                 )
                 
                 Spacer(Modifier.height(16.dp))
                 
                 PrivacyPoint(
-                    icon = Icons.Default.AdsClick,
-                    title = "Geen Advertenties",
-                    description = "De Senioren Launcher is volledig vrij van reclame en tracking software."
+                    icon = Icons.Default.Info,
+                    title = stringResource(R.string.privacy_rights_title),
+                    description = stringResource(R.string.privacy_rights_desc)
                 )
             }
         }
@@ -169,7 +171,7 @@ fun PrivacyConsentScreen(onAccepted: () -> Unit) {
             modifier = Modifier.fillMaxWidth().height(70.dp),
             shape = RoundedCornerShape(20.dp)
         ) {
-            Text("IK GA AKKOORD", fontSize = 20.sp, fontWeight = FontWeight.Bold)
+            Text(stringResource(R.string.privacy_accept), fontSize = 20.sp, fontWeight = FontWeight.Bold)
         }
     }
 }
