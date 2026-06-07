@@ -5,8 +5,14 @@ import android.content.pm.PackageManager
 import android.provider.ContactsContract
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.*
+import androidx.compose.animation.core.*
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -20,6 +26,9 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
@@ -45,11 +54,8 @@ fun MessagesScreen(
 ) {
     val isDefaultSms by messagesVm.isDefaultSmsApp.collectAsState()
     val context = LocalContext.current
-    
-    // Zoom/Grootte status
-    var textZoom by remember { mutableStateOf(1f) }
+    var textZoom by remember { mutableFloatStateOf(1f) }
 
-    // Permission state
     var hasSmsPermissions by remember {
         mutableStateOf(
             ContextCompat.checkSelfPermission(context, Manifest.permission.READ_SMS) == PackageManager.PERMISSION_GRANTED &&
@@ -60,25 +66,15 @@ fun MessagesScreen(
 
     val permissionLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { results ->
         hasSmsPermissions = results.values.all { it }
-        if (hasSmsPermissions) {
-            messagesVm.loadConversations()
-        }
+        if (hasSmsPermissions) messagesVm.loadConversations()
     }
 
     LaunchedEffect(Unit) {
         if (!hasSmsPermissions) {
-            permissionLauncher.launch(
-                arrayOf(
-                    Manifest.permission.READ_SMS,
-                    Manifest.permission.RECEIVE_SMS,
-                    Manifest.permission.SEND_SMS,
-                    Manifest.permission.READ_CONTACTS
-                )
-            )
+            permissionLauncher.launch(arrayOf(Manifest.permission.READ_SMS, Manifest.permission.RECEIVE_SMS, Manifest.permission.SEND_SMS, Manifest.permission.READ_CONTACTS))
         }
     }
 
-    // Role Manager Launcher
     val roleLauncher = rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) {
         messagesVm.checkDefaultSmsApp()
     }
@@ -87,11 +83,9 @@ fun MessagesScreen(
     var selectedAddress by remember { mutableStateOf<String?>(null) }
     var selectedName by remember { mutableStateOf<String?>(null) }
 
-    // Handle deep link - verbeterd om direct naar chat te gaan bij initialAddress
     LaunchedEffect(initialAddress) {
-        if (initialAddress != null && initialAddress.isNotBlank()) {
+        if (!initialAddress.isNullOrBlank()) {
             selectedAddress = initialAddress
-            selectedName = null 
             activeView = MessageView.Chat
         }
     }
@@ -99,24 +93,20 @@ fun MessagesScreen(
     val backHandler = {
         when (activeView) {
             MessageView.Overview -> onBack()
-            MessageView.Chat -> {
-                activeView = MessageView.Overview
-                selectedAddress = null
-                messagesVm.clearActiveChat()
-            }
+            MessageView.Chat -> { activeView = MessageView.Overview; selectedAddress = null; messagesVm.clearActiveChat() }
             MessageView.NewMessage -> activeView = MessageView.Overview
         }
     }
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
-        containerColor = MaterialTheme.colorScheme.background
+        containerColor = Color(0xFF0F172A)
     ) { innerPadding ->
         Column(
             Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
-                .padding(horizontal = 16.dp)
+                .padding(horizontal = 20.dp)
         ) {
             Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
                 Box(Modifier.weight(1f)) {
@@ -124,47 +114,41 @@ fun MessagesScreen(
                         title = when (activeView) {
                             MessageView.Overview -> "Berichten"
                             MessageView.Chat -> selectedName ?: selectedAddress ?: "Chat"
-                            MessageView.NewMessage -> "Nieuw Bericht"
+                            MessageView.NewMessage -> "Nieuw"
                         },
                         onBack = backHandler
                     )
                 }
                 
-                // Zoom Controls
-                IconButton(onClick = { if (textZoom > 0.8f) textZoom -= 0.2f }) {
-                    Icon(Icons.Default.TextFormat, "Kleiner", modifier = Modifier.size(32.dp))
-                }
-                IconButton(onClick = { if (textZoom < 2.0f) textZoom += 0.2f }) {
-                    Icon(Icons.Default.TextFormat, "Groter", modifier = Modifier.size(44.dp))
-                }
-            }
-            
-            Spacer(Modifier.height(8.dp))
-
-            if (!hasSmsPermissions) {
-                Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.padding(24.dp)) {
-                        Text("De app heeft toestemming nodig om uw berichten te tonen.", textAlign = TextAlign.Center, fontSize = 20.sp)
-                        Spacer(Modifier.height(16.dp))
-                        Button(onClick = { 
-                            permissionLauncher.launch(arrayOf(Manifest.permission.READ_SMS, Manifest.permission.RECEIVE_SMS, Manifest.permission.SEND_SMS, Manifest.permission.READ_CONTACTS)) 
-                        }, shape = RoundedCornerShape(24.dp), modifier = Modifier.height(70.dp).fillMaxWidth()) {
-                            Text("GEEF TOESTEMMING", fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                Surface(
+                    color = Color(0xFF1E293B),
+                    shape = RoundedCornerShape(40.dp),
+                    border = BorderStroke(1.dp, Color.White.copy(alpha = 0.1f)),
+                    modifier = Modifier.padding(bottom = 16.dp)
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(4.dp)) {
+                        IconButton(onClick = { if (textZoom > 0.8f) textZoom -= 0.1f }) {
+                            Icon(Icons.Default.Remove, "Kleiner", tint = Color.White)
+                        }
+                        Text("A", fontSize = 16.sp, fontWeight = FontWeight.Black, color = Color.White)
+                        IconButton(onClick = { if (textZoom < 1.8f) textZoom += 0.1f }) {
+                            Icon(Icons.Default.Add, "Groter", tint = Color.White)
                         }
                     }
                 }
+            }
+
+            if (!hasSmsPermissions) {
+                PermissionRequestView { permissionLauncher.launch(arrayOf(Manifest.permission.READ_SMS, Manifest.permission.RECEIVE_SMS, Manifest.permission.SEND_SMS, Manifest.permission.READ_CONTACTS)) }
             } else {
                 if (!isDefaultSms) {
-                    DefaultSmsBanner {
-                        val intent = messagesVm.createDefaultSmsIntent()
-                        if (intent != null) roleLauncher.launch(intent)
-                    }
+                    DefaultSmsBanner { messagesVm.createDefaultSmsIntent()?.let { roleLauncher.launch(it) } }
                 }
 
                 Box(Modifier.weight(1f)) {
-                    when (activeView) {
-                        MessageView.Overview -> {
-                            ConversationOverview(
+                    AnimatedContent(targetState = activeView, label = "ViewTransition") { view ->
+                        when (view) {
+                            MessageView.Overview -> ConversationOverview(
                                 messagesVm = messagesVm,
                                 onConversationClick = { conv ->
                                     selectedAddress = conv.address
@@ -174,21 +158,8 @@ fun MessagesScreen(
                                 onNewMessageClick = { activeView = MessageView.NewMessage },
                                 zoom = textZoom
                             )
-                        }
-                        MessageView.Chat -> {
-                            if (selectedAddress != null) {
-                                ChatScreen(
-                                    address = selectedAddress!!,
-                                    messagesVm = messagesVm,
-                                    zoom = textZoom
-                                )
-                            } else {
-                                activeView = MessageView.Overview
-                            }
-                        }
-                        MessageView.NewMessage -> {
-                            NewMessageScreen(
-                                messagesVm = messagesVm,
+                            MessageView.Chat -> ChatScreen(address = selectedAddress ?: "", messagesVm = messagesVm, zoom = textZoom)
+                            MessageView.NewMessage -> NewMessageScreen(
                                 onContactSelected = { name, phone ->
                                     selectedAddress = phone
                                     selectedName = name
@@ -206,189 +177,98 @@ fun MessagesScreen(
 enum class MessageView { Overview, Chat, NewMessage }
 
 @Composable
-fun DefaultSmsBanner(onSetDefault: () -> Unit) {
-    Card(
-        modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
-        shape = RoundedCornerShape(24.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer)
-    ) {
-        Column(Modifier.padding(24.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-            Text(
-                "De app is niet de standaard SMS-app.",
-                fontSize = 20.sp,
-                fontWeight = FontWeight.Black,
-                textAlign = TextAlign.Center,
-                color = MaterialTheme.colorScheme.onErrorContainer
-            )
-            Spacer(Modifier.height(12.dp))
-            Button(
-                onClick = onSetDefault,
-                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error),
-                shape = RoundedCornerShape(16.dp),
-                modifier = Modifier.fillMaxWidth().height(60.dp)
-            ) {
-                Text("MAAK STANDAARD", fontSize = 18.sp, fontWeight = FontWeight.Black)
-            }
-        }
-    }
-}
-
-@Composable
-fun ConversationOverview(
-    messagesVm: MessagesViewModel,
-    onConversationClick: (Conversation) -> Unit,
-    onNewMessageClick: () -> Unit,
-    zoom: Float
-) {
+fun ConversationOverview(messagesVm: MessagesViewModel, onConversationClick: (Conversation) -> Unit, onNewMessageClick: () -> Unit, zoom: Float) {
     val conversations by messagesVm.conversations.collectAsState()
     val isLoading by messagesVm.isLoading.collectAsState()
 
-    LaunchedEffect(Unit) {
-        messagesVm.loadConversations()
-    }
-
-    val unreadConversations = remember(conversations) { conversations.filter { !it.isRead } }
-    val readConversations = remember(conversations) { conversations.filter { it.isRead } }
+    LaunchedEffect(Unit) { messagesVm.loadConversations() }
 
     Column(Modifier.fillMaxSize()) {
-        Button(
+        val interactionSource = remember { MutableInteractionSource() }
+        val isPressed by interactionSource.collectIsPressedAsState()
+        val scale by animateFloatAsState(
+            targetValue = if (isPressed) 0.94f else 1f,
+            animationSpec = spring(dampingRatio = 0.7f, stiffness = 500f),
+            label = "scale"
+        )
+        Surface(
             onClick = onNewMessageClick,
+            interactionSource = interactionSource,
             modifier = Modifier
                 .fillMaxWidth()
-                .heightIn(min = 85.dp)
-                .padding(vertical = 12.dp),
-            shape = RoundedCornerShape(28.dp),
-            contentPadding = PaddingValues(16.dp)
+                .padding(vertical = 12.dp)
+                .height(80.dp)
+                .scale(scale),
+            color = Color(0xFF6366F1),
+            shape = RoundedCornerShape(40.dp),
+            border = BorderStroke(1.dp, Color.White.copy(alpha = 0.2f)),
+            shadowElevation = 8.dp
         ) {
-            Icon(Icons.Default.Add, null, modifier = Modifier.size(36.dp))
-            Spacer(Modifier.width(12.dp))
-            Text(
-                "NIEUW BERICHT", 
-                fontSize = 24.sp, 
-                fontWeight = FontWeight.Black,
-                textAlign = TextAlign.Center
-            )
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.Center) {
+                Icon(Icons.Default.Edit, null, tint = Color.White, modifier = Modifier.size(28.dp))
+                Spacer(Modifier.width(12.dp))
+                Text("NIEUW BERICHT SCHRIJVEN", fontSize = 20.sp, fontWeight = FontWeight.Black, color = Color.White)
+            }
         }
 
         if (isLoading && conversations.isEmpty()) {
-            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                CircularProgressIndicator()
-            }
-        } else if (conversations.isEmpty()) {
-            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                Text("Geen berichten gevonden.", fontSize = 20.sp, color = Color.Gray)
-            }
+            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator(color = Color.White) }
         } else {
             LazyColumn(verticalArrangement = Arrangement.spacedBy(12.dp), contentPadding = PaddingValues(bottom = 24.dp)) {
-                if (unreadConversations.isNotEmpty()) {
-                    item {
-                        ListSectionHeader("NIEUWE BERICHTEN", Color.Red)
-                    }
-                    items(unreadConversations) { conv ->
-                        ConversationItem(conv, onConversationClick, zoom)
-                    }
-                }
-                
-                if (readConversations.isNotEmpty()) {
-                    item {
-                        ListSectionHeader("GELEZEN BERICHTEN", Color.Gray)
-                    }
-                    items(readConversations) { conv ->
-                        ConversationItem(conv, onConversationClick, zoom)
-                    }
+                items(conversations) { conv ->
+                    ConversationItem(conv, onConversationClick, zoom)
                 }
             }
         }
-    }
-}
-
-@Composable
-fun ListSectionHeader(title: String, color: Color) {
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(top = 16.dp, bottom = 8.dp)
-    ) {
-        Box(
-            Modifier
-                .size(16.dp)
-                .clip(CircleShape)
-                .background(color)
-        )
-        Spacer(Modifier.width(12.dp))
-        Text(
-            text = title,
-            fontSize = 22.sp,
-            fontWeight = FontWeight.Black,
-            color = color,
-            letterSpacing = 1.sp
-        )
     }
 }
 
 @Composable
 fun ConversationItem(conv: Conversation, onClick: (Conversation) -> Unit, zoom: Float) {
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable { onClick(conv) },
-        shape = RoundedCornerShape(28.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = if (conv.isRead) MaterialTheme.colorScheme.surfaceVariant else MaterialTheme.colorScheme.primaryContainer
-        )
+    val interactionSource = remember { MutableInteractionSource() }
+    val isPressed by interactionSource.collectIsPressedAsState()
+    val scale by animateFloatAsState(
+        targetValue = if (isPressed) 0.94f else 1f,
+        animationSpec = spring(dampingRatio = 0.7f, stiffness = 500f),
+        label = "scale"
+    )
+
+    Surface(
+        onClick = { onClick(conv) },
+        interactionSource = interactionSource,
+        shape = RoundedCornerShape(40.dp),
+        color = if (conv.isRead) Color(0xFF1E293B) else Color(0xFF334155),
+        border = BorderStroke(1.dp, if (conv.isRead) Color.White.copy(alpha = 0.1f) else Color.White.copy(alpha = 0.2f)),
+        modifier = Modifier.fillMaxWidth().scale(scale)
     ) {
-        Row(
-            Modifier.padding(20.dp), 
-            verticalAlignment = Alignment.CenterVertically
-        ) {
+        Row(Modifier.padding(20.dp), verticalAlignment = Alignment.CenterVertically) {
             Box(
                 Modifier
-                    .size((72 * zoom).dp)
-                    .clip(CircleShape)
-                    .background(
-                        if (conv.isRead) MaterialTheme.colorScheme.secondaryContainer else MaterialTheme.colorScheme.primary
-                    ),
+                    .size((64 * zoom).dp)
+                    .background(Brush.linearGradient(listOf(Color(0xFF6366F1), Color(0xFF818CF8))), CircleShape),
                 contentAlignment = Alignment.Center
             ) {
-                Text(
-                    (conv.contactName ?: conv.address).take(1).uppercase(),
-                    fontSize = (36 * zoom).sp,
-                    fontWeight = FontWeight.Black,
-                    color = if (conv.isRead) MaterialTheme.colorScheme.onSecondaryContainer else Color.White
-                )
+                Text((conv.contactName ?: conv.address).take(1).uppercase(), fontSize = (28 * zoom).sp, fontWeight = FontWeight.Black, color = Color.White)
             }
-            Spacer(Modifier.width(20.dp))
+            Spacer(Modifier.width(16.dp))
             Column(Modifier.weight(1f)) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(
                         conv.contactName ?: conv.address,
-                        fontSize = (26 * zoom).sp,
-                        fontWeight = if (conv.isRead) FontWeight.Bold else FontWeight.Black,
+                        fontSize = (22 * zoom).sp,
+                        fontWeight = FontWeight.Black,
+                        color = Color.White,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
                     if (!conv.isRead) {
-                        Spacer(Modifier.width(10.dp))
-                        Box(Modifier.size(14.dp).clip(CircleShape).background(Color.Red))
+                        Spacer(Modifier.width(8.dp))
+                        Box(Modifier.size(12.dp).background(Color(0xFF10B981), CircleShape))
                     }
                 }
-                Spacer(Modifier.height(4.dp))
-                Text(
-                    conv.snippet,
-                    fontSize = (22 * zoom).sp,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
+                Text(conv.snippet, fontSize = (18 * zoom).sp, maxLines = 1, overflow = TextOverflow.Ellipsis, color = Color.White.copy(alpha = 0.6f))
             }
-            Spacer(Modifier.width(8.dp))
-            Text(
-                formatTime(conv.date),
-                fontSize = (16 * zoom).sp,
-                fontWeight = FontWeight.Bold,
-                color = Color.Gray
-            )
+            Text(formatTime(conv.date), fontSize = (14 * zoom).sp, fontWeight = FontWeight.Black, color = Color.White.copy(alpha = 0.4f))
         }
     }
 }
@@ -398,15 +278,8 @@ fun ChatScreen(address: String, messagesVm: MessagesViewModel, zoom: Float) {
     val messages by messagesVm.messages.collectAsState()
     var newMessageBody by remember { mutableStateOf("") }
     val scrollState = rememberLazyListState()
-    var messageToDelete by remember { mutableStateOf<SmsMessage?>(null) }
 
-    LaunchedEffect(address) {
-        messagesVm.loadChat(address)
-    }
-
-    val groupedMessages = remember(messages) {
-        messages.groupBy { formatGroupDate(it.timestamp) }
-    }
+    LaunchedEffect(address) { messagesVm.loadChat(address) }
 
     Column(Modifier.fillMaxSize()) {
         LazyColumn(
@@ -416,203 +289,159 @@ fun ChatScreen(address: String, messagesVm: MessagesViewModel, zoom: Float) {
             contentPadding = PaddingValues(vertical = 12.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            groupedMessages.forEach { (date, msgs) ->
-                items(msgs) { msg ->
-                    MessageBubble(
-                        message = msg,
-                        onDelete = { messageToDelete = msg },
-                        zoom = zoom
-                    )
-                }
-                item {
-                    DateHeader(date)
-                }
+            items(messages) { msg ->
+                MessageBubble(message = msg, zoom = zoom)
             }
         }
 
-        Row(
-            Modifier.padding(vertical = 16.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        Surface(
+            modifier = Modifier.padding(vertical = 16.dp),
+            color = MaterialTheme.colorScheme.surface.copy(alpha = 0.7f),
+            shape = RoundedCornerShape(40.dp),
+            border = BorderStroke(1.dp, Color.White.copy(alpha = 0.1f))
         ) {
-            OutlinedTextField(
-                value = newMessageBody,
-                onValueChange = { newMessageBody = it },
-                modifier = Modifier.weight(1f),
-                placeholder = { Text("Schrijf bericht...", fontSize = (22 * zoom).sp) },
-                shape = RoundedCornerShape(32.dp),
-                textStyle = LocalTextStyle.current.copy(fontSize = (22 * zoom).sp)
-            )
-            FloatingActionButton(
-                onClick = {
-                    if (newMessageBody.isNotBlank()) {
-                        messagesVm.sendMessage(address, newMessageBody)
-                        newMessageBody = ""
+            Row(Modifier.padding(8.dp), verticalAlignment = Alignment.CenterVertically) {
+                TextField(
+                    value = newMessageBody,
+                    onValueChange = { newMessageBody = it },
+                    modifier = Modifier.weight(1f),
+                    placeholder = { Text("Typ een bericht...", fontSize = (18 * zoom).sp, fontWeight = FontWeight.Bold) },
+                    colors = TextFieldDefaults.colors(
+                        focusedContainerColor = Color.Transparent,
+                        unfocusedContainerColor = Color.Transparent,
+                        focusedIndicatorColor = Color.Transparent,
+                        unfocusedIndicatorColor = Color.Transparent
+                    )
+                )
+                val interactionSourceSend = remember { MutableInteractionSource() }
+                val isPressedSend by interactionSourceSend.collectIsPressedAsState()
+                val scaleSend by animateFloatAsState(
+                    targetValue = if (isPressedSend) 0.88f else 1f,
+                    animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy),
+                    label = "scale"
+                )
+                Surface(
+                    onClick = {
+                        if (newMessageBody.isNotBlank()) {
+                            messagesVm.sendMessage(address, newMessageBody)
+                            newMessageBody = ""
+                        }
+                    },
+                    interactionSource = interactionSourceSend,
+                    modifier = Modifier.size(56.dp).scale(scaleSend),
+                    shape = CircleShape,
+                    color = MaterialTheme.colorScheme.primary,
+                    border = BorderStroke(1.dp, Color.White.copy(alpha = 0.2f))
+                ) {
+                    Box(contentAlignment = Alignment.Center) {
+                        Icon(Icons.Default.Send, null, tint = Color.White)
                     }
-                },
-                containerColor = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.size(70.dp),
-                shape = CircleShape
-            ) {
-                Icon(Icons.Default.Send, null, modifier = Modifier.size(36.dp))
+                }
             }
         }
     }
+}
 
-    if (messageToDelete != null) {
-        AlertDialog(
-            onDismissRequest = { messageToDelete = null },
-            title = { Text("Bericht wissen?") },
-            text = { Text("Weet u zeker dat u dit bericht wilt verwijderen?", fontSize = 20.sp) },
-            confirmButton = {
-                Button(
-                    onClick = {
-                        messagesVm.deleteMessage(messageToDelete!!.id)
-                        messageToDelete = null
-                    },
-                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error),
-                    shape = RoundedCornerShape(12.dp),
-                    modifier = Modifier.height(60.dp)
-                ) {
-                    Text("WISSEN", fontWeight = FontWeight.Black)
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { messageToDelete = null }, modifier = Modifier.height(60.dp)) {
-                    Text("ANNULEREN", fontSize = 18.sp, fontWeight = FontWeight.Bold)
-                }
-            }
+@Composable
+fun MessageBubble(message: SmsMessage, zoom: Float) {
+    val isSent = message.isSent
+    val bubbleColor = if (isSent) Color(0xFF6366F1) else Color(0xFF1E293B)
+    val textColor = Color.White
+    val borderColor = if (isSent) Color.White.copy(alpha = 0.2f) else Color.White.copy(alpha = 0.1f)
+
+    Column(modifier = Modifier.fillMaxWidth(), horizontalAlignment = if (isSent) Alignment.End else Alignment.Start) {
+        Surface(
+            color = bubbleColor,
+            shape = RoundedCornerShape(
+                topStart = 40.dp, topEnd = 40.dp,
+                bottomStart = if (isSent) 40.dp else 8.dp,
+                bottomEnd = if (isSent) 8.dp else 40.dp
+            ),
+            border = BorderStroke(1.dp, borderColor),
+            modifier = Modifier.widthIn(max = 280.dp)
+        ) {
+            Text(
+                text = message.body,
+                modifier = Modifier.padding(18.dp),
+                fontSize = (20 * zoom).sp,
+                fontWeight = FontWeight.Black,
+                color = textColor,
+                lineHeight = (26 * zoom).sp
+            )
+        }
+        Text(
+            text = formatTime(message.timestamp),
+            fontSize = 12.sp,
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.padding(horizontal = 14.dp, vertical = 4.dp)
         )
     }
 }
 
 @Composable
-fun DateHeader(date: String) {
-    Box(Modifier.fillMaxWidth().padding(vertical = 12.dp), contentAlignment = Alignment.Center) {
-        Surface(
-            color = Color.Gray.copy(alpha = 0.15f),
-            shape = RoundedCornerShape(16.dp)
-        ) {
-            Text(
-                text = date,
-                modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp),
-                fontSize = 16.sp,
-                fontWeight = FontWeight.Black,
-                color = Color.DarkGray
-            )
-        }
-    }
-}
-
-@Composable
-fun MessageBubble(message: SmsMessage, onDelete: () -> Unit, zoom: Float) {
-    val alignment = if (message.isSent) Alignment.End else Alignment.Start
-    val color = if (message.isSent) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.secondaryContainer
-    
-    Column(modifier = Modifier.fillMaxWidth(), horizontalAlignment = alignment) {
-        Surface(
-            color = color,
-            shape = RoundedCornerShape(
-                topStart = 24.dp,
-                topEnd = 24.dp,
-                bottomStart = if (message.isSent) 24.dp else 4.dp,
-                bottomEnd = if (message.isSent) 4.dp else 24.dp
-            ),
-            modifier = Modifier.padding(horizontal = 8.dp).widthIn(max = 340.dp)
-        ) {
-            Column(Modifier.padding(16.dp)) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(
-                        text = message.body,
-                        fontSize = (24 * zoom).sp,
-                        fontWeight = FontWeight.Medium,
-                        lineHeight = (30 * zoom).sp,
-                        modifier = Modifier.weight(1f)
-                    )
-                    IconButton(onClick = onDelete, modifier = Modifier.size(36.dp)) {
-                        Icon(Icons.Default.Delete, null, tint = Color.Gray.copy(alpha = 0.5f), modifier = Modifier.size(24.dp))
-                    }
-                }
-                Spacer(Modifier.height(6.dp))
-                Text(
-                    text = formatMessageTime(message.timestamp),
-                    fontSize = 14.sp,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
-                    textAlign = if (message.isSent) TextAlign.End else TextAlign.Start,
-                    modifier = Modifier.fillMaxWidth()
-                )
-            }
-        }
-    }
-}
-
-@Composable
-fun NewMessageScreen(messagesVm: MessagesViewModel, onContactSelected: (String, String) -> Unit) {
+fun NewMessageScreen(onContactSelected: (String, String) -> Unit) {
     var searchQuery by remember { mutableStateOf("") }
     var contacts by remember { mutableStateOf(emptyList<Pair<String, String>>()) }
     val context = LocalContext.current
 
     LaunchedEffect(Unit) {
-        if (ContextCompat.checkSelfPermission(context, Manifest.permission.READ_CONTACTS) == PackageManager.PERMISSION_GRANTED) {
-            withContext(Dispatchers.IO) {
-                val list = mutableListOf<Pair<String, String>>()
-                val cursor = context.contentResolver.query(
-                    ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
-                    null, null, null, ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME + " ASC"
-                )
-                cursor?.use {
-                    val nIdx = it.getColumnIndex(ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME)
-                    val pIdx = it.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER)
-                    while (it.moveToNext()) {
-                        if (nIdx >= 0 && pIdx >= 0) {
-                            list.add(it.getString(nIdx) to it.getString(pIdx))
-                        }
-                    }
+        withContext(Dispatchers.IO) {
+            val list = mutableListOf<Pair<String, String>>()
+            context.contentResolver.query(ContactsContract.CommonDataKinds.Phone.CONTENT_URI, null, null, null, ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME + " ASC")?.use { cursor ->
+                val nIdx = cursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME)
+                val pIdx = cursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER)
+                while (cursor.moveToNext()) {
+                    val name = cursor.getString(nIdx) ?: "Onbekend"
+                    val phone = cursor.getString(pIdx) ?: ""
+                    list.add(name to phone)
                 }
-                contacts = list.distinctBy { it.second.replace(" ", "") }
             }
+            contacts = list.distinctBy { it.second.replace(" ", "") }
         }
     }
 
     Column(Modifier.fillMaxSize()) {
-        OutlinedTextField(
+        TextField(
             value = searchQuery,
             onValueChange = { searchQuery = it },
             modifier = Modifier.fillMaxWidth(),
-            placeholder = { Text("Typ naam of nummer...", fontSize = 22.sp) },
-            leadingIcon = { Icon(Icons.Default.Search, null) },
-            shape = RoundedCornerShape(16.dp)
+            placeholder = { Text("Zoek contact...", fontWeight = FontWeight.Black) },
+            leadingIcon = { Icon(Icons.Default.Search, null, tint = MaterialTheme.colorScheme.primary) },
+            shape = RoundedCornerShape(40.dp),
+            colors = TextFieldDefaults.colors(
+                focusedContainerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.7f),
+                unfocusedContainerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.5f),
+                focusedIndicatorColor = Color.Transparent,
+                unfocusedIndicatorColor = Color.Transparent
+            )
         )
-        
         Spacer(Modifier.height(16.dp))
-        
-        if (searchQuery.length >= 3 && searchQuery.all { it.isDigit() || it == '+' }) {
-            Button(
-                onClick = { onContactSelected(searchQuery, searchQuery) },
-                modifier = Modifier.fillMaxWidth().height(75.dp),
-                shape = RoundedCornerShape(20.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary)
-            ) {
-                Text("STUUR NAAR $searchQuery", fontWeight = FontWeight.Black, fontSize = 20.sp)
-            }
-            Spacer(Modifier.height(16.dp))
-        }
-
         LazyColumn(verticalArrangement = Arrangement.spacedBy(12.dp)) {
             items(contacts.filter { it.first.contains(searchQuery, true) || it.second.contains(searchQuery) }) { contact ->
-                Card(
-                    Modifier.fillMaxWidth().clickable { onContactSelected(contact.first, contact.second) },
-                    shape = RoundedCornerShape(24.dp),
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+                val interactionSourceItem = remember { MutableInteractionSource() }
+                val isPressedItem by interactionSourceItem.collectIsPressedAsState()
+                val scaleItem by animateFloatAsState(
+                    targetValue = if (isPressedItem) 0.96f else 1f,
+                    animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy),
+                    label = "scale"
+                )
+                Surface(
+                    onClick = { onContactSelected(contact.first, contact.second) },
+                    interactionSource = interactionSourceItem,
+                    shape = RoundedCornerShape(40.dp),
+                    color = MaterialTheme.colorScheme.surface.copy(alpha = 0.7f),
+                    border = BorderStroke(1.dp, Color.White.copy(alpha = 0.1f)),
+                    modifier = Modifier.fillMaxWidth().scale(scaleItem)
                 ) {
-                    Row(Modifier.padding(20.dp), verticalAlignment = Alignment.CenterVertically) {
-                        Box(Modifier.size(60.dp).clip(CircleShape).background(MaterialTheme.colorScheme.primaryContainer), contentAlignment = Alignment.Center) {
-                            Text(contact.first.take(1).uppercase(), fontWeight = FontWeight.Black, fontSize = 28.sp)
+                    Row(Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
+                        Box(Modifier.size(56.dp).background(MaterialTheme.colorScheme.primaryContainer, CircleShape), contentAlignment = Alignment.Center) {
+                            Text(contact.first.take(1).uppercase(), fontWeight = FontWeight.Black, fontSize = 24.sp)
                         }
-                        Spacer(Modifier.width(20.dp))
+                        Spacer(Modifier.width(16.dp))
                         Column {
-                            Text(contact.first, fontSize = 22.sp, fontWeight = FontWeight.Bold)
-                            Text(contact.second, fontSize = 18.sp, color = Color.Gray)
+                            Text(contact.first, fontSize = 20.sp, fontWeight = FontWeight.Black)
+                            Text(contact.second, fontSize = 16.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
                         }
                     }
                 }
@@ -621,30 +450,37 @@ fun NewMessageScreen(messagesVm: MessagesViewModel, onContactSelected: (String, 
     }
 }
 
-fun formatTime(timestamp: Long): String {
-    return SimpleDateFormat("HH:mm", Locale.getDefault()).format(Date(timestamp))
-}
-
-fun formatMessageTime(timestamp: Long): String {
-    return SimpleDateFormat("HH:mm", Locale.getDefault()).format(Date(timestamp))
-}
-
-fun formatGroupDate(timestamp: Long): String {
-    val now = Calendar.getInstance()
-    val msgTime = Calendar.getInstance().apply { timeInMillis = timestamp }
-    return when {
-        now.get(Calendar.DATE) == msgTime.get(Calendar.DATE) -> "Vandaag"
-        now.get(Calendar.DATE) - msgTime.get(Calendar.DATE) == 1 -> "Gisteren"
-        else -> SimpleDateFormat("d MMMM yyyy", Locale.getDefault()).format(Date(timestamp))
+@Composable
+fun PermissionRequestView(onGrant: () -> Unit) {
+    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+        Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.padding(24.dp)) {
+            Icon(Icons.Default.Lock, null, modifier = Modifier.size(80.dp), tint = MaterialTheme.colorScheme.primary)
+            Spacer(Modifier.height(24.dp))
+            Text("Berichten Beveiligd", fontSize = 24.sp, fontWeight = FontWeight.Black)
+            Text("Geef toestemming om uw berichten veilig te tonen.", textAlign = TextAlign.Center, modifier = Modifier.padding(vertical = 16.dp), fontWeight = FontWeight.Bold)
+            Button(onClick = onGrant, modifier = Modifier.fillMaxWidth().height(80.dp), shape = RoundedCornerShape(40.dp)) {
+                Text("TOESTEMMING GEVEN", fontSize = 20.sp, fontWeight = FontWeight.Black)
+            }
+        }
     }
 }
 
-fun formatDateTime(timestamp: Long): String {
-    val now = Calendar.getInstance()
-    val msgTime = Calendar.getInstance().apply { timeInMillis = timestamp }
-    return if (now.get(Calendar.DATE) == msgTime.get(Calendar.DATE)) {
-        "Vandaag " + SimpleDateFormat("HH:mm", Locale.getDefault()).format(Date(timestamp))
-    } else {
-        SimpleDateFormat("d MMM HH:mm", Locale.getDefault()).format(Date(timestamp))
+@Composable
+fun DefaultSmsBanner(onSet: () -> Unit) {
+    Surface(
+        color = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.7f), 
+        shape = RoundedCornerShape(40.dp), 
+        border = BorderStroke(1.dp, Color.White.copy(alpha = 0.1f)),
+        modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp)
+    ) {
+        Column(Modifier.padding(20.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+            Text("Stel in als standaard SMS-app", fontWeight = FontWeight.Black, fontSize = 18.sp)
+            Spacer(Modifier.height(12.dp))
+            Button(onClick = onSet, colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error), shape = RoundedCornerShape(16.dp)) {
+                Text("FIX NU", fontWeight = FontWeight.Black)
+            }
+        }
     }
 }
+
+fun formatTime(timestamp: Long): String = SimpleDateFormat("HH:mm", Locale.getDefault()).format(Date(timestamp))

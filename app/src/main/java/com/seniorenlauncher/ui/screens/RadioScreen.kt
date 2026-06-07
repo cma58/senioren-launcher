@@ -3,10 +3,12 @@ package com.seniorenlauncher.ui.screens
 import android.widget.Toast
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -14,6 +16,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
@@ -64,38 +67,61 @@ fun RadioScreen(onBack: () -> Unit, radioVm: RadioViewModel = viewModel()) {
         RadioCategory(title, stations)
     }.sortedBy { it.title }
 
-    Box(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
-        Column(Modifier.fillMaxSize().padding(horizontal = 12.dp, vertical = 8.dp)) {
+    Box(Modifier.fillMaxSize().background(Color(0xFF0F172A))) {
+        Column(Modifier.fillMaxSize().padding(horizontal = 20.dp)) {
             ScreenHeader(title = "Radio", onBack = onBack)
             
             LazyColumn(
                 modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(8.dp),
-                contentPadding = PaddingValues(bottom = 100.dp)
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+                contentPadding = PaddingValues(bottom = 120.dp)
             ) {
                 categories.forEach { category ->
                     stickyHeader {
-                        Surface(Modifier.fillMaxWidth(), color = MaterialTheme.colorScheme.background) {
-                            Text(category.title, fontSize = 22.sp, fontWeight = FontWeight.Black, modifier = Modifier.padding(vertical = 12.dp), color = MaterialTheme.colorScheme.primary)
+                        Surface(Modifier.fillMaxWidth(), color = Color(0xFF0F172A)) {
+                            Text(
+                                text = category.title.uppercase(), 
+                                fontSize = 14.sp, 
+                                fontWeight = FontWeight.Black, 
+                                modifier = Modifier.padding(top = 20.dp, bottom = 8.dp), 
+                                color = MaterialTheme.colorScheme.primary,
+                                letterSpacing = 2.sp
+                            )
                         }
                     }
 
                     items(category.stations) { station ->
                         val active = currentStation?.url == station.url
-                        Card(
-                            modifier = Modifier.fillMaxWidth().height(85.dp).clickable { radioVm.playStation(station) },
-                            shape = RoundedCornerShape(16.dp),
-                            colors = CardDefaults.cardColors(containerColor = if (active) Color(station.colorValue) else MaterialTheme.colorScheme.surfaceVariant)
+                        Surface(
+                            onClick = { radioVm.playStation(station) },
+                            modifier = Modifier.fillMaxWidth().height(90.dp),
+                            shape = RoundedCornerShape(40.dp),
+                            color = if (active) Color(station.colorValue) else Color(0xFF1E293B).copy(alpha = 0.5f),
+                            border = androidx.compose.foundation.BorderStroke(1.dp, Color.White.copy(alpha = 0.1f)),
+                            shadowElevation = if (active) 8.dp else 0.dp
                         ) {
-                            Row(Modifier.fillMaxSize().padding(horizontal = 20.dp), verticalAlignment = Alignment.CenterVertically) {
-                                Text(station.emoji, fontSize = 28.sp)
-                                Spacer(Modifier.width(16.dp))
-                                Text(station.name, fontSize = 20.sp, fontWeight = FontWeight.ExtraBold, color = if (active) Color.White else MaterialTheme.colorScheme.onSurface)
+                            Row(Modifier.fillMaxSize().padding(horizontal = 24.dp), verticalAlignment = Alignment.CenterVertically) {
+                                Box(
+                                    modifier = Modifier.size(56.dp).background(Color.White.copy(alpha = 0.1f), CircleShape),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Text(station.emoji, fontSize = 28.sp)
+                                }
+                                Spacer(Modifier.width(20.dp))
+                                Text(
+                                    station.name, 
+                                    fontSize = 22.sp, 
+                                    fontWeight = FontWeight.Black, 
+                                    color = if (active) Color.White else MaterialTheme.colorScheme.onSurface
+                                )
                                 Spacer(Modifier.weight(1f))
                                 if (station.isCustom) {
                                     IconButton(onClick = { scope.launch { dao.delete(station) } }) {
-                                        Icon(Icons.Default.Delete, null, tint = if (active) Color.White else Color.Gray)
+                                        Icon(Icons.Default.Delete, null, tint = if (active) Color.White.copy(alpha = 0.7f) else Color.White.copy(alpha = 0.2f))
                                     }
+                                }
+                                if (active && isPlaying) {
+                                    Icon(Icons.Default.VolumeUp, null, tint = Color.White, modifier = Modifier.size(24.dp))
                                 }
                             }
                         }
@@ -104,67 +130,127 @@ fun RadioScreen(onBack: () -> Unit, radioVm: RadioViewModel = viewModel()) {
             }
         }
 
-        // --- VASTE PLAYER ONDERAAN ---
+        // --- ANDROID 17 FLOATING PLAYER ---
         if (currentStation != null) {
-            Card(
-                modifier = Modifier.align(Alignment.BottomCenter).fillMaxWidth().padding(12.dp),
-                elevation = CardDefaults.cardElevation(8.dp),
-                shape = RoundedCornerShape(24.dp),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer)
+            Surface(
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                shadowElevation = 16.dp,
+                shape = RoundedCornerShape(40.dp),
+                color = Color(0xFF1E293B), // Slate 800
+                border = androidx.compose.foundation.BorderStroke(1.dp, Color.White.copy(alpha = 0.1f))
             ) {
-                Column(Modifier.padding(16.dp)) {
+                Column(Modifier.padding(20.dp)) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Box(contentAlignment = Alignment.Center) {
-                            Text(if (hasError) "⚠️" else currentStation?.emoji ?: "📻", fontSize = 32.sp)
-                            if (isLoading) CircularProgressIndicator(modifier = Modifier.size(48.dp))
+                        Surface(
+                            modifier = Modifier.size(64.dp),
+                            shape = CircleShape,
+                            color = Color.White.copy(alpha = 0.05f)
+                        ) {
+                            Box(contentAlignment = Alignment.Center) {
+                                if (isLoading) {
+                                    CircularProgressIndicator(modifier = Modifier.size(40.dp), strokeWidth = 3.dp, color = MaterialTheme.colorScheme.primary)
+                                } else {
+                                    Text(if (hasError) "⚠️" else currentStation?.emoji ?: "📻", fontSize = 32.sp)
+                                }
+                            }
                         }
                         Spacer(Modifier.width(16.dp))
                         Column(Modifier.weight(1f)) {
-                            Text(if (hasError) "Fout!" else if (isLoading) "Laden..." else "Nu bezig:", fontSize = 12.sp)
-                            Text(currentStation?.name ?: "Zender", fontSize = 18.sp, fontWeight = FontWeight.Bold, maxLines = 1)
+                            Text(
+                                text = if (hasError) "FOUT BIJ LADEN" else if (isLoading) "VERBINDEN..." else "NU AAN HET SPELEN", 
+                                fontSize = 11.sp, 
+                                fontWeight = FontWeight.Black,
+                                color = MaterialTheme.colorScheme.primary,
+                                letterSpacing = 1.sp
+                            )
+                            Text(
+                                text = currentStation?.name ?: "Zender", 
+                                fontSize = 22.sp, 
+                                fontWeight = FontWeight.Black, 
+                                color = Color.White,
+                                maxLines = 1
+                            )
                         }
-                        // Grote Volume Knoppen onderaan voor Senior
-                        Row {
-                            IconButton(onClick = { radioVm.volumeDown() }, modifier = Modifier.size(48.dp)) {
-                                Icon(Icons.Default.Remove, null, modifier = Modifier.size(32.dp))
+                        
+                        // Volume "Orbs"
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            Surface(
+                                onClick = { radioVm.volumeDown() },
+                                modifier = Modifier.size(50.dp),
+                                shape = CircleShape,
+                                color = Color.White.copy(alpha = 0.1f)
+                            ) {
+                                Box(contentAlignment = Alignment.Center) {
+                                    Icon(Icons.Default.Remove, null, tint = Color.White)
+                                }
                             }
-                            IconButton(onClick = { radioVm.volumeUp() }, modifier = Modifier.size(48.dp)) {
-                                Icon(Icons.Default.Add, null, modifier = Modifier.size(32.dp))
+                            Surface(
+                                onClick = { radioVm.volumeUp() },
+                                modifier = Modifier.size(50.dp),
+                                shape = CircleShape,
+                                color = Color.White.copy(alpha = 0.1f)
+                            ) {
+                                Box(contentAlignment = Alignment.Center) {
+                                    Icon(Icons.Default.Add, null, tint = Color.White)
+                                }
                             }
                         }
                     }
-                    Spacer(Modifier.height(8.dp))
-                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Button(
+                    
+                    Spacer(Modifier.height(20.dp))
+                    
+                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                        // Play/Pause Orb
+                        Surface(
                             onClick = { if (isPlaying) radioVm.pause() else radioVm.resume() },
-                            modifier = Modifier.weight(1f).height(56.dp),
-                            shape = RoundedCornerShape(12.dp)
+                            modifier = Modifier.weight(1.5f).height(70.dp),
+                            shape = RoundedCornerShape(24.dp),
+                            color = MaterialTheme.colorScheme.primary,
+                            shadowElevation = 8.dp
                         ) {
-                            Icon(if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow, null)
-                            Spacer(Modifier.width(8.dp))
-                            Text(if (isPlaying) "Pauze" else "Speel")
+                            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.Center) {
+                                Icon(if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow, null, tint = Color.White, modifier = Modifier.size(32.dp))
+                                Spacer(Modifier.width(12.dp))
+                                Text(if (isPlaying) "PAUZE" else "SPEEL", fontWeight = FontWeight.Black, color = Color.White, fontSize = 18.sp)
+                            }
                         }
-                        Button(
+                        
+                        // Stop Orb
+                        Surface(
                             onClick = { radioVm.stop() },
-                            modifier = Modifier.weight(0.6f).height(56.dp),
-                            shape = RoundedCornerShape(12.dp),
-                            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
+                            modifier = Modifier.weight(1f).height(70.dp),
+                            shape = RoundedCornerShape(24.dp),
+                            color = Color(0xFFEF4444).copy(alpha = 0.2f),
+                            border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFEF4444).copy(alpha = 0.5f))
                         ) {
-                            Icon(Icons.Default.Stop, null)
-                            Spacer(Modifier.width(8.dp))
-                            Text("Stop")
+                            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.Center) {
+                                Icon(Icons.Default.Stop, null, tint = Color(0xFFEF4444), modifier = Modifier.size(28.dp))
+                                Spacer(Modifier.width(8.dp))
+                                Text("STOP", fontWeight = FontWeight.Black, color = Color(0xFFEF4444), fontSize = 18.sp)
+                            }
                         }
                     }
                 }
             }
         }
 
-        FloatingActionButton(
+        // Luminous Add FAB
+        Surface(
             onClick = { showAddDialog = true },
-            modifier = Modifier.align(Alignment.BottomEnd).padding(bottom = if (currentStation != null) 160.dp else 24.dp, end = 24.dp),
-            containerColor = MaterialTheme.colorScheme.primary
+            modifier = Modifier
+                .align(Alignment.BottomEnd)
+                .padding(bottom = if (currentStation != null) 210.dp else 24.dp, end = 24.dp)
+                .size(76.dp),
+            shape = CircleShape,
+            color = MaterialTheme.colorScheme.secondary,
+            shadowElevation = 12.dp
         ) {
-            Icon(Icons.Default.Add, null, modifier = Modifier.size(32.dp))
+            Box(contentAlignment = Alignment.Center) {
+                Icon(Icons.Default.Add, null, modifier = Modifier.size(36.dp), tint = Color.White)
+            }
         }
     }
 
@@ -202,30 +288,51 @@ fun AddRadioDialog(
     val isUrl = input.startsWith("http")
 
     Dialog(onDismissRequest = onDismiss) {
-        Card(Modifier.fillMaxWidth().fillMaxHeight(0.85f).padding(16.dp), shape = RoundedCornerShape(24.dp)) {
-            Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                Text("Zender Toevoegen", fontSize = 24.sp, fontWeight = FontWeight.Black)
+        Surface(
+            Modifier.fillMaxWidth().fillMaxHeight(0.85f),
+            shape = RoundedCornerShape(40.dp),
+            color = Color(0xFF1E293B), // Slate 800
+            border = androidx.compose.foundation.BorderStroke(1.dp, Color.White.copy(alpha = 0.1f))
+        ) {
+            Column(Modifier.padding(24.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                Text("Zender Toevoegen", fontSize = 28.sp, fontWeight = FontWeight.Black, color = Color.White)
                 
                 OutlinedTextField(
                     value = input, 
                     onValueChange = { input = it }, 
                     label = { Text(if (isUrl) "Link gedetecteerd!" else "Typ naam of plak link...") }, 
                     modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(12.dp)
+                    shape = RoundedCornerShape(24.dp),
+                    colors = TextFieldDefaults.colors(
+                        focusedContainerColor = Color.Transparent,
+                        unfocusedContainerColor = Color.Transparent,
+                        focusedTextColor = Color.White,
+                        unfocusedTextColor = Color.White
+                    )
                 )
 
                 if (isUrl) {
-                    Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)) {
-                        Column(Modifier.padding(16.dp)) {
-                            Text("Gevonden: Directe Stream", fontWeight = FontWeight.Bold)
-                            Text("Geef deze zender een naam:", fontSize = 14.sp)
-                            Spacer(Modifier.height(8.dp))
-                            OutlinedTextField(value = name, onValueChange = { name = it }, placeholder = { Text("Bijv. Radio Extra") }, modifier = Modifier.fillMaxWidth())
+                    Surface(
+                        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
+                        shape = RoundedCornerShape(20.dp),
+                        border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.3f))
+                    ) {
+                        Column(Modifier.padding(20.dp)) {
+                            Text("Gevonden: Directe Stream", fontWeight = FontWeight.Black, color = Color.White)
+                            Text("Geef deze zender een naam:", fontSize = 14.sp, color = Color.White.copy(alpha = 0.6f))
+                            Spacer(Modifier.height(12.dp))
+                            OutlinedTextField(
+                                value = name, 
+                                onValueChange = { name = it }, 
+                                placeholder = { Text("Bijv. Radio Extra") }, 
+                                modifier = Modifier.fillMaxWidth(),
+                                shape = RoundedCornerShape(12.dp)
+                            )
                         }
                     }
                     url = input
                 } else if (input.length > 2) {
-                    Button(
+                    Surface(
                         onClick = {
                             isSearching = true
                             scope.launch {
@@ -243,39 +350,42 @@ fun AddRadioDialog(
                                 } catch (e: Exception) { } finally { isSearching = false }
                             }
                         },
-                        modifier = Modifier.fillMaxWidth().height(56.dp)
+                        modifier = Modifier.fillMaxWidth().height(70.dp),
+                        shape = RoundedCornerShape(40.dp),
+                        color = MaterialTheme.colorScheme.primary
                     ) {
-                        if (isSearching) CircularProgressIndicator(color = Color.White)
-                        else Text("🔍 Zoek op internet")
+                        Box(contentAlignment = Alignment.Center) {
+                            if (isSearching) CircularProgressIndicator(color = Color.White, modifier = Modifier.size(28.dp))
+                            else Text("ZOEK OP INTERNET", fontWeight = FontWeight.Black, color = Color.White)
+                        }
                     }
 
-                    LazyColumn(Modifier.weight(1f)) {
+                    LazyColumn(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         items(searchResults) { res ->
-                            Card(
-                                Modifier
-                                    .fillMaxWidth()
-                                    .padding(vertical = 4.dp)
-                                    .clickable {
-                                        val newStation = RadioStation(
-                                            name = res.name,
-                                            url = res.url,
-                                            emoji = "📻",
-                                            category = "⭐ Mijn Zenders",
-                                            colorValue = 0xFF3B82F6L,
-                                            isCustom = true
-                                        )
-                                        scope.launch {
-                                            dao.insert(newStation)
-                                            radioVm.playStation(newStation)
-                                            onDismiss()
-                                        }
-                                    },
-                                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)
+                            Surface(
+                                modifier = Modifier.fillMaxWidth(),
+                                onClick = {
+                                    val newStation = RadioStation(
+                                        name = res.name,
+                                        url = res.url,
+                                        emoji = "📻",
+                                        category = "⭐ Mijn Zenders",
+                                        colorValue = 0xFF3B82F6L,
+                                        isCustom = true
+                                    )
+                                    scope.launch {
+                                        dao.insert(newStation)
+                                        radioVm.playStation(newStation)
+                                        onDismiss()
+                                    }
+                                },
+                                shape = RoundedCornerShape(20.dp),
+                                color = Color.White.copy(alpha = 0.05f)
                             ) {
                                 Row(Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
                                     Column(Modifier.weight(1f)) {
-                                        Text(res.name, fontWeight = FontWeight.Black, fontSize = 20.sp)
-                                        Text(res.country, fontSize = 16.sp)
+                                        Text(res.name, fontWeight = FontWeight.Black, fontSize = 20.sp, color = Color.White)
+                                        Text(res.country, fontSize = 16.sp, color = Color.White.copy(alpha = 0.6f))
                                     }
                                     Icon(Icons.Default.AddCircle, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(32.dp))
                                 }
@@ -288,15 +398,15 @@ fun AddRadioDialog(
                     Spacer(Modifier.height(8.dp))
                     Button(
                         onClick = { onSave(name, url, emoji, "⭐ Mijn Zenders") },
-                        modifier = Modifier.fillMaxWidth().height(70.dp),
-                        shape = RoundedCornerShape(16.dp)
+                        modifier = Modifier.fillMaxWidth().height(76.dp),
+                        shape = RoundedCornerShape(40.dp)
                     ) {
-                        Text("Opslaan & Spelen", fontSize = 20.sp, fontWeight = FontWeight.Bold)
+                        Text("OPSLAAN & SPELEN", fontSize = 20.sp, fontWeight = FontWeight.Black)
                     }
                 }
 
-                TextButton(onClick = onDismiss, modifier = Modifier.align(Alignment.CenterHorizontally)) {
-                    Text("Annuleren", fontSize = 18.sp)
+                TextButton(onClick = onDismiss, modifier = Modifier.align(Alignment.CenterHorizontally).height(70.dp)) {
+                    Text("ANNULEREN", fontSize = 18.sp, color = Color.White.copy(alpha = 0.6f), fontWeight = FontWeight.Black)
                 }
             }
         }

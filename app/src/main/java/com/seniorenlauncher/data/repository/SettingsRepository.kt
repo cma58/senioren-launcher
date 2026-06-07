@@ -10,6 +10,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import org.json.JSONObject
+import java.util.Calendar
 
 private val Context.dataStore by preferencesDataStore(name = "settings")
 
@@ -33,9 +34,16 @@ class SettingsRepository(private val context: Context) {
         val PRIVACY_ACCEPTED = booleanPreferencesKey("privacy_accepted")
         val USER_PHONE_NUMBER = stringPreferencesKey("user_phone_number")
         val SOS_PHONE_NUMBER = stringPreferencesKey("sos_phone_number")
+        val STEPS_TODAY = intPreferencesKey("steps_today")
+        val LAST_SENSOR_VALUE = floatPreferencesKey("last_sensor_value")
+        val LAST_STEPS_UPDATE_DAY = intPreferencesKey("last_steps_update_day")
     }
 
     val settingsFlow: Flow<AppSettings> = context.dataStore.data.map { prefs ->
+        val calendar = Calendar.getInstance()
+        val currentDay = calendar.get(Calendar.DAY_OF_YEAR)
+        val lastUpdateDay = prefs[LAST_STEPS_UPDATE_DAY] ?: -1
+        
         AppSettings(
             theme = try { AppTheme.valueOf(prefs[THEME] ?: AppTheme.CLASSIC.name) } catch(e: Exception) { AppTheme.CLASSIC },
             layout = try { LayoutType.valueOf(prefs[LAYOUT] ?: LayoutType.GRID_2x3.name) } catch(e: Exception) { LayoutType.GRID_2x3 },
@@ -59,7 +67,8 @@ class SettingsRepository(private val context: Context) {
             } ?: emptyMap(),
             hasCompletedSetup = prefs[HAS_COMPLETED_SETUP] ?: false,
             privacyAccepted = prefs[PRIVACY_ACCEPTED] ?: false,
-            userPhoneNumber = prefs[USER_PHONE_NUMBER]
+            userPhoneNumber = prefs[USER_PHONE_NUMBER],
+            stepsToday = if (currentDay == lastUpdateDay) (prefs[STEPS_TODAY] ?: 0) else 0
         )
     }
 
@@ -155,6 +164,35 @@ class SettingsRepository(private val context: Context) {
         context.dataStore.edit {
             if (number == null) it.remove(USER_PHONE_NUMBER)
             else it[USER_PHONE_NUMBER] = number
+        }
+    }
+
+    suspend fun updateSteps(sensorValue: Float) {
+        context.dataStore.edit { prefs ->
+            val calendar = Calendar.getInstance()
+            val today = calendar.get(Calendar.DAY_OF_YEAR)
+            val lastUpdateDay = prefs[LAST_STEPS_UPDATE_DAY] ?: -1
+            val lastSensorValue = prefs[LAST_SENSOR_VALUE] ?: sensorValue
+            
+            var currentSteps = prefs[STEPS_TODAY] ?: 0
+            
+            if (today != lastUpdateDay) {
+                // Nieuwe dag: reset
+                currentSteps = 0
+                prefs[LAST_STEPS_UPDATE_DAY] = today
+            } else {
+                // Zelfde dag: bereken verschil
+                val diff = sensorValue - lastSensorValue
+                if (diff > 0) {
+                    currentSteps += diff.toInt()
+                } else if (diff < 0) {
+                    // Waarschijnlijk reboot: voeg de volledige nieuwe sensorwaarde toe
+                    currentSteps += sensorValue.toInt()
+                }
+            }
+            
+            prefs[STEPS_TODAY] = currentSteps
+            prefs[LAST_SENSOR_VALUE] = sensorValue
         }
     }
 }

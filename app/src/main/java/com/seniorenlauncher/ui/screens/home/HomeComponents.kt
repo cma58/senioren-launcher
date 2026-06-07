@@ -6,7 +6,9 @@ import android.content.IntentFilter
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
 import android.os.BatteryManager
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
@@ -18,6 +20,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
@@ -34,21 +37,16 @@ fun HomeTopBar(notificationCount: Int, onNotificationsClick: () -> Unit) {
     var currentTime by remember { mutableStateOf(SimpleDateFormat("HH:mm", Locale.getDefault()).format(Date())) }
     var currentDate by remember { mutableStateOf(SimpleDateFormat("EEEE d MMMM", Locale.getDefault()).format(Date())) }
     
-    // Batterij status
     var batteryLevel by remember { mutableIntStateOf(100) }
     var isCharging by remember { mutableStateOf(false) }
-    
-    // Wifi status
     var isWifiConnected by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
-        // Klok update
         while (true) {
             val now = Date()
             currentTime = SimpleDateFormat("HH:mm", Locale.getDefault()).format(now)
             currentDate = SimpleDateFormat("EEEE d MMMM", Locale.getDefault()).format(now)
             
-            // Batterij info ophalen
             val batteryStatus: Intent? = IntentFilter(Intent.ACTION_BATTERY_CHANGED).let { filter ->
                 context.registerReceiver(null, filter)
             }
@@ -56,7 +54,6 @@ fun HomeTopBar(notificationCount: Int, onNotificationsClick: () -> Unit) {
             val status = batteryStatus?.getIntExtra(BatteryManager.EXTRA_STATUS, -1) ?: -1
             isCharging = status == BatteryManager.BATTERY_STATUS_CHARGING || status == BatteryManager.BATTERY_STATUS_FULL
 
-            // Wifi info ophalen
             val connectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
             val network = connectivityManager.activeNetwork
             val capabilities = connectivityManager.getNetworkCapabilities(network)
@@ -73,98 +70,97 @@ fun HomeTopBar(notificationCount: Int, onNotificationsClick: () -> Unit) {
         Row(
             Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 24.dp, vertical = 20.dp),
+                .padding(horizontal = 24.dp, vertical = 24.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Links: Batterij & Verbinding
-            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
+            // Links: Status Capsule (Glass Effect)
+            Surface(
+                shape = RoundedCornerShape(30.dp),
+                color = Color(0xFF1E293B).copy(alpha = 0.6f),
+                modifier = Modifier.height(76.dp),
+                border = BorderStroke(1.dp, Color.White.copy(alpha = 0.1f))
+            ) {
+                Row(
+                    Modifier.padding(horizontal = 20.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(14.dp)
+                ) {
                     Icon(
                         imageVector = if (isCharging) Icons.Default.BatteryChargingFull else if (batteryLevel < 20) Icons.Default.BatteryAlert else Icons.Default.BatteryFull,
                         contentDescription = null,
-                        modifier = Modifier.size(32.dp),
-                        tint = if (batteryLevel < 20 && !isCharging) Color.Red else MaterialTheme.colorScheme.primary
+                        modifier = Modifier.size(28.dp),
+                        tint = if (batteryLevel < 20 && !isCharging) Color(0xFFEF4444) else Color(0xFF10B981)
                     )
-                    Spacer(Modifier.width(8.dp))
                     Text(
                         text = "$batteryLevel%",
-                        fontSize = 24.sp,
+                        fontSize = 22.sp,
                         fontWeight = FontWeight.Black,
-                        color = if (batteryLevel < 20 && !isCharging) Color.Red else MaterialTheme.colorScheme.onBackground
+                        color = Color.White
                     )
-                }
-                
-                // Signaal & Wifi indicators
-                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Box(Modifier.width(1.dp).height(24.dp).background(Color.White.copy(alpha = 0.2f)))
                     Icon(
                         imageVector = if (isWifiConnected) Icons.Default.Wifi else Icons.Default.SignalCellularAlt,
                         contentDescription = null,
-                        modifier = Modifier.size(24.dp),
-                        tint = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f)
-                    )
-                    Spacer(Modifier.width(8.dp))
-                    Text(
-                        if (isWifiConnected) "WIFI" else "MOBIEL",
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.Bold,
-                        letterSpacing = 1.sp,
-                        color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f)
+                        modifier = Modifier.size(26.dp),
+                        tint = Color.White.copy(alpha = 0.6f)
                     )
                 }
             }
 
-            // Midden: Klok
+            // Midden: Elegante Klok (Hyper-Refined)
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Text(
                     currentTime, 
-                    fontSize = 64.sp, 
-                    fontWeight = FontWeight.Black,
-                    color = MaterialTheme.colorScheme.onBackground,
+                    fontSize = 62.sp, 
+                    fontWeight = FontWeight.W900,
+                    color = Color.White,
                     letterSpacing = (-2).sp
                 )
                 Text(
-                    currentDate.replaceFirstChar { it.uppercase() }, 
-                    fontSize = 18.sp, 
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.primary
+                    currentDate.uppercase(), 
+                    fontSize = 13.sp, 
+                    fontWeight = FontWeight.Black,
+                    color = Color(0xFF6366F1), // Modern Indigo
+                    letterSpacing = 2.5.sp
                 )
             }
 
-            // Rechts: Notificaties
-            Box(
-                modifier = Modifier
-                    .size(80.dp)
-                    .clip(RoundedCornerShape(24.dp))
-                    .background(MaterialTheme.colorScheme.surfaceColorAtElevation(4.dp))
-                    .clickable { onNotificationsClick() },
-                contentAlignment = Alignment.Center
+            // Rechts: Notification Avatar (Glass Effect)
+            Surface(
+                onClick = onNotificationsClick,
+                modifier = Modifier.size(76.dp),
+                shape = CircleShape,
+                color = Color(0xFF1E293B).copy(alpha = 0.6f),
+                border = BorderStroke(1.dp, Color.White.copy(alpha = 0.1f))
             ) {
-                Icon(
-                    Icons.Default.Notifications, 
-                    contentDescription = "Meldingen",
-                    modifier = Modifier.size(44.dp),
-                    tint = if (notificationCount > 0) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
-                )
-                if (notificationCount > 0) {
-                    Surface(
-                        modifier = Modifier
-                            .align(Alignment.TopEnd)
-                            .padding(8.dp)
-                            .size(28.dp),
-                        shape = CircleShape,
-                        color = Color.Red,
-                        tonalElevation = 4.dp
-                    ) {
-                        Box(contentAlignment = Alignment.Center) {
-                            Text(
-                                "$notificationCount",
-                                color = Color.White,
-                                fontSize = 16.sp,
-                                fontWeight = FontWeight.Black
-                            )
+                Box(contentAlignment = Alignment.Center) {
+                    Icon(
+                        Icons.Default.Notifications, 
+                        contentDescription = "Meldingen",
+                        modifier = Modifier.size(34.dp),
+                        tint = if (notificationCount > 0) Color(0xFF6366F1) else Color.White.copy(alpha = 0.4f)
+                    )
+                    if (notificationCount > 0) {
+                        Surface(
+                            modifier = Modifier
+                                .align(Alignment.TopEnd)
+                                .padding(4.dp)
+                                .size(24.dp),
+                            shape = CircleShape,
+                            color = Color(0xFFEF4444),
+                            border = BorderStroke(2.dp, Color(0xFF0F172A))
+                        ) {
+                            Box(contentAlignment = Alignment.Center) {
+                                Text(
+                                    "$notificationCount",
+                                    color = Color.White,
+                                    fontSize = 12.sp,
+                                    fontWeight = FontWeight.Black
+                                )
+                            }
                         }
                     }
                 }
@@ -175,39 +171,45 @@ fun HomeTopBar(notificationCount: Int, onNotificationsClick: () -> Unit) {
 
 @Composable
 fun HomeSOSButton(onClick: () -> Unit, modifier: Modifier = Modifier) {
-    Button(
+    Surface(
         onClick = onClick,
         modifier = modifier
-            .height(90.dp)
+            .height(110.dp)
             .fillMaxWidth(),
-        colors = ButtonDefaults.buttonColors(
-            containerColor = Color(0xFFEF4444),
-            contentColor = Color.White
-        ),
-        shape = RoundedCornerShape(28.dp),
-        elevation = ButtonDefaults.buttonElevation(
-            defaultElevation = 8.dp,
-            pressedElevation = 2.dp
-        ),
-        contentPadding = PaddingValues(16.dp)
+        shape = RoundedCornerShape(40.dp),
+        color = Color(0xFFEF4444),
+        shadowElevation = 16.dp
     ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.Center
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(
+                    Brush.horizontalGradient(
+                        colors = listOf(Color(0xFFEF4444), Color(0xFF991B1B))
+                    )
+                )
+                .border(1.dp, Color.White.copy(alpha = 0.2f), RoundedCornerShape(40.dp)),
+            contentAlignment = Alignment.Center
         ) {
-            Icon(
-                Icons.Default.Warning,
-                contentDescription = null,
-                modifier = Modifier.size(48.dp),
-                tint = Color.White
-            )
-            Spacer(Modifier.width(20.dp))
-            Text(
-                "SOS HULP NODIG",
-                fontSize = 28.sp,
-                fontWeight = FontWeight.Black,
-                color = Color.White
-            )
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.Center
+            ) {
+                Icon(
+                    Icons.Default.HealthAndSafety,
+                    contentDescription = null,
+                    modifier = Modifier.size(48.dp),
+                    tint = Color.White
+                )
+                Spacer(Modifier.width(24.dp))
+                Text(
+                    "SOS HULP NODIG",
+                    fontSize = 28.sp,
+                    fontWeight = FontWeight.W900,
+                    color = Color.White,
+                    letterSpacing = 1.2.sp
+                )
+            }
         }
     }
 }
@@ -217,25 +219,41 @@ fun HomeStatusCard(
     pendingMedsCount: Int,
     onMedsClick: () -> Unit
 ) {
-    Card(
-        Modifier
+    Surface(
+        onClick = onMedsClick,
+        modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 8.dp),
-        shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.9f))
+            .padding(horizontal = 24.dp, vertical = 12.dp),
+        shape = RoundedCornerShape(36.dp),
+        color = Color(0xFF10B981).copy(alpha = 0.15f),
+        border = BorderStroke(1.dp, Color(0xFF10B981).copy(alpha = 0.3f))
     ) {
         Row(
-            Modifier.padding(24.dp).fillMaxWidth().clickable { onMedsClick() },
+            Modifier.padding(28.dp).fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Text("💊", fontSize = 40.sp)
-            Spacer(Modifier.width(16.dp))
-            Text(
-                "Je hebt nog $pendingMedsCount medicijnen in te nemen", 
-                fontSize = 20.sp, 
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onErrorContainer
-            )
+            Box(
+                Modifier.size(64.dp).background(Color(0xFF10B981).copy(alpha = 0.2f), CircleShape),
+                contentAlignment = Alignment.Center
+            ) {
+                Text("💊", fontSize = 36.sp)
+            }
+            Spacer(Modifier.width(24.dp))
+            Column {
+                Text(
+                    "HERINNERING",
+                    fontSize = 13.sp,
+                    fontWeight = FontWeight.Black,
+                    letterSpacing = 1.5.sp,
+                    color = Color(0xFF10B981)
+                )
+                Text(
+                    "Nog $pendingMedsCount medicijnen", 
+                    fontSize = 22.sp, 
+                    fontWeight = FontWeight.Black,
+                    color = Color.White
+                )
+            }
         }
     }
 }
@@ -251,33 +269,5 @@ fun getHomeWeatherEmoji(iconUrl: String): String {
         iconUrl.contains("13") -> "❄️"
         iconUrl.contains("50") -> "🌫️"
         else -> "☁️"
-    }
-}
-
-// --- PREVIEWS ---
-
-@Preview(showBackground = true, backgroundColor = 0xFFFFFFFF)
-@Composable
-fun PreviewHomeTopBar() {
-    SeniorenLauncherTheme {
-        HomeTopBar(notificationCount = 3, onNotificationsClick = {})
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun PreviewHomeSOSButton() {
-    SeniorenLauncherTheme {
-        Box(Modifier.padding(16.dp)) {
-            HomeSOSButton(onClick = {})
-        }
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun PreviewHomeStatusCard() {
-    SeniorenLauncherTheme {
-        HomeStatusCard(pendingMedsCount = 2, onMedsClick = {})
     }
 }

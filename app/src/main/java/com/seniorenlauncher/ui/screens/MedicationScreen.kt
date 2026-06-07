@@ -5,6 +5,7 @@ import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -23,6 +24,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
@@ -52,32 +54,39 @@ fun MedicationScreen(onBack: () -> Unit) {
     var editingMed by remember { mutableStateOf<Medication?>(null) }
     var showHistory by remember { mutableStateOf(false) }
     
-    Column(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background).padding(horizontal = 12.dp, vertical = 8.dp)) {
+    Column(Modifier.fillMaxSize().background(Color(0xFF0F172A)).padding(horizontal = 20.dp)) {
         ScreenHeader(
             title = if (showHistory) "Logboek" else "Medicijnen", 
             onBack = { if (showHistory) showHistory = false else onBack() }
         )
         
-        Row(Modifier.fillMaxWidth().padding(vertical = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            Button(
-                onClick = { showHistory = false },
-                modifier = Modifier.weight(1f),
-                colors = ButtonDefaults.buttonColors(containerColor = if (!showHistory) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant),
-                shape = RoundedCornerShape(12.dp)
+        // Android 17 Glass Tab Switcher
+        Surface(
+            color = Color(0xFF1E293B).copy(alpha = 0.5f),
+            shape = RoundedCornerShape(40.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 12.dp)
+                .border(1.dp, Color.White.copy(alpha = 0.1f), RoundedCornerShape(40.dp))
+        ) {
+            Row(
+                modifier = Modifier.padding(6.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                Icon(Icons.Default.Medication, contentDescription = null)
-                Spacer(Modifier.width(8.dp))
-                Text("OVERZICHT")
-            }
-            Button(
-                onClick = { showHistory = true },
-                modifier = Modifier.weight(1f),
-                colors = ButtonDefaults.buttonColors(containerColor = if (showHistory) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant),
-                shape = RoundedCornerShape(12.dp)
-            ) {
-                Icon(Icons.Outlined.History, contentDescription = null)
-                Spacer(Modifier.width(8.dp))
-                Text("LOGBOEK")
+                MedicationTabButton(
+                    icon = Icons.Default.Medication,
+                    label = "OVERZICHT",
+                    isSelected = !showHistory,
+                    modifier = Modifier.weight(1f),
+                    onClick = { showHistory = false }
+                )
+                MedicationTabButton(
+                    icon = Icons.Outlined.History,
+                    label = "LOGBOEK",
+                    isSelected = showHistory,
+                    modifier = Modifier.weight(1f),
+                    onClick = { showHistory = true }
+                )
             }
         }
 
@@ -123,6 +132,37 @@ fun MedicationScreen(onBack: () -> Unit) {
 }
 
 @Composable
+fun MedicationTabButton(icon: ImageVector, label: String, isSelected: Boolean, modifier: Modifier, onClick: () -> Unit) {
+    val containerColor = if (isSelected) MaterialTheme.colorScheme.primary else Color.Transparent
+    val contentColor = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant
+
+    Surface(
+        onClick = onClick,
+        modifier = modifier.height(64.dp),
+        color = containerColor,
+        shape = RoundedCornerShape(40.dp)
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Center,
+            modifier = Modifier.padding(horizontal = 8.dp)
+        ) {
+            Icon(icon, null, modifier = Modifier.size(24.dp), tint = contentColor)
+            if (isSelected) {
+                Spacer(Modifier.width(8.dp))
+                Text(
+                    label, 
+                    fontSize = 14.sp, 
+                    fontWeight = FontWeight.Black,
+                    color = contentColor,
+                    maxLines = 1
+                )
+            }
+        }
+    }
+}
+
+@Composable
 fun MedicationOverview(
     medications: List<Medication>, 
     dao: com.seniorenlauncher.data.db.MedicationDao, 
@@ -135,16 +175,16 @@ fun MedicationOverview(
     Box(modifier = Modifier.fillMaxSize()) {
         Column(
             Modifier.fillMaxSize().verticalScroll(rememberScrollState()),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             if (medications.isEmpty()) {
                 Box(Modifier.fillMaxWidth().padding(top = 60.dp), contentAlignment = Alignment.Center) {
-                    Text("Nog geen medicijnen toegevoegd", fontSize = 20.sp, color = Color.Gray)
+                    Text("Nog geen medicijnen toegevoegd", fontSize = 20.sp, color = Color.Gray, fontWeight = FontWeight.Black)
                 }
             } else {
                 val pendingMeds = medications.filter { it.isPending }
                 if (pendingMeds.isNotEmpty()) {
-                    Text("⚠️ NU INNEMEN", fontWeight = FontWeight.Black, fontSize = 22.sp, color = Color(0xFFC62828), modifier = Modifier.padding(start = 8.dp))
+                    Text("⚠️ NU INNEMEN", fontWeight = FontWeight.Black, fontSize = 20.sp, color = Color(0xFFEF4444), modifier = Modifier.padding(start = 4.dp))
                     pendingMeds.forEach { med ->
                         MedicationActionCard(med, onTaken = {
                             scope.launch {
@@ -166,7 +206,7 @@ fun MedicationOverview(
                     }
                 }
 
-                Text("💊 MIJN LIJST", fontWeight = FontWeight.Black, fontSize = 22.sp, color = MaterialTheme.colorScheme.primary, modifier = Modifier.padding(start = 8.dp, top = 8.dp))
+                Text("💊 MIJN LIJST", fontWeight = FontWeight.Black, fontSize = 20.sp, color = MaterialTheme.colorScheme.primary, modifier = Modifier.padding(start = 4.dp, top = 8.dp))
                 medications.forEach { med ->
                     MedicationInfoCard(
                         med = med, 
@@ -183,47 +223,66 @@ fun MedicationOverview(
             Spacer(Modifier.height(100.dp))
         }
 
-        LargeFloatingActionButton(
+        // Luminous Add Button
+        Surface(
             onClick = onAddClick,
-            modifier = Modifier.align(Alignment.BottomEnd).padding(16.dp),
-            containerColor = MaterialTheme.colorScheme.primaryContainer
+            modifier = Modifier
+                .align(Alignment.BottomEnd)
+                .padding(16.dp)
+                .size(80.dp),
+            shape = CircleShape,
+            color = MaterialTheme.colorScheme.primary,
+            shadowElevation = 12.dp
         ) {
-            Icon(Icons.Default.Add, null, modifier = Modifier.size(36.dp))
+            Box(contentAlignment = Alignment.Center) {
+                Icon(Icons.Default.Add, null, modifier = Modifier.size(40.dp), tint = Color.White)
+            }
         }
     }
 }
 
 @Composable
 fun MedicationActionCard(med: Medication, onTaken: () -> Unit) {
-    Card(
+    Surface(
         modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = Color(0xFFFFEBEE)),
-        border = androidx.compose.foundation.BorderStroke(3.dp, Color(0xFFC62828)),
-        shape = RoundedCornerShape(20.dp)
+        color = Color(0xFFEF4444).copy(alpha = 0.15f),
+        border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFEF4444).copy(alpha = 0.5f)),
+        shape = RoundedCornerShape(40.dp)
     ) {
         Row(Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
             if (med.photoUri != null) {
                 AsyncImage(
                     model = med.photoUri,
                     contentDescription = null,
-                    modifier = Modifier.size(80.dp).clip(RoundedCornerShape(12.dp)),
+                    modifier = Modifier.size(70.dp).clip(RoundedCornerShape(20.dp)),
                     contentScale = ContentScale.Crop
                 )
                 Spacer(Modifier.width(16.dp))
+            } else {
+                Box(
+                    Modifier.size(70.dp).background(Color(0xFFEF4444).copy(alpha = 0.2f), RoundedCornerShape(20.dp)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(Icons.Default.Medication, null, tint = Color(0xFFEF4444), modifier = Modifier.size(32.dp))
+                }
+                Spacer(Modifier.width(16.dp))
             }
             Column(Modifier.weight(1f)) {
-                Text(med.name, fontSize = 22.sp, fontWeight = FontWeight.Black)
-                Text(med.dose, fontSize = 18.sp)
+                Text(med.name, fontSize = 22.sp, fontWeight = FontWeight.Black, color = Color.White)
+                Text(med.dose, fontSize = 18.sp, color = Color.White.copy(alpha = 0.7f))
             }
-            Button(
+            
+            // Taken "Orb"
+            Surface(
                 onClick = onTaken,
-                modifier = Modifier.height(70.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2E7D32)),
-                shape = RoundedCornerShape(16.dp)
+                modifier = Modifier.size(70.dp),
+                shape = CircleShape,
+                color = Color(0xFF10B981),
+                shadowElevation = 8.dp
             ) {
-                Icon(Icons.Default.Check, null, modifier = Modifier.size(28.dp))
-                Spacer(Modifier.width(8.dp))
-                Text("KLAAR", fontWeight = FontWeight.Bold, fontSize = 18.sp)
+                Box(contentAlignment = Alignment.Center) {
+                    Icon(Icons.Default.Check, null, modifier = Modifier.size(36.dp), tint = Color.White)
+                }
             }
         }
     }
@@ -233,50 +292,66 @@ fun MedicationActionCard(med: Medication, onTaken: () -> Unit) {
 fun MedicationInfoCard(med: Medication, onDelete: () -> Unit, onEdit: () -> Unit) {
     val isLowStock = med.stockCount <= med.lowStockThreshold
     
-    Card(
-        modifier = Modifier.fillMaxWidth().clickable { onEdit() },
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f))
+    Surface(
+        onClick = onEdit,
+        shape = RoundedCornerShape(40.dp),
+        color = Color(0xFF1E293B).copy(alpha = 0.5f),
+        border = androidx.compose.foundation.BorderStroke(1.dp, Color.White.copy(alpha = 0.1f)),
+        modifier = Modifier.fillMaxWidth()
     ) {
-        Column(Modifier.padding(16.dp)) {
+        Column(Modifier.padding(20.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 if (med.photoUri != null) {
                     AsyncImage(
                         model = med.photoUri,
                         contentDescription = null,
-                        modifier = Modifier.size(50.dp).clip(CircleShape),
+                        modifier = Modifier.size(60.dp).clip(CircleShape).border(2.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.5f), CircleShape),
                         contentScale = ContentScale.Crop
                     )
-                    Spacer(Modifier.width(12.dp))
+                    Spacer(Modifier.width(16.dp))
+                } else {
+                    Box(
+                        Modifier.size(60.dp).background(MaterialTheme.colorScheme.primary.copy(alpha = 0.1f), CircleShape),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(Icons.Default.Medication, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(28.dp))
+                    }
+                    Spacer(Modifier.width(16.dp))
                 }
                 Column(Modifier.weight(1f)) {
-                    Text(med.name, fontSize = 18.sp, fontWeight = FontWeight.Bold)
-                    Text("${med.dose} • ${med.times}", fontSize = 16.sp, color = Color.Gray)
+                    Text(med.name, fontSize = 22.sp, fontWeight = FontWeight.Black, color = MaterialTheme.colorScheme.onSurface)
+                    Text("${med.dose} • ${med.times}", fontSize = 16.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
-                Row {
-                    IconButton(onClick = onEdit) {
-                        Icon(Icons.Default.Edit, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
-                    }
-                    IconButton(onClick = onDelete) {
-                        Icon(Icons.Default.Delete, contentDescription = null, tint = Color.LightGray)
-                    }
+                IconButton(onClick = onDelete) {
+                    Icon(Icons.Default.Delete, contentDescription = null, tint = Color.White.copy(alpha = 0.3f))
                 }
             }
             
             if (med.stockCount > 0 || isLowStock) {
-                Spacer(Modifier.height(8.dp))
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.background(if (isLowStock) Color(0xFFFFF3E0) else Color.Transparent, RoundedCornerShape(8.dp)).padding(4.dp)
+                Spacer(Modifier.height(12.dp))
+                Surface(
+                    color = if (isLowStock) Color(0xFFEF4444).copy(alpha = 0.2f) else MaterialTheme.colorScheme.surface.copy(alpha = 0.5f),
+                    shape = RoundedCornerShape(16.dp),
+                    modifier = Modifier.fillMaxWidth()
                 ) {
-                    Icon(Icons.Outlined.Inventory, contentDescription = null, modifier = Modifier.size(16.dp), tint = if (isLowStock) Color(0xFFE65100) else Color.Gray)
-                    Spacer(Modifier.width(4.dp))
-                    Text(
-                        text = if (isLowStock) "BIJNA OP: nog ${med.stockCount} stuks" else "Voorraad: ${med.stockCount}",
-                        fontSize = 14.sp,
-                        fontWeight = if (isLowStock) FontWeight.Bold else FontWeight.Normal,
-                        color = if (isLowStock) Color(0xFFE65100) else Color.Gray
-                    )
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp)
+                    ) {
+                        Icon(
+                            Icons.Outlined.Inventory, 
+                            contentDescription = null, 
+                            modifier = Modifier.size(18.dp), 
+                            tint = if (isLowStock) Color(0xFFF87171) else MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Spacer(Modifier.width(8.dp))
+                        Text(
+                            text = if (isLowStock) "BIJNA OP: nog ${med.stockCount} stuks" else "Voorraad: ${med.stockCount}",
+                            fontSize = 15.sp,
+                            fontWeight = if (isLowStock) FontWeight.Black else FontWeight.Bold,
+                            color = if (isLowStock) Color(0xFFF87171) else MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
                 }
             }
         }
@@ -287,25 +362,31 @@ fun MedicationInfoCard(med: Medication, onDelete: () -> Unit, onEdit: () -> Unit
 fun MedicationHistoryView(logs: List<MedicationLog>, meds: List<Medication>) {
     if (logs.isEmpty()) {
         Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            Text("Nog geen geschiedenis", color = Color.Gray)
+            Text("Nog geen geschiedenis", color = Color.Gray, fontWeight = FontWeight.Bold, fontSize = 18.sp)
         }
     } else {
-        LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(8.dp)) {
+        LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(bottom = 24.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             items(logs) { log ->
                 val med = meds.find { it.id == log.medicationId }
                 val dateStr = SimpleDateFormat("EEEE d MMMM", Locale("nl", "NL")).format(Date(log.date))
                 
-                Card(
-                    Modifier.fillMaxWidth().padding(vertical = 4.dp),
-                    colors = CardDefaults.cardColors(containerColor = Color.White),
-                    shape = RoundedCornerShape(12.dp)
+                Surface(
+                    Modifier.fillMaxWidth(),
+                    color = Color(0xFF1E293B).copy(alpha = 0.5f),
+                    shape = RoundedCornerShape(40.dp),
+                    border = androidx.compose.foundation.BorderStroke(1.dp, Color.White.copy(alpha = 0.1f))
                 ) {
-                    Row(Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
-                        Text(if (log.status == "TAKEN") "✅" else "❌", fontSize = 24.sp)
-                        Spacer(Modifier.width(16.dp))
+                    Row(Modifier.padding(20.dp), verticalAlignment = Alignment.CenterVertically) {
+                        Box(
+                            Modifier.size(50.dp).background(if (log.status == "TAKEN") Color(0xFF10B981).copy(alpha = 0.1f) else Color(0xFFEF4444).copy(alpha = 0.1f), CircleShape),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(if (log.status == "TAKEN") "✅" else "❌", fontSize = 24.sp)
+                        }
+                        Spacer(Modifier.width(20.dp))
                         Column {
-                            Text(med?.name ?: "Verwijderd medicijn", fontWeight = FontWeight.Bold, fontSize = 18.sp)
-                            Text("$dateStr om ${log.time}", fontSize = 14.sp, color = Color.Gray)
+                            Text(med?.name ?: "Verwijderd medicijn", fontWeight = FontWeight.Black, fontSize = 20.sp, color = MaterialTheme.colorScheme.onSurface)
+                            Text("$dateStr om ${log.time}", fontSize = 15.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
                         }
                     }
                 }
@@ -344,75 +425,137 @@ fun MedicationEditDialog(
     }
 
     Dialog(onDismissRequest = onDismiss) {
-        Card(
-            Modifier.fillMaxWidth().fillMaxHeight(0.95f),
-            shape = RoundedCornerShape(28.dp)
+        Surface(
+            Modifier.fillMaxWidth().fillMaxHeight(0.9f),
+            shape = RoundedCornerShape(40.dp),
+            color = Color(0xFF1E293B), // Slate 800
+            border = androidx.compose.foundation.BorderStroke(1.dp, Color.White.copy(alpha = 0.1f))
         ) {
-            Column(Modifier.padding(20.dp).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                Text(if (medication == null) "Nieuw Medicijn" else "Aanpassen", fontSize = 24.sp, fontWeight = FontWeight.Bold)
+            Column(Modifier.padding(24.dp).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                Text(if (medication == null) "Nieuw Medicijn" else "Aanpassen", fontSize = 28.sp, fontWeight = FontWeight.Black, color = Color.White)
                 
-                OutlinedTextField(value = name, onValueChange = { name = it }, label = { Text("Naam") }, modifier = Modifier.fillMaxWidth())
-                OutlinedTextField(value = dose, onValueChange = { dose = it }, label = { Text("Dosering") }, modifier = Modifier.fillMaxWidth())
-                OutlinedTextField(value = stock, onValueChange = { stock = it }, label = { Text("Voorraad (aantal)") }, modifier = Modifier.fillMaxWidth())
+                OutlinedTextField(
+                    value = name, 
+                    onValueChange = { name = it }, 
+                    label = { Text("Naam") }, 
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(24.dp),
+                    colors = TextFieldDefaults.colors(
+                        focusedContainerColor = Color.Transparent,
+                        unfocusedContainerColor = Color.Transparent,
+                        focusedTextColor = Color.White,
+                        unfocusedTextColor = Color.White
+                    )
+                )
+                OutlinedTextField(
+                    value = dose, 
+                    onValueChange = { dose = it }, 
+                    label = { Text("Dosering") }, 
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(24.dp),
+                    colors = TextFieldDefaults.colors(
+                        focusedContainerColor = Color.Transparent,
+                        unfocusedContainerColor = Color.Transparent,
+                        focusedTextColor = Color.White,
+                        unfocusedTextColor = Color.White
+                    )
+                )
+                OutlinedTextField(
+                    value = stock, 
+                    onValueChange = { stock = it }, 
+                    label = { Text("Voorraad (aantal)") }, 
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(24.dp),
+                    colors = TextFieldDefaults.colors(
+                        focusedContainerColor = Color.Transparent,
+                        unfocusedContainerColor = Color.Transparent,
+                        focusedTextColor = Color.White,
+                        unfocusedTextColor = Color.White
+                    )
+                )
                 
-                Text("Herhaal op:", fontWeight = FontWeight.Bold)
+                Text("Herhaal op:", fontWeight = FontWeight.Black, color = Color.White)
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                     for (i in 1..7) {
                         val isSelected = selectedDays.contains(i)
-                        Box(
-                            modifier = Modifier
-                                .size(38.dp)
-                                .clip(CircleShape)
-                                .background(if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant)
-                                .clickable { if (isSelected) selectedDays.remove(i) else selectedDays.add(i) },
-                            contentAlignment = Alignment.Center
+                        Surface(
+                            onClick = { if (isSelected) selectedDays.remove(i) else selectedDays.add(i) },
+                            modifier = Modifier.size(42.dp),
+                            shape = CircleShape,
+                            color = if (isSelected) MaterialTheme.colorScheme.primary else Color.White.copy(alpha = 0.1f),
+                            border = androidx.compose.foundation.BorderStroke(1.dp, Color.White.copy(alpha = 0.1f))
                         ) {
-                            Text(dayNames[i-1].take(1), color = if (isSelected) Color.White else Color.Black, fontWeight = FontWeight.Bold)
+                            Box(contentAlignment = Alignment.Center) {
+                                Text(dayNames[i-1].take(1), color = Color.White, fontWeight = FontWeight.Black)
+                            }
                         }
                     }
                 }
 
-                Text("Foto:", fontWeight = FontWeight.Bold)
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+                Text("Foto:", fontWeight = FontWeight.Black, color = Color.White)
+                Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
                     if (photoUri != null) {
-                        AsyncImage(model = photoUri, contentDescription = null, modifier = Modifier.size(60.dp).clip(RoundedCornerShape(8.dp)), contentScale = ContentScale.Crop)
+                        AsyncImage(model = photoUri, contentDescription = null, modifier = Modifier.size(80.dp).clip(RoundedCornerShape(20.dp)), contentScale = ContentScale.Crop)
+                    } else {
+                        Box(Modifier.size(80.dp).background(Color.White.copy(alpha = 0.05f), RoundedCornerShape(20.dp)), contentAlignment = Alignment.Center) {
+                            Icon(Icons.Default.PhotoCamera, null, tint = Color.White.copy(alpha = 0.3f), modifier = Modifier.size(32.dp))
+                        }
                     }
-                    Button(onClick = { galleryLauncher.launch("image/*") }, modifier = Modifier.weight(1f)) {
+                    Button(
+                        onClick = { galleryLauncher.launch("image/*") }, 
+                        modifier = Modifier.weight(1f).height(70.dp),
+                        shape = RoundedCornerShape(40.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary)
+                    ) {
                         Icon(Icons.Default.PhotoLibrary, null)
                         Spacer(Modifier.width(8.dp))
-                        Text("KIES FOTO")
+                        Text("KIES FOTO", fontWeight = FontWeight.Black)
                     }
                 }
 
-                Text("Tijden:", fontWeight = FontWeight.Bold)
+                Text("Tijden:", fontWeight = FontWeight.Black, color = Color.White)
                 selectedTimes.forEach { time ->
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text(time, fontSize = 18.sp, modifier = Modifier.weight(1f))
-                        IconButton(onClick = { selectedTimes.remove(time) }) { Icon(Icons.Default.Close, null, tint = Color.Red) }
+                    Surface(
+                        modifier = Modifier.fillMaxWidth(),
+                        color = Color.White.copy(alpha = 0.05f),
+                        shape = RoundedCornerShape(24.dp)
+                    ) {
+                        Row(Modifier.padding(horizontal = 16.dp, vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
+                            Text(time, fontSize = 20.sp, fontWeight = FontWeight.Bold, color = Color.White, modifier = Modifier.weight(1f))
+                            IconButton(onClick = { selectedTimes.remove(time) }) { Icon(Icons.Default.Close, null, tint = Color(0xFFEF4444)) }
+                        }
                     }
                 }
-                Button(onClick = {
-                    val c = Calendar.getInstance()
-                    TimePickerDialog(context, { _, h, m ->
-                        val timeStr = String.format(Locale.getDefault(), "%02d:%02d", h, m)
-                        if (!selectedTimes.contains(timeStr)) {
-                            selectedTimes.add(timeStr)
-                            selectedTimes.sort()
-                        }
-                    }, c.get(Calendar.HOUR_OF_DAY), c.get(Calendar.MINUTE), true).show()
-                }, modifier = Modifier.fillMaxWidth()) {
-                    Icon(Icons.Default.Add, null)
+                Button(
+                    onClick = {
+                        val c = Calendar.getInstance()
+                        TimePickerDialog(context, { _, h, m ->
+                            val timeStr = String.format(Locale.getDefault(), "%02d:%02d", h, m)
+                            if (!selectedTimes.contains(timeStr)) {
+                                selectedTimes.add(timeStr)
+                                selectedTimes.sort()
+                            }
+                        }, c.get(Calendar.HOUR_OF_DAY), c.get(Calendar.MINUTE), true).show()
+                    }, 
+                    modifier = Modifier.fillMaxWidth().height(70.dp),
+                    shape = RoundedCornerShape(40.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = Color.White.copy(alpha = 0.1f))
+                ) {
+                    Icon(Icons.Default.Add, null, tint = Color.White)
                     Spacer(Modifier.width(8.dp))
-                    Text("TIJD TOEVOEGEN")
+                    Text("TIJD TOEVOEGEN", fontWeight = FontWeight.Black, color = Color.White)
                 }
 
                 Spacer(Modifier.height(16.dp))
                 
-                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    TextButton(onClick = onDismiss, modifier = Modifier.weight(1f)) { Text("ANNULEREN") }
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                    TextButton(onClick = onDismiss, modifier = Modifier.weight(1f).height(70.dp)) { 
+                        Text("ANNULEREN", color = Color.White.copy(alpha = 0.6f), fontWeight = FontWeight.Black) 
+                    }
                     Button(
-                        modifier = Modifier.weight(1f),
+                        modifier = Modifier.weight(1f).height(70.dp),
                         enabled = name.isNotBlank() && selectedTimes.isNotEmpty() && selectedDays.isNotEmpty(),
+                        shape = RoundedCornerShape(40.dp),
                         onClick = {
                             val baseMed = medication ?: Medication(name = "", dose = "", times = "")
                             onSave(baseMed.copy(
@@ -424,7 +567,7 @@ fun MedicationEditDialog(
                                 photoUri = photoUri?.toString()
                             ))
                         }
-                    ) { Text("OPSLAAN") }
+                    ) { Text("OPSLAAN", fontWeight = FontWeight.Black) }
                 }
             }
         }

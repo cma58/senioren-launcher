@@ -1,11 +1,19 @@
 package com.seniorenlauncher.ui.screens.home
 
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -61,53 +69,81 @@ fun FallDetectionDialog(
         properties = DialogProperties(dismissOnBackPress = false, dismissOnClickOutside = false, usePlatformDefaultWidth = false)
     ) {
         Card(
-            shape = RoundedCornerShape(24.dp),
+            shape = RoundedCornerShape(40.dp),
             modifier = Modifier
-                .fillMaxWidth(0.9f)
+                .fillMaxWidth(0.95f)
                 .padding(16.dp),
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer)
+            colors = CardDefaults.cardColors(containerColor = Color(0xFFEF4444)), // Red 500
+            border = BorderStroke(2.dp, Color.White.copy(alpha = 0.2f))
         ) {
             Column(
-                Modifier.padding(24.dp),
+                Modifier.padding(32.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(20.dp)
+                verticalArrangement = Arrangement.spacedBy(24.dp)
             ) {
+                Icon(
+                    Icons.Default.Warning,
+                    contentDescription = null,
+                    modifier = Modifier.size(100.dp),
+                    tint = Color.White
+                )
+
                 Text(
                     "VAL GEDETECTEERD!",
-                    fontSize = 28.sp,
-                    fontWeight = FontWeight.ExtraBold,
-                    color = MaterialTheme.colorScheme.error
+                    fontSize = 32.sp,
+                    fontWeight = FontWeight.Black,
+                    color = Color.White,
+                    textAlign = androidx.compose.ui.text.style.TextAlign.Center
                 )
 
                 Text(
                     "Bent u gevallen? We gaan hulp inschakelen over:",
                     fontSize = 20.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White,
                     textAlign = androidx.compose.ui.text.style.TextAlign.Center
                 )
 
                 Text(
                     "$timeLeft",
-                    fontSize = 80.sp,
-                    fontWeight = FontWeight.ExtraBold,
-                    color = MaterialTheme.colorScheme.error
+                    fontSize = 100.sp,
+                    fontWeight = FontWeight.Black,
+                    color = Color.White
+                )
+
+                val cancelInteractionSource = remember { MutableInteractionSource() }
+                val cancelPressed by cancelInteractionSource.collectIsPressedAsState()
+                val cancelScale by animateFloatAsState(
+                    targetValue = if (cancelPressed) 0.94f else 1f,
+                    animationSpec = spring(dampingRatio = 0.7f, stiffness = 500f)
                 )
 
                 Button(
                     onClick = onCancel,
-                    modifier = Modifier.fillMaxWidth().height(80.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.surface),
-                    shape = RoundedCornerShape(20.dp)
+                    interactionSource = cancelInteractionSource,
+                    modifier = Modifier.fillMaxWidth().height(90.dp).scale(cancelScale),
+                    colors = ButtonDefaults.buttonColors(containerColor = Color.White, contentColor = Color(0xFFEF4444)),
+                    shape = RoundedCornerShape(40.dp)
                 ) {
-                    Text("IK MAAK HET GOED (STOP)", fontSize = 22.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
+                    Text("STOP / ANNULEER", fontSize = 24.sp, fontWeight = FontWeight.Black)
                 }
 
-                Button(
+                val confirmInteractionSource = remember { MutableInteractionSource() }
+                val confirmPressed by confirmInteractionSource.collectIsPressedAsState()
+                val confirmScale by animateFloatAsState(
+                    targetValue = if (confirmPressed) 0.94f else 1f,
+                    animationSpec = spring(dampingRatio = 0.7f, stiffness = 500f)
+                )
+
+                OutlinedButton(
                     onClick = onConfirm,
-                    modifier = Modifier.fillMaxWidth().height(80.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = Color.Red),
-                    shape = RoundedCornerShape(20.dp)
+                    interactionSource = confirmInteractionSource,
+                    modifier = Modifier.fillMaxWidth().height(80.dp).scale(confirmScale),
+                    colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.White),
+                    border = BorderStroke(2.dp, Color.White.copy(alpha = 0.5f)),
+                    shape = RoundedCornerShape(40.dp)
                 ) {
-                    Text("BEL NU HULP", fontSize = 22.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                    Text("BEL NU HULP", fontSize = 22.sp, fontWeight = FontWeight.Black)
                 }
             }
         }

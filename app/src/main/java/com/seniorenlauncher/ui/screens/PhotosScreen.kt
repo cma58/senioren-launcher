@@ -69,7 +69,7 @@ fun PhotosScreen(onBack: () -> Unit) {
         isLoading = false
     }
 
-    Column(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background).padding(horizontal = 12.dp, vertical = 8.dp)) {
+    Column(Modifier.fillMaxSize().background(Color(0xFF0F172A)).padding(horizontal = 12.dp, vertical = 8.dp)) {
         val title = when {
             initialPageIndex != null -> "Foto bekijken"
             selectedFolder != null -> selectedFolder!!
@@ -134,7 +134,7 @@ fun PhotosScreen(onBack: () -> Unit) {
                     Card(
                         modifier = Modifier
                             .aspectRatio(1f)
-                            .clip(RoundedCornerShape(12.dp))
+                            .clip(RoundedCornerShape(20.dp))
                             .clickable { initialPageIndex = index },
                         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
                     ) {
@@ -158,9 +158,10 @@ fun FolderCard(folder: FolderItem, onClick: () -> Unit) {
             .fillMaxWidth()
             .aspectRatio(0.9f)
             .clickable { onClick() }
-            .shadow(4.dp, RoundedCornerShape(16.dp)),
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+            .shadow(8.dp, RoundedCornerShape(40.dp)),
+        shape = RoundedCornerShape(40.dp),
+        colors = CardDefaults.cardColors(containerColor = Color(0xFF1E293B).copy(alpha = 0.5f)),
+        border = androidx.compose.foundation.BorderStroke(1.dp, Color.White.copy(alpha = 0.1f))
     ) {
         Column {
             Box(Modifier.weight(1f)) {
@@ -175,22 +176,23 @@ fun FolderCard(folder: FolderItem, onClick: () -> Unit) {
                         .align(Alignment.BottomEnd)
                         .padding(8.dp),
                     color = Color.Black.copy(alpha = 0.6f),
-                    shape = RoundedCornerShape(8.dp)
+                    shape = RoundedCornerShape(20.dp)
                 ) {
                     Text(
                         "${folder.photoCount}",
                         color = Color.White,
-                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
-                        fontSize = 12.sp,
-                        fontWeight = FontWeight.Bold
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Black
                     )
                 }
             }
             Text(
-                text = folder.name,
+                text = folder.name.uppercase(),
                 modifier = Modifier.padding(12.dp),
                 fontSize = 18.sp,
-                fontWeight = FontWeight.Bold,
+                fontWeight = FontWeight.Black,
+                color = Color.White,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )

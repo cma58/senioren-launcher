@@ -25,6 +25,9 @@ import com.seniorenlauncher.service.SeniorInCallService
 import com.seniorenlauncher.util.UpdateManager
 import android.telecom.Call
 import android.util.Log
+import android.content.pm.PackageManager
+import androidx.core.content.ContextCompat
+import com.seniorenlauncher.service.StepCounterService
 
 class MainActivity : ComponentActivity() {
     
@@ -88,6 +91,11 @@ class MainActivity : ComponentActivity() {
                 val release = updateManager.checkForUpdates()
                 if (release != null) {
                     updateManager.downloadAndInstall(release)
+                }
+
+                // Start stappenteller als we de permissie hebben
+                if (hasStepPermission()) {
+                    startForegroundService(Intent(this@MainActivity, StepCounterService::class.java))
                 }
             }
 
@@ -217,5 +225,11 @@ class MainActivity : ComponentActivity() {
                 navigateToIncomingCall.value = true
             }
         }
+    }
+
+    private fun hasStepPermission(): Boolean {
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            ContextCompat.checkSelfPermission(this, android.Manifest.permission.ACTIVITY_RECOGNITION) == PackageManager.PERMISSION_GRANTED
+        } else true
     }
 }

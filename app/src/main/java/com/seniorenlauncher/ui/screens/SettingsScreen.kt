@@ -3,6 +3,8 @@ package com.seniorenlauncher.ui.screens
 import androidx.compose.ui.tooling.preview.Preview
 import com.seniorenlauncher.ui.theme.SeniorenLauncherTheme
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -124,7 +126,7 @@ fun SettingsScreenContent(
         return
     }
 
-    Column(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background).padding(horizontal = 16.dp, vertical = 8.dp)) {
+    Column(Modifier.fillMaxSize().background(Color(0xFF0F172A)).padding(horizontal = 16.dp, vertical = 8.dp)) {
         ScreenHeader(title = "Beheer & Instellingen", onBack = onBack)
         
         Column(
@@ -141,8 +143,13 @@ fun SettingsScreenContent(
                             modifier = Modifier
                                 .weight(1f)
                                 .background(
-                                    if (selected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surface,
-                                    RoundedCornerShape(12.dp)
+                                    if (selected) Color(0xFF6366F1).copy(alpha = 0.2f) else Color(0xFF1E293B),
+                                    RoundedCornerShape(20.dp)
+                                )
+                                .border(
+                                    1.dp, 
+                                    if (selected) Color(0xFF6366F1) else Color.White.copy(alpha = 0.1f),
+                                    RoundedCornerShape(20.dp)
                                 )
                                 .clickable { 
                                     haptic.performHapticFeedback(HapticFeedbackType.LongPress)
@@ -178,7 +185,7 @@ fun SettingsScreenContent(
                                 onUpdateLayout(type) 
                             },
                             modifier = Modifier.weight(1f),
-                            shape = RoundedCornerShape(12.dp),
+                            shape = RoundedCornerShape(20.dp),
                             colors = if (selected) ButtonDefaults.buttonColors() else ButtonDefaults.filledTonalButtonColors()
                         ) {
                             Text(label, fontSize = 14.sp)
@@ -219,7 +226,7 @@ fun SettingsScreenContent(
                                 onUpdateLanguage(code) 
                             },
                             modifier = Modifier.weight(1f),
-                            shape = RoundedCornerShape(8.dp),
+                            shape = RoundedCornerShape(20.dp),
                             colors = if (selected) ButtonDefaults.buttonColors() else ButtonDefaults.filledTonalButtonColors(),
                             contentPadding = PaddingValues(4.dp)
                         ) {
@@ -292,8 +299,8 @@ fun SettingsScreenContent(
                             }
                         },
                         enabled = !isCheckingUpdate,
-                        modifier = Modifier.fillMaxWidth().height(64.dp),
-                        shape = RoundedCornerShape(16.dp)
+                        modifier = Modifier.fillMaxWidth().height(80.dp),
+                        shape = RoundedCornerShape(40.dp)
                     ) {
                         if (isCheckingUpdate) CircularProgressIndicator(Modifier.size(24.dp), color = Color.White)
                         else Row(verticalAlignment = Alignment.CenterVertically) {
@@ -325,9 +332,9 @@ fun SettingsScreenContent(
                         haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                         onLockSettings() 
                     },
-                    modifier = Modifier.fillMaxWidth().height(64.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error),
-                    shape = RoundedCornerShape(16.dp)
+                    modifier = Modifier.fillMaxWidth().height(80.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFEF4444)),
+                    shape = RoundedCornerShape(40.dp)
                 ) {
                     Icon(Icons.Default.Lock, null)
                     Spacer(Modifier.width(12.dp))
@@ -365,8 +372,8 @@ fun SettingsScreenContent(
                         val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://www.paypal.com/donate/?business=amine.chtaiti@gmail.com&no_recurring=0&currency_code=EUR"))
                         context.startActivity(intent)
                     },
-                    modifier = Modifier.fillMaxWidth().height(60.dp),
-                    shape = RoundedCornerShape(16.dp),
+                    modifier = Modifier.fillMaxWidth().height(80.dp),
+                    shape = RoundedCornerShape(40.dp),
                     colors = ButtonDefaults.filledTonalButtonColors()
                 ) {
                     Icon(Icons.Default.VolunteerActivism, null) // VolunteerActivism acts as a nice "heart in hand" icon
@@ -384,8 +391,9 @@ fun SettingsScreenContent(
 fun SettingsGroup(title: String, icon: ImageVector, content: @Composable ColumnScope.() -> Unit) {
     Card(
         Modifier.fillMaxWidth(), 
-        shape = RoundedCornerShape(24.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f))
+        shape = RoundedCornerShape(40.dp),
+        colors = CardDefaults.cardColors(containerColor = Color(0xFF1E293B).copy(alpha = 0.5f)),
+        border = BorderStroke(1.dp, Color.White.copy(alpha = 0.1f))
     ) {
         Column(Modifier.padding(20.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -418,38 +426,38 @@ fun SettRow(label: String, onClick: () -> Unit) {
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
-        Text(label, fontSize = 18.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
-        Icon(Icons.Default.ChevronRight, null, tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(28.dp))
+        Text(label, fontSize = 18.sp, fontWeight = FontWeight.Black, color = Color.White)
+        Icon(Icons.Default.ChevronRight, null, tint = Color.White.copy(alpha = 0.3f), modifier = Modifier.size(28.dp))
     }
 }
 
 @Composable
 fun LockedSettingsScreen(onBack: () -> Unit, onUnlockClick: () -> Unit) {
     Column(
-        Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background).padding(32.dp),
+        Modifier.fillMaxSize().background(Color(0xFF0F172A)).padding(32.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
         Icon(Icons.Default.Lock, null, modifier = Modifier.size(120.dp), tint = MaterialTheme.colorScheme.primary)
         Spacer(Modifier.height(32.dp))
-        Text("Instellingen Vergrendeld", fontSize = 32.sp, fontWeight = FontWeight.Black, textAlign = TextAlign.Center)
+        Text("Instellingen Vergrendeld", fontSize = 32.sp, fontWeight = FontWeight.Black, textAlign = TextAlign.Center, color = Color.White)
         Spacer(Modifier.height(16.dp))
         Text(
             "Dit menu is beveiligd om te voorkomen dat instellingen per ongeluk worden gewijzigd.", 
             fontSize = 20.sp, 
             textAlign = TextAlign.Center,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
+            color = Color.White.copy(alpha = 0.7f)
         )
         Spacer(Modifier.height(48.dp))
         Button(
             onClick = onUnlockClick,
-            shape = RoundedCornerShape(20.dp),
+            shape = RoundedCornerShape(40.dp),
             modifier = Modifier.fillMaxWidth().height(90.dp)
         ) {
             Text("PINCODE INVOEREN", fontSize = 24.sp, fontWeight = FontWeight.Black)
         }
         TextButton(onClick = onBack, modifier = Modifier.padding(top = 24.dp)) {
-            Text("TERUG NAAR START", fontSize = 20.sp, fontWeight = FontWeight.Bold)
+            Text("TERUG NAAR START", fontSize = 20.sp, fontWeight = FontWeight.Black, color = Color.White.copy(alpha = 0.7f))
         }
     }
 }
@@ -457,11 +465,11 @@ fun LockedSettingsScreen(onBack: () -> Unit, onUnlockClick: () -> Unit) {
 @Composable
 fun PinEntryScreen(pin: String, onPinChange: (String) -> Unit, onCancel: () -> Unit) {
     Column(
-        Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background).padding(32.dp),
+        Modifier.fillMaxSize().background(Color(0xFF0F172A)).padding(32.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        Text("Beheerders PIN", fontSize = 28.sp, fontWeight = FontWeight.Black)
+        Text("Beheerders PIN", fontSize = 28.sp, fontWeight = FontWeight.Black, color = Color.White)
         Spacer(Modifier.height(32.dp))
         Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
             repeat(4) { i ->
@@ -469,7 +477,7 @@ fun PinEntryScreen(pin: String, onPinChange: (String) -> Unit, onCancel: () -> U
                     Modifier
                         .size(28.dp)
                         .background(
-                            if (pin.length > i) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant,
+                            if (pin.length > i) MaterialTheme.colorScheme.primary else Color.White.copy(alpha = 0.1f),
                             CircleShape
                         )
                 )
@@ -492,11 +500,11 @@ fun PinEntryScreen(pin: String, onPinChange: (String) -> Unit, onCancel: () -> U
                             Surface(
                                 onClick = { onPinChange(key) },
                                 shape = CircleShape,
-                                color = MaterialTheme.colorScheme.surfaceVariant,
+                                color = Color.White.copy(alpha = 0.1f),
                                 modifier = Modifier.size(80.dp)
                             ) {
                                 Box(contentAlignment = Alignment.Center) {
-                                    Text(key, fontSize = 32.sp, fontWeight = FontWeight.Black)
+                                    Text(key, fontSize = 32.sp, fontWeight = FontWeight.Black, color = Color.White)
                                 }
                             }
                         }
@@ -506,7 +514,7 @@ fun PinEntryScreen(pin: String, onPinChange: (String) -> Unit, onCancel: () -> U
         }
         Spacer(Modifier.height(32.dp))
         TextButton(onClick = onCancel) {
-            Text("ANNULEREN", fontSize = 22.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.error)
+            Text("ANNULEREN", fontSize = 22.sp, fontWeight = FontWeight.Black, color = Color(0xFFEF4444))
         }
     }
 }

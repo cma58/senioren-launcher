@@ -2,20 +2,25 @@ package com.seniorenlauncher.ui.components
 
 import android.graphics.drawable.Drawable
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.border
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.surfaceColorAtElevation
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -30,8 +35,6 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.material3.Icon
-import androidx.compose.material3.Surface
 import coil.compose.rememberAsyncImagePainter
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -51,39 +54,65 @@ fun BigButton(
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val pressed by interactionSource.collectIsPressedAsState()
-    val scale by animateFloatAsState(if (pressed) 0.94f else 1f, label = "s")
+    val scale by animateFloatAsState(
+        targetValue = if (pressed) 0.94f else 1f,
+        animationSpec = spring(dampingRatio = 0.7f, stiffness = 500f),
+        label = "scale"
+    )
     
-    val buttonHeight = if (small) 110.dp else 150.dp
-    val cornerRadius = if (small) 24.dp else 32.dp
+    val buttonHeight = if (small) 120.dp else 168.dp
+    val cornerRadius = 40.dp
 
     Box(
         modifier = modifier
             .fillMaxWidth()
             .height(buttonHeight)
             .scale(scale)
-            .shadow(if (pressed) 2.dp else 10.dp, RoundedCornerShape(cornerRadius))
+            .shadow(
+                elevation = if (pressed) 2.dp else 8.dp,
+                shape = RoundedCornerShape(cornerRadius),
+                ambientColor = color.copy(alpha = 0.3f),
+                spotColor = color
+            )
             .clip(RoundedCornerShape(cornerRadius))
             .background(
                 Brush.verticalGradient(
                     colors = listOf(
-                        color.copy(alpha = 0.95f),
-                        color.copy(alpha = 0.75f)
+                        color.copy(alpha = 0.85f),
+                        color.copy(alpha = 0.95f)
                     )
                 )
+            )
+            .border(
+                width = 1.dp,
+                color = Color.White.copy(alpha = 0.15f),
+                shape = RoundedCornerShape(cornerRadius)
             )
             .combinedClickable(
                 interactionSource = interactionSource,
                 indication = null,
                 onClick = onClick,
                 onLongClick = onLongClick
-            )
-            .padding(12.dp), 
+            ),
         contentAlignment = Alignment.Center
     ) {
+        // High-end glass shine effect
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(
+                    Brush.radialGradient(
+                        colors = listOf(Color.White.copy(alpha = 0.12f), Color.Transparent),
+                        center = androidx.compose.ui.geometry.Offset(0f, 0f),
+                        radius = 400f
+                    )
+                )
+        )
+
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center,
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.padding(16.dp)
         ) {
             Box(contentAlignment = Alignment.Center) {
                 if (vectorIcon != null) {
@@ -103,94 +132,71 @@ fun BigButton(
                 } else if (emoji != null) {
                     Text(
                         emoji, 
-                        fontSize = if (small) 32.sp else 44.sp,
-                        lineHeight = if (small) 36.sp else 48.sp
+                        fontSize = if (small) 40.sp else 56.sp,
+                        style = androidx.compose.ui.text.TextStyle(
+                            shadow = androidx.compose.ui.graphics.Shadow(
+                                color = Color.Black.copy(alpha = 0.25f),
+                                offset = androidx.compose.ui.geometry.Offset(2f, 4f),
+                                blurRadius = 12f
+                            )
+                        )
                     )
                 }
                 
-                // Weather overlay (Temperature)
                 if (weatherText != null) {
                     Surface(
-                        Modifier
+                        modifier = Modifier
                             .align(Alignment.BottomEnd)
-                            .offset(x = 12.dp, y = 12.dp),
-                        shape = RoundedCornerShape(8.dp),
-                        color = Color.Black.copy(alpha = 0.5f)
+                            .offset(x = 10.dp, y = 10.dp),
+                        shape = RoundedCornerShape(14.dp),
+                        color = Color.Black.copy(alpha = 0.5f),
+                        border = BorderStroke(0.5.dp, Color.White.copy(alpha = 0.2f))
                     ) {
                         Text(
                             weatherText, 
                             color = Color.White, 
-                            fontSize = 14.sp, 
+                            fontSize = 15.sp, 
                             fontWeight = FontWeight.Black,
-                            modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp)
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
                         )
                     }
                 }
             }
             
-            Spacer(Modifier.height(8.dp))
+            Spacer(Modifier.height(14.dp))
             
             Text(
-                label, 
-                fontSize = if (small) 16.sp else 22.sp, 
+                label.uppercase(), 
+                fontSize = if (small) 15.sp else 19.sp, 
                 fontWeight = FontWeight.Black,
                 color = Color.White, 
                 textAlign = TextAlign.Center, 
                 maxLines = 1,
+                letterSpacing = 1.2.sp,
                 overflow = TextOverflow.Ellipsis
             )
         }
         
         if (badge != null && badge > 0) {
             Surface(
-                Modifier
+                modifier = Modifier
                     .align(Alignment.TopEnd)
-                    .offset(x = 4.dp, y = (-4).dp)
-                    .size(36.dp),
+                    .padding(14.dp)
+                    .size(34.dp),
                 shape = CircleShape,
-                color = Color(0xFFEF4444),
-                shadowElevation = 4.dp
+                color = Color.White,
+                shadowElevation = 8.dp,
+                border = BorderStroke(2.dp, color.copy(alpha = 0.2f))
             ) {
                 Box(contentAlignment = Alignment.Center) {
                     Text(
                         badge.toString(), 
-                        fontSize = 18.sp,
+                        fontSize = 17.sp,
                         fontWeight = FontWeight.Black, 
-                        color = Color.White
+                        color = color
                     )
                 }
             }
-        }
-    }
-}
-
-@Composable
-fun SOSButton(onClick: () -> Unit, modifier: Modifier = Modifier) {
-    Box(
-        modifier = modifier
-            .fillMaxWidth()
-            .heightIn(min = 100.dp)
-            .wrapContentHeight()
-            .clip(RoundedCornerShape(16.dp))
-            .background(Brush.linearGradient(listOf(Color(0xFFEF4444), Color(0xFFDC2626))))
-            .clickable { onClick() }
-            .padding(16.dp),
-        contentAlignment = Alignment.Center
-    ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.Center,
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Text("🆘", fontSize = 40.sp)
-            Spacer(Modifier.width(16.dp))
-            Text(
-                "SOS NOOD", 
-                fontSize = 28.sp, 
-                fontWeight = FontWeight.ExtraBold,
-                color = Color.White, 
-                textAlign = TextAlign.Center
-            )
         }
     }
 }
@@ -200,41 +206,41 @@ fun ScreenHeader(title: String, onBack: () -> Unit) {
     Surface(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(bottom = 16.dp),
+            .padding(bottom = 20.dp, top = 8.dp),
         color = Color.Transparent
     ) {
         Row(
-            Modifier
+            modifier = Modifier
                 .fillMaxWidth()
-                .heightIn(min = 90.dp),
+                .heightIn(min = 96.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Surface(
-                modifier = Modifier
-                    .size(80.dp)
-                    .clickable { onBack() },
-                shape = RoundedCornerShape(24.dp),
-                color = MaterialTheme.colorScheme.surfaceColorAtElevation(4.dp),
-                tonalElevation = 2.dp
+                onClick = onBack,
+                modifier = Modifier.size(80.dp),
+                shape = RoundedCornerShape(32.dp),
+                color = Color(0xFF1E293B), // Slate 800
+                border = BorderStroke(1.dp, Color.White.copy(alpha = 0.1f))
             ) {
                 Box(contentAlignment = Alignment.Center) {
                     Text(
                         "←", 
                         fontSize = 44.sp, 
                         fontWeight = FontWeight.Black, 
-                        color = MaterialTheme.colorScheme.primary
+                        color = Color.White
                     )
                 }
             }
-            Spacer(Modifier.width(20.dp))
+            Spacer(Modifier.width(24.dp))
             Text(
                 title, 
-                fontSize = 36.sp,
+                fontSize = 34.sp,
                 fontWeight = FontWeight.Black, 
-                color = MaterialTheme.colorScheme.onBackground,
+                color = Color.White,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.weight(1f)
+                modifier = Modifier.weight(1f),
+                lineHeight = 42.sp
             )
         }
     }

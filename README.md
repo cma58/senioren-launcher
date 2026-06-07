@@ -36,6 +36,7 @@ Most smartphones are designed for digital natives. We turn that around. The Seni
 | **🎮 Remote Support** | Caregivers manage the phone via the [Senioren Beheerder](https://github.com/cma58/SeniorenBeheerder) dashboard. |
 
 ## 🛠️ Recent Technical Updates (v0.8.8)
+- **Compose UI Stability:** Systematic resolution of `Surface` API mismatches and missing foundation imports across all major UI screens (`Weather`, `Settings`, `Calendar`, `AllApps`). Migrated `Surface` borders to `BorderStroke` and implemented `combinedClickable` for enhanced interaction handling.
 - **SMS Command Optimization:** Enhanced `#STATUS` output with visual markers (`🔕`, `🔊`) for caregiver apps.
 - **Bilingual Support:** Remote commands now accept both Dutch (`AAN`/`UIT`) and English (`ON`/`OFF`).
 - **International Normalization:** Improved phone number parsing for **BE, NL, FR, and DE** prefixes.

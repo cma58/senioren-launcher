@@ -36,6 +36,7 @@ De meeste smartphones zijn ontworpen voor "digital natives". Wij draaien dat om.
 | **🎮 Remote Support** | Laat mantelzorgers de telefoon beheren via de [Senioren Beheerder](https://github.com/cma58/SeniorenBeheerder) app. |
 
 ## 🛠️ Recente Technische Updates (v0.8.8)
+- **Compose UI Stabiliteit:** Systematische oplossing van `Surface` API-fouten en ontbrekende foundation-imports in alle belangrijke UI-schermen (`Weer`, `Instellingen`, `Agenda`, `Alle Apps`). `Surface`-randen zijn gemigreerd naar `BorderStroke` en `combinedClickable` is geïmplementeerd voor betere interactie-afhandeling.
 - **SMS Commando Optimalisatie:** Verbeterde `#STATUS` output met visuele indicatoren (`🔕`, `🔊`) voor beheer-apps.
 - **Tweetalige Ondersteuning:** Afstandscommando's accepteren nu zowel Nederlands (`AAN`/`UIT`) als Engels (`ON`/`OFF`).
 - **Internationale Normalisatie:** Verbeterde nummerherkenning voor **BE, NL, FR, en DE** landcodes.

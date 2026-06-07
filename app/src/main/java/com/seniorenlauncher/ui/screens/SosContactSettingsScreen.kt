@@ -43,7 +43,7 @@ fun SosContactSettingsScreen(onBack: () -> Unit) {
     
     var showAddDialog by remember { mutableStateOf(false) }
 
-    Column(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background).padding(horizontal = 12.dp, vertical = 8.dp)) {
+    Column(Modifier.fillMaxSize().background(Color(0xFF0F172A)).padding(horizontal = 12.dp, vertical = 8.dp)) {
         ScreenHeader(title = "SOS Instellingen", onBack = onBack)
         
         Text(
@@ -51,7 +51,7 @@ fun SosContactSettingsScreen(onBack: () -> Unit) {
             modifier = Modifier.padding(bottom = 16.dp, start = 8.dp, end = 8.dp),
             fontSize = 18.sp,
             lineHeight = 24.sp,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
+            color = Color.White.copy(alpha = 0.7f)
         )
 
         LazyColumn(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -59,12 +59,14 @@ fun SosContactSettingsScreen(onBack: () -> Unit) {
                 item {
                     Card(
                         modifier = Modifier.fillMaxWidth().padding(top = 24.dp),
-                        colors = CardDefaults.cardColors(containerColor = Color(0xFFFFF5F5))
+                        shape = RoundedCornerShape(40.dp),
+                        colors = CardDefaults.cardColors(containerColor = Color(0xFFEF4444).copy(alpha = 0.1f)),
+                        border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFEF4444).copy(alpha = 0.3f))
                     ) {
                         Column(Modifier.padding(24.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-                            Text("⚠️ Geen contacten", fontSize = 22.sp, fontWeight = FontWeight.Bold, color = Color(0xFFC53030))
+                            Text("⚠️ Geen contacten", fontSize = 22.sp, fontWeight = FontWeight.Black, color = Color(0xFFEF4444))
                             Spacer(Modifier.height(8.dp))
-                            Text("Voeg minimaal één persoon toe die we kunnen waarschuwen.", textAlign = androidx.compose.ui.text.style.TextAlign.Center)
+                            Text("Voeg minimaal één persoon toe die we kunnen waarschuwen.", textAlign = androidx.compose.ui.text.style.TextAlign.Center, color = Color.White)
                         }
                     }
                 }
@@ -73,25 +75,25 @@ fun SosContactSettingsScreen(onBack: () -> Unit) {
             items(sosContacts) { contact ->
                 Card(
                     modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(16.dp),
-                    colors = CardDefaults.cardColors(containerColor = Color(0xFFFEF2F2)),
-                    border = androidx.compose.foundation.BorderStroke(2.dp, Color(0xFFFCA5A5))
+                    shape = RoundedCornerShape(40.dp),
+                    colors = CardDefaults.cardColors(containerColor = Color(0xFF1E293B).copy(alpha = 0.5f)),
+                    border = androidx.compose.foundation.BorderStroke(1.dp, Color.White.copy(alpha = 0.1f))
                 ) {
                     Row(Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
-                        Box(Modifier.size(50.dp).background(Color(0xFFEF4444), CircleShape), contentAlignment = Alignment.Center) {
-                            Text(contact.name.take(1).uppercase(), color = Color.White, fontWeight = FontWeight.Bold, fontSize = 24.sp)
+                        Box(Modifier.size(60.dp).background(Color(0xFFEF4444), CircleShape), contentAlignment = Alignment.Center) {
+                            Text(contact.name.take(1).uppercase(), color = Color.White, fontWeight = FontWeight.Black, fontSize = 28.sp)
                         }
                         Spacer(Modifier.width(16.dp))
                         Column(Modifier.weight(1f)) {
-                            Text(contact.name, fontWeight = FontWeight.Black, fontSize = 20.sp)
-                            Text(contact.phoneNumber, fontSize = 16.sp, color = Color.DarkGray)
+                            Text(contact.name, fontWeight = FontWeight.Black, fontSize = 22.sp, color = Color.White)
+                            Text(contact.phoneNumber, fontSize = 16.sp, color = Color.White.copy(alpha = 0.6f))
                         }
                         IconButton(onClick = {
                             scope.launch {
                                 dao.delete(contact) // Verwijder volledig uit SOS lijst
                             }
                         }) {
-                            Icon(Icons.Default.Delete, "Verwijder", tint = Color(0xFFC53030), modifier = Modifier.size(32.dp))
+                            Icon(Icons.Default.Delete, "Verwijder", tint = Color.White.copy(alpha = 0.3f), modifier = Modifier.size(32.dp))
                         }
                     }
                 }
@@ -101,7 +103,7 @@ fun SosContactSettingsScreen(onBack: () -> Unit) {
         Button(
             onClick = { showAddDialog = true },
             modifier = Modifier.fillMaxWidth().height(90.dp).padding(vertical = 8.dp),
-            shape = RoundedCornerShape(20.dp),
+            shape = RoundedCornerShape(40.dp),
             colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFEF4444))
         ) {
             Icon(Icons.Default.PersonAdd, null, modifier = Modifier.size(32.dp))

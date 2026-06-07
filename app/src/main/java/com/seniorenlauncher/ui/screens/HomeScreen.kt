@@ -195,16 +195,16 @@ fun HomeScreenContent(
             HorizontalPager(
                 state = pagerState,
                 modifier = Modifier.weight(1f).fillMaxWidth(),
-                contentPadding = PaddingValues(horizontal = 24.dp, vertical = 16.dp),
-                pageSpacing = 24.dp
+                contentPadding = PaddingValues(horizontal = 24.dp, vertical = 8.dp),
+                pageSpacing = 32.dp
             ) { pageIndex ->
             val startIdx = pageIndex * appsPerPage
             
             LazyVerticalGrid(
                 columns = GridCells.Fixed(cols),
                 modifier = Modifier.fillMaxSize(),
-                verticalArrangement = Arrangement.spacedBy(16.dp),
-                horizontalArrangement = Arrangement.spacedBy(16.dp),
+                verticalArrangement = Arrangement.spacedBy(20.dp),
+                horizontalArrangement = Arrangement.spacedBy(20.dp),
                 userScrollEnabled = false
             ) {
                 // Apps voor deze pagina

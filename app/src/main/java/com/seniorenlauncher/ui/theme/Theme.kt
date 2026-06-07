@@ -13,10 +13,17 @@ import androidx.compose.ui.unit.sp
 import com.seniorenlauncher.data.model.AppTheme
 
 val ClassicColors = darkColorScheme(
-    primary = Color(0xFF3B82F6), onPrimary = Color.White, secondary = Color(0xFF38A169),
-    background = Color(0xFF0F1729), surface = Color(0xFF1A2440), surfaceVariant = Color(0xFF243352),
-    onBackground = Color.White, onSurface = Color.White, onSurfaceVariant = Color(0xFF8B9DC3),
-    error = Color(0xFFE53E3E)
+    primary = Color(0xFF6366F1), // Modern Indigo
+    onPrimary = Color.White,
+    secondary = Color(0xFF10B981), // Emerald
+    tertiary = Color(0xFFF59E0B), // Amber
+    background = Color(0xFF0F172A), // Slate 900
+    surface = Color(0xFF1E293B), // Slate 800
+    surfaceVariant = Color(0xFF334155), // Slate 700
+    onBackground = Color(0xFFF8FAFC),
+    onSurface = Color(0xFFF8FAFC),
+    onSurfaceVariant = Color(0xFFCBD5E1),
+    error = Color(0xFFEF4444)
 )
 val HighContrastColors = darkColorScheme(
     primary = Color(0xFF00CCFF), onPrimary = Color.Black, secondary = Color(0xFF00FF00),
@@ -25,9 +32,15 @@ val HighContrastColors = darkColorScheme(
     error = Color.Red
 )
 val LightColors = lightColorScheme(
-    primary = Color(0xFF2563EB), onPrimary = Color.White, secondary = Color(0xFF16A34A),
-    background = Color(0xFFF0F2F5), surface = Color.White, surfaceVariant = Color(0xFFE4E7EC),
-    onBackground = Color(0xFF1A202C), onSurface = Color(0xFF1A202C), onSurfaceVariant = Color(0xFF64748B),
+    primary = Color(0xFF4F46E5),
+    onPrimary = Color.White,
+    secondary = Color(0xFF059669),
+    background = Color(0xFFF8FAFC),
+    surface = Color.White,
+    surfaceVariant = Color(0xFFF1F5F9),
+    onBackground = Color(0xFF0F172A),
+    onSurface = Color(0xFF0F172A),
+    onSurfaceVariant = Color(0xFF64748B),
     error = Color(0xFFDC2626)
 )
 

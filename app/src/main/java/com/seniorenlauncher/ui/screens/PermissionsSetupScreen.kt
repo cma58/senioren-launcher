@@ -7,8 +7,14 @@ import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.*
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
@@ -18,6 +24,10 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
@@ -35,7 +45,6 @@ data class PermissionCategory(
     val permissions: List<String>
 )
 
-@OptIn(ExperimentalAnimationApi::class)
 @Composable
 fun PermissionsSetupScreen(onNext: () -> Unit, isSenior: Boolean = false) {
     val context = LocalContext.current
@@ -52,39 +61,30 @@ fun PermissionsSetupScreen(onNext: () -> Unit, isSenior: Boolean = false) {
         }
 
         list.add(PermissionCategory(
-            if (isSenior) "Hulp bij nood" else "Locatie", 
-            if (isSenior) "Als u in nood bent, kan de app uw familie vertellen waar u bent, ook als de telefoon in uw zak zit." 
-            else "Nodig voor de SOS-functie om uw locatie te bepalen (ook op de achtergrond).", 
-            "Privacy: Uw locatiegegevens worden alleen lokaal verwerkt en uitsluitend bij een actieve SOS-melding verstuurd naar uw eigen noodcontacten.",
+            if (isSenior) "HULP BIJ NOOD" else "LOCATIE", 
+            if (isSenior) "Als u in nood bent, kan de app uw familie vertellen waar u bent." 
+            else "Nodig voor de SOS-functie om uw locatie te bepalen.", 
+            "Privacy: Uw locatie wordt alleen gedeeld tijdens een SOS-oproep.",
             Icons.Default.LocationOn, 
             locationPermissions
         ))
 
         list.add(PermissionCategory(
-            if (isSenior) "Bellen naar familie" else "Bellen", 
-            if (isSenior) "Hiermee kunt u direct familie of de dokter bellen."
+            if (isSenior) "FAMILIE BELLEN" else "TELEFOON", 
+            if (isSenior) "Hiermee kunt u direct uw kinderen of de dokter bellen."
             else "Om direct vanuit de launcher te bellen.", 
-            "Privacy: De app belt alleen wanneer u op een contact drukt.",
+            "Privacy: De app belt alleen wanneer u zelf op een contact drukt.",
             Icons.Default.Phone, 
             listOf(Manifest.permission.CALL_PHONE)
         ))
 
         list.add(PermissionCategory(
-            if (isSenior) "Berichten sturen" else "SMS", 
-            if (isSenior) "Zodat de telefoon een noodbericht kan sturen als dat nodig is."
+            if (isSenior) "BERICHTEN" else "SMS SERVICE", 
+            if (isSenior) "Zodat de telefoon een noodbericht kan sturen naar uw familie."
             else "Nodig voor SOS en batterijwaarschuwingen.", 
-            "Privacy: We lezen geen andere berichten.",
+            "Privacy: We lezen NOOIT uw privéberichten.",
             Icons.Default.Sms, 
             listOf(Manifest.permission.SEND_SMS, Manifest.permission.READ_SMS, Manifest.permission.RECEIVE_SMS)
-        ))
-
-        list.add(PermissionCategory(
-            if (isSenior) "Uw bekenden" else "Contacten", 
-            if (isSenior) "Om de namen van uw familie in de telefoon te zetten."
-            else "Om favorieten te kunnen beheren.", 
-            "Privacy: Uw contacten worden nooit gedeeld.",
-            Icons.Default.ContactPhone, 
-            listOf(Manifest.permission.READ_CONTACTS)
         ))
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
@@ -94,48 +94,29 @@ fun PermissionsSetupScreen(onNext: () -> Unit, isSenior: Boolean = false) {
             }
             
             list.add(PermissionCategory(
-                "Gezondheid", 
-                "Zodat de telefoon uw stapjes kan tellen en valdetectie kan uitvoeren.", 
-                "Privacy: Deze gegevens blijven op uw telefoon.",
+                "GEZONDHEID", 
+                "Zodat de telefoon uw stapjes kan tellen voor uw dagelijkse beweging.", 
+                "Privacy: Deze gegevens blijven veilig op uw eigen telefoon.",
                 Icons.AutoMirrored.Filled.DirectionsWalk, 
                 healthPermissions
             ))
         }
 
         list.add(PermissionCategory(
-            if (isSenior) "Het vergrootglas" else "Camera", 
-            if (isSenior) "Zodat u kleine lettertjes makkelijk kunt lezen."
+            if (isSenior) "VERGROOTGLAS" else "CAMERA", 
+            if (isSenior) "Zodat u kleine lettertjes makkelijk kunt lezen met de camera."
             else "Nodig voor het vergrootglas en de zaklamp.", 
-            "Privacy: Er worden geen foto's op de achtergrond gemaakt.",
+            "Privacy: Er worden geen foto's ongevraagd opgeslagen.",
             Icons.Default.CameraAlt, 
             listOf(Manifest.permission.CAMERA)
         ))
 
-        val storagePerms = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
-            // Android 16+ en 14+ ondersteuning voor Photo Picker (geen permissie nodig voor picker, 
-            // maar voor volledige galerij app-functies is READ_MEDIA_VISUAL_USER_SELECTED/READ_MEDIA_IMAGES nodig)
-            listOf(Manifest.permission.READ_MEDIA_IMAGES, Manifest.permission.READ_MEDIA_VISUAL_USER_SELECTED)
-        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            listOf(Manifest.permission.READ_MEDIA_IMAGES)
-        } else {
-            listOf(Manifest.permission.READ_EXTERNAL_STORAGE)
-        }
-        
-        list.add(PermissionCategory(
-            if (isSenior) "Uw Foto's" else "Foto's", 
-            if (isSenior) "Zodat u de foto's van uw familie kunt bekijken."
-            else "Nodig om de galerij te kunnen tonen.", 
-            "Privacy: De app gebruikt de moderne Android Photo Picker. We hebben alleen toegang tot foto's die u zelf selecteert of de mappen die u expliciet vrijgeeft.",
-            Icons.Default.PhotoLibrary, 
-            storagePerms
-        ))
-
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             list.add(PermissionCategory(
-                if (isSenior) "Herinneringen" else "Meldingen", 
-                if (isSenior) "Zodat u een seintje krijgt voor uw medicijnen."
+                if (isSenior) "HERINNERINGEN" else "MELDINGEN", 
+                if (isSenior) "Zodat u een seintje krijgt als het tijd is voor uw medicijnen."
                 else "Nodig voor medicijnalarmen.", 
-                "Privacy: Geen reclame, alleen belangrijke meldingen.",
+                "Privacy: Geen reclame, alleen uw eigen belangrijke meldingen.",
                 Icons.Default.Notifications, 
                 listOf(Manifest.permission.POST_NOTIFICATIONS)
             ))
@@ -157,146 +138,207 @@ fun PermissionsSetupScreen(onNext: () -> Unit, isSenior: Boolean = false) {
         isGranted = results.values.all { it }
     }
 
-    Column(
+    Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
-            .padding(24.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
+            .background(Color(0xFF0F172A)) // Slate 900
     ) {
-        Text(
-            text = "Stap ${currentStep + 1} van ${categories.size}",
-            fontSize = 18.sp,
-            fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
-        LinearProgressIndicator(
-            progress = { (currentStep + 1) / categories.size.toFloat() },
+        Column(
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 16.dp)
-                .height(8.dp),
-            color = MaterialTheme.colorScheme.primary,
-            trackColor = MaterialTheme.colorScheme.surfaceVariant,
-            strokeCap = androidx.compose.ui.graphics.StrokeCap.Round
-        )
+                .fillMaxSize()
+                .padding(24.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Spacer(modifier = Modifier.height(32.dp))
 
-        Spacer(modifier = Modifier.height(24.dp))
-
-        AnimatedContent(
-            targetState = currentCategory,
-            transitionSpec = {
-                (slideInHorizontally { it } + fadeIn()).togetherWith(slideOutHorizontally { -it } + fadeOut())
-            },
-            label = "PermissionStep"
-        ) { category ->
+            // Premium Stepper
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Icon(
-                    imageVector = category.icon,
-                    contentDescription = if (isSenior) "Icoon voor ${category.title}" else null,
-                    modifier = Modifier.size(100.dp),
-                    tint = MaterialTheme.colorScheme.primary
-                )
-                
-                Spacer(modifier = Modifier.height(24.dp))
-
                 Text(
-                    text = category.title,
-                    fontSize = 36.sp,
-                    fontWeight = FontWeight.ExtraBold,
-                    color = MaterialTheme.colorScheme.onBackground
+                    text = "STAP ${currentStep + 1} VAN ${categories.size}".uppercase(),
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Black,
+                    letterSpacing = 2.sp,
+                    color = Color(0xFF3B82F6)
                 )
-                
                 Spacer(modifier = Modifier.height(16.dp))
+                Box(
+                    modifier = Modifier
+                        .width(180.dp)
+                        .height(8.dp)
+                        .clip(CircleShape)
+                        .background(Color.White.copy(alpha = 0.1f))
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth((currentStep + 1) / categories.size.toFloat())
+                            .fillMaxHeight()
+                            .background(Color(0xFF3B82F6))
+                    )
+                }
+            }
 
-                Text(
-                    text = category.description,
-                    fontSize = if (isSenior) 24.sp else 22.sp,
-                    textAlign = TextAlign.Center,
-                    lineHeight = if (isSenior) 32.sp else 30.sp,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
+            Spacer(modifier = Modifier.height(48.dp))
 
-                Spacer(modifier = Modifier.height(24.dp))
-
-                Card(
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
-                    shape = RoundedCornerShape(12.dp),
+            AnimatedContent(
+                targetState = currentCategory,
+                transitionSpec = {
+                    (fadeIn() + slideInVertically { it / 2 }).togetherWith(fadeOut() + slideOutVertically { -it / 2 })
+                },
+                label = "PermissionContent",
+                modifier = Modifier.weight(1f)
+            ) { category ->
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    Row(
-                        modifier = Modifier.padding(16.dp),
-                        verticalAlignment = Alignment.CenterVertically
+                    // Luminous Icon
+                    Box(
+                        contentAlignment = Alignment.Center,
+                        modifier = Modifier.size(160.dp)
                     ) {
-                        Icon(Icons.Default.Info, contentDescription = if (isSenior) "Informatie over privacy" else "Privacy", tint = MaterialTheme.colorScheme.primary)
-                        Spacer(Modifier.width(12.dp))
-                        Text(
-                            text = category.privacyNote,
-                            fontSize = 16.sp,
-                            fontWeight = FontWeight.Medium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
+                        Surface(
+                            modifier = Modifier.size(120.dp),
+                            shape = RoundedCornerShape(40.dp),
+                            color = Color(0xFF3B82F6).copy(alpha = 0.1f),
+                            border = BorderStroke(1.dp, Color(0xFF3B82F6).copy(alpha = 0.2f))
+                        ) {
+                            Box(contentAlignment = Alignment.Center) {
+                                Icon(
+                                    imageVector = category.icon,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(72.dp),
+                                    tint = Color(0xFF3B82F6)
+                                )
+                            }
+                        }
+                    }
+                    
+                    Spacer(modifier = Modifier.height(32.dp))
+
+                    Text(
+                        text = category.title.uppercase(),
+                        fontSize = 32.sp,
+                        fontWeight = FontWeight.Black,
+                        textAlign = TextAlign.Center,
+                        lineHeight = 38.sp,
+                        color = Color.White
+                    )
+                    
+                    Spacer(modifier = Modifier.height(24.dp))
+
+                    Text(
+                        text = category.description,
+                        fontSize = 22.sp,
+                        fontWeight = FontWeight.Bold,
+                        textAlign = TextAlign.Center,
+                        lineHeight = 32.sp,
+                        color = Color.White
+                    )
+
+                    Spacer(modifier = Modifier.height(40.dp))
+
+                    // Bento-style Privacy Card
+                    Card(
+                        colors = CardDefaults.cardColors(containerColor = Color(0xFF1E293B)),
+                        shape = RoundedCornerShape(40.dp),
+                        modifier = Modifier.fillMaxWidth(),
+                        border = BorderStroke(1.dp, Color.White.copy(alpha = 0.05f))
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(24.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                Icons.Default.Shield, 
+                                contentDescription = null, 
+                                tint = Color(0xFF10B981),
+                                modifier = Modifier.size(32.dp)
+                            )
+                            Spacer(Modifier.width(16.dp))
+                            Text(
+                                text = category.privacyNote,
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color(0xFFCBD5E1),
+                                lineHeight = 22.sp
+                            )
+                        }
                     }
                 }
             }
-        }
 
-        Spacer(modifier = Modifier.weight(1f))
-
-        if (isGranted) {
-            Card(
-                colors = CardDefaults.cardColors(containerColor = Color(0xFFE8F5E9)),
-                shape = RoundedCornerShape(16.dp),
+            // Action Area
+            Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(bottom = 16.dp)
+                    .padding(bottom = 16.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                Row(
-                    modifier = Modifier.padding(16.dp),
-                    horizontalArrangement = Arrangement.Center,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(Icons.Default.CheckCircle, contentDescription = if (isSenior) "Gelukt" else null, tint = Color(0xFF2E7D32), modifier = Modifier.size(32.dp))
-                    Spacer(modifier = Modifier.width(12.dp))
-                    Text(if (isSenior) "Het is gelukt!" else "Toegang verleend", fontSize = 20.sp, fontWeight = FontWeight.Bold, color = Color(0xFF1B5E20))
+                if (isGranted) {
+                    val nextInteractionSource = remember { MutableInteractionSource() }
+                    val nextPressed by nextInteractionSource.collectIsPressedAsState()
+                    val nextScale by animateFloatAsState(
+                        targetValue = if (nextPressed) 0.94f else 1f,
+                        animationSpec = spring(dampingRatio = 0.7f, stiffness = 500f)
+                    )
+
+                    Button(
+                        onClick = { 
+                            if (currentStep < categories.size - 1) currentStep++ else onNext() 
+                        },
+                        interactionSource = nextInteractionSource,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(90.dp)
+                            .scale(nextScale),
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF10B981)),
+                        shape = RoundedCornerShape(40.dp)
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text(
+                                if (currentStep < categories.size - 1) "VOLGENDE STAP" else "START DE APP", 
+                                fontSize = 24.sp, 
+                                fontWeight = FontWeight.Black
+                            )
+                            Spacer(Modifier.width(12.dp))
+                            Icon(Icons.AutoMirrored.Filled.ArrowForward, contentDescription = null)
+                        }
+                    }
+                } else {
+                    val grantInteractionSource = remember { MutableInteractionSource() }
+                    val grantPressed by grantInteractionSource.collectIsPressedAsState()
+                    val grantScale by animateFloatAsState(
+                        targetValue = if (grantPressed) 0.94f else 1f,
+                        animationSpec = spring(dampingRatio = 0.7f, stiffness = 500f)
+                    )
+
+                    Button(
+                        onClick = { launcher.launch(currentCategory.permissions.toTypedArray()) },
+                        interactionSource = grantInteractionSource,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(90.dp)
+                            .scale(grantScale),
+                        shape = RoundedCornerShape(40.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF3B82F6))
+                    ) {
+                        Text("JA, DIT IS GOED", fontSize = 24.sp, fontWeight = FontWeight.Black)
+                    }
+                    
+                    TextButton(
+                        onClick = { 
+                            if (currentStep < categories.size - 1) currentStep++ else onNext() 
+                        },
+                        modifier = Modifier.align(Alignment.CenterHorizontally)
+                    ) {
+                        Text(
+                            "NU EVEN NIET", 
+                            fontSize = 18.sp, 
+                            fontWeight = FontWeight.Black,
+                            color = Color(0xFF94A3B8)
+                        )
+                    }
                 }
-            }
-        } else {
-            Button(
-                onClick = { launcher.launch(currentCategory.permissions.toTypedArray()) },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(80.dp)
-                    .padding(bottom = 8.dp),
-                shape = RoundedCornerShape(20.dp)
-            ) {
-                Text(if (isSenior) "JA, DAT IS GOED" else "GEEF TOEGANG", fontSize = 22.sp, fontWeight = FontWeight.Bold)
-            }
-            
-            TextButton(
-                onClick = { 
-                    if (currentStep < categories.size - 1) currentStep++ else onNext() 
-                },
-                modifier = Modifier.padding(bottom = 8.dp)
-            ) {
-                Text(if (isSenior) "Nu even niet" else "Sla deze stap over", fontSize = 18.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            }
-        }
-
-        if (isGranted) {
-            Button(
-                onClick = { 
-                    if (currentStep < categories.size - 1) currentStep++ else onNext() 
-                },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(80.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary),
-                shape = RoundedCornerShape(20.dp)
-            ) {
-                Text(if (currentStep < categories.size - 1) "GA NAAR DE VOLGENDE" else "KLAAR!", fontSize = 22.sp, fontWeight = FontWeight.Black)
-                Spacer(Modifier.width(12.dp))
-                Icon(Icons.AutoMirrored.Filled.ArrowForward, contentDescription = if (isSenior) "Volgende stap" else null, modifier = Modifier.size(28.dp))
             }
         }
     }

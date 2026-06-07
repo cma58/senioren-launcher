@@ -18,10 +18,17 @@ import android.view.SoundEffectConstants
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.*
+import androidx.compose.animation.core.*
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -35,6 +42,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
@@ -130,7 +138,7 @@ fun CalendarScreen(onBack: () -> Unit) {
 
     val groupedEvents = remember(events) { groupEventsByDay(events, localeNl) }
 
-    Column(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background).padding(horizontal = 12.dp, vertical = 8.dp)) {
+    Column(Modifier.fillMaxSize().background(Color(0xFF0F172A)).padding(horizontal = 12.dp, vertical = 8.dp)) {
         ScreenHeader(title = "Agenda", onBack = onBack)
         
         if (!canDrawOverlays) {
@@ -139,13 +147,14 @@ fun CalendarScreen(onBack: () -> Unit) {
                     val intent = Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:${context.packageName}"))
                     context.startActivity(intent)
                 },
-                colors = CardDefaults.cardColors(containerColor = Color(0xFFFED7D7)),
-                shape = RoundedCornerShape(16.dp)
+                colors = CardDefaults.cardColors(containerColor = Color(0xFFEF4444).copy(alpha = 0.2f)),
+                shape = RoundedCornerShape(40.dp),
+                border = BorderStroke(1.dp, Color(0xFFEF4444).copy(alpha = 0.5f))
             ) {
-                Row(Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
-                    Icon(Icons.Default.Warning, null, tint = Color(0xFFC53030), modifier = Modifier.size(32.dp))
-                    Spacer(Modifier.width(12.dp))
-                    Text("Zet 'Verschijnen bovenop' AAN voor wekkers.", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color(0xFFC53030))
+                Row(Modifier.padding(20.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Default.Warning, null, tint = Color(0xFFEF4444), modifier = Modifier.size(32.dp))
+                    Spacer(Modifier.width(16.dp))
+                    Text("Zet 'Verschijnen bovenop' AAN voor wekkers.", fontSize = 16.sp, fontWeight = FontWeight.Black, color = Color.White)
                 }
             }
         }
@@ -215,19 +224,28 @@ fun CalendarScreen(onBack: () -> Unit) {
         }
     }
 
-    if (hasPermission) {
-        Box(Modifier.fillMaxSize()) {
-            Button(
-                onClick = { showAddDialog = true },
-                modifier = Modifier.align(Alignment.BottomCenter).padding(24.dp).fillMaxWidth().height(80.dp),
-                shape = RoundedCornerShape(20.dp)
-            ) {
-                Icon(Icons.Default.Add, null)
-                Spacer(Modifier.width(12.dp))
-                Text("NIEUWE AFSPRAAK", fontSize = 22.sp, fontWeight = FontWeight.Black)
+        if (hasPermission) {
+            Box(Modifier.fillMaxSize()) {
+                val interactionSource = remember { MutableInteractionSource() }
+                val isPressed by interactionSource.collectIsPressedAsState()
+                val scale by animateFloatAsState(
+                    targetValue = if (isPressed) 0.94f else 1f,
+                    animationSpec = spring(dampingRatio = 0.7f, stiffness = 500f),
+                    label = "scale"
+                )
+                Button(
+                    onClick = { showAddDialog = true },
+                    interactionSource = interactionSource,
+                    modifier = Modifier.align(Alignment.BottomCenter).padding(24.dp).fillMaxWidth().height(80.dp).scale(scale),
+                    shape = RoundedCornerShape(40.dp),
+                    border = BorderStroke(1.dp, Color.White.copy(alpha = 0.2f))
+                ) {
+                    Icon(Icons.Default.Add, null)
+                    Spacer(Modifier.width(12.dp))
+                    Text("NIEUWE AFSPRAAK", fontSize = 22.sp, fontWeight = FontWeight.Black)
+                }
             }
         }
-    }
 
     if (showAddDialog) {
         SeniorFriendlyAddEventDialog(
@@ -404,25 +422,35 @@ private suspend fun insertCalendarEvent(context: Context, contentResolver: Conte
 @Composable
 fun EventCard(event: CalendarEventInfo, onClick: () -> Unit, onLongClick: () -> Unit) {
     val isPast = !event.isAllDay && event.endTime < System.currentTimeMillis()
-    Card(
+    val interactionSource = remember { MutableInteractionSource() }
+    val isPressed by interactionSource.collectIsPressedAsState()
+    val scale by animateFloatAsState(
+        targetValue = if (isPressed) 0.96f else 1f,
+        animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy),
+        label = "scale"
+    )
+
+    Surface(
         modifier = Modifier
             .fillMaxWidth()
             .heightIn(min = 90.dp)
-            .pointerInput(Unit) {
-                detectTapGestures(
-                    onTap = { onClick() },
-                    onLongPress = { onLongClick() }
-                )
-            }, 
-        shape = RoundedCornerShape(20.dp), 
-        colors = CardDefaults.cardColors(containerColor = if (isPast) MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f) else MaterialTheme.colorScheme.primaryContainer)
+            .scale(scale)
+            .combinedClickable(
+                interactionSource = interactionSource,
+                indication = androidx.compose.foundation.LocalIndication.current,
+                onClick = onClick,
+                onLongClick = onLongClick
+            ),
+        shape = RoundedCornerShape(40.dp), 
+        color = if (isPast) Color(0xFF1E293B).copy(alpha = 0.4f) else Color(0xFF1E293B).copy(alpha = 0.8f),
+        border = BorderStroke(1.dp, Color.White.copy(alpha = 0.1f))
     ) {
         Row(Modifier.padding(20.dp), verticalAlignment = Alignment.CenterVertically) {
             Text(text = if (event.isAllDay) "Hele dag" else SimpleDateFormat("HH:mm", Locale.getDefault()).format(Date(event.startTime)), fontSize = 24.sp, fontWeight = FontWeight.Black, color = if (isPast) Color.Gray else MaterialTheme.colorScheme.primary, modifier = Modifier.width(70.dp))
             Spacer(Modifier.width(12.dp))
             Box(Modifier.width(2.dp).height(40.dp).background(if (isPast) Color.Gray else MaterialTheme.colorScheme.primary))
             Spacer(Modifier.width(20.dp))
-            Text(text = event.title, fontSize = 22.sp, fontWeight = FontWeight.Bold, color = if (isPast) Color.Gray else Color.Black, modifier = Modifier.weight(1f))
+            Text(text = event.title, fontSize = 22.sp, fontWeight = FontWeight.Black, color = if (isPast) Color.Gray else MaterialTheme.colorScheme.onPrimaryContainer, modifier = Modifier.weight(1f))
         }
     }
 }

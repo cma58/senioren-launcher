@@ -185,6 +185,9 @@
                 android:name="android.app.PROPERTY_SPECIAL_USE_FGS_TYPE"
                 android:value="This service monitors accelerometer data to detect hard falls and automatically trigger emergency protocols, ensuring rapid assistance for seniors." />
         </service>
+        <service android:name=".service.StepCounterService"
+            android:foregroundServiceType="health"
+            android:exported="false" />
         <service android:name=".service.RadioService"
             android:foregroundServiceType="mediaPlayback"
             android:exported="true">

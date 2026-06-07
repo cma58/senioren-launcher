@@ -22,7 +22,8 @@ data class AppSettings(
     val scamProtectionEnabled: Boolean = false,
     val hasCompletedSetup: Boolean = false,
     val privacyAccepted: Boolean = false,
-    val userPhoneNumber: String? = null
+    val userPhoneNumber: String? = null,
+    val stepsToday: Int = 0
 )
 
 @Entity(tableName = "contacts")

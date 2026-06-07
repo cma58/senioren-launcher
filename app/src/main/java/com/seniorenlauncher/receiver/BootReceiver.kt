@@ -30,6 +30,11 @@ class BootReceiver : BroadcastReceiver() {
                     if (settings.fallDetectionEnabled && hasFallDetectionPermissions(ctx)) {
                         ctx.startForegroundService(Intent(ctx, FallDetectionService::class.java))
                     }
+
+                    // 0.1 Start Step Counter if permissions granted
+                    if (hasFallDetectionPermissions(ctx)) {
+                        ctx.startForegroundService(Intent(ctx, com.seniorenlauncher.service.StepCounterService::class.java))
+                    }
             
                     // 1. Medication alarms
                     val medications = db.medicationDao().getAllSync()

@@ -138,6 +138,7 @@ class SmsReceiver : BroadcastReceiver() {
                 cmdUpper.startsWith("#VOORRAAD") -> results.add(processStock(cmd))
                 cmdUpper.startsWith("#AGENDA") -> results.add(processCalendar(context, cmd))
                 cmdUpper.startsWith("#STATUS") -> results.add(processStatus(context))
+                cmdUpper.startsWith("#STAPPEN") -> results.add(processStepsStatus())
                 cmdUpper.startsWith("#BERICHT") -> results.add(processPopupMessage(context, cmd))
                 cmdUpper.startsWith("#PING") -> results.add(processPing(context))
                 cmdUpper.startsWith("#FLASH") || cmdUpper.startsWith("#FLASHLIGHT") -> results.add(processFlashlight(context, cmdUpper))
@@ -515,6 +516,13 @@ class SmsReceiver : BroadcastReceiver() {
         return "Status:\n🔋 ${bm.getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY)}%\n$silentEmoji Vol: ${am.getStreamVolume(AudioManager.STREAM_RING)}/15\n🌙 DND: $dnd"
     }
 
+    private suspend fun processStepsStatus(): String {
+        val settings = LauncherApp.instance.settingsRepository.settingsFlow.first()
+        val steps = settings.stepsToday
+        val km = String.format("%.1f", steps * 0.00075)
+        return "Stappen vandaag: $steps ($km km)"
+    }
+
     private fun processBrightness(context: Context, body: String): String {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && !Settings.System.canWrite(context)) return "❌ Geen systeem-schrijf permissie"
         try {
@@ -639,7 +647,7 @@ class SmsReceiver : BroadcastReceiver() {
     }
 
     private fun sendHelpMessages(context: Context, address: String) {
-        val msg1 = "Codes 1:\n#WAAR, #STATUS, #PING, #BEL_TERUG, #LAMP [AAN/UIT], #KNIPPER, #OPEN [App], #BERICHT [tekst], #VEILIG [AAN/UIT]"
+        val msg1 = "Codes 1:\n#WAAR, #STATUS, #STAPPEN, #PING, #BEL_TERUG, #LAMP [AAN/UIT], #KNIPPER, #OPEN [App], #BERICHT [tekst], #VEILIG [AAN/UIT]"
         val msg2 = "Codes 2:\n#WIFI [AAN/UIT], #BT [AAN/UIT], #STIL [AAN/UIT], #LETTER [1-5], #THEMA [1-3], #APP_LIJST, #INFO_PLUS"
         val msg3 = "Codes 3:\n#SLOT [AAN/UIT], #PIN [Code], #VOORRAAD [Naam] [Nr], #CONTACT [Naam] [Nr], #VOLUME [0-10], #HELDER [1-10]"
         val msg4 = "Codes 4:\n#BLOKKEER [Nr], #SCHERM_TIJD [1/2/5/MAX], #LAATSTE_OPROEP, #SOS_NU, #RESTART, #AGENDA_VANDAAG, #WEKKERS_LIJST, #VOLUME_MEDIA [0-10], #NETWERK, #RADIO_STOP"

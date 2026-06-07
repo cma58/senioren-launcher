@@ -32,6 +32,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
+import com.seniorenlauncher.LauncherApp
 import com.seniorenlauncher.ui.components.ScreenHeader
 
 @Composable
@@ -80,34 +81,9 @@ fun StepsScreen(onBack: () -> Unit) {
 @Composable
 fun StepCounterContent() {
     val context = LocalContext.current
-    var stepsSinceBoot by remember { mutableFloatStateOf(0f) }
-    var initialSteps by remember { mutableFloatStateOf(-1f) }
-    
-    val currentSteps = if (initialSteps == -1f) 0 else (stepsSinceBoot - initialSteps).toInt()
-
-    DisposableEffect(Unit) {
-        val sensorManager = context.getSystemService(Context.SENSOR_SERVICE) as SensorManager
-        val stepSensor = sensorManager.getDefaultSensor(Sensor.TYPE_STEP_COUNTER)
-
-        val listener = object : SensorEventListener {
-            override fun onSensorChanged(event: SensorEvent?) {
-                if (event != null && event.sensor.type == Sensor.TYPE_STEP_COUNTER) {
-                    val count = event.values[0]
-                    stepsSinceBoot = count
-                    if (initialSteps == -1f) {
-                        initialSteps = count
-                    }
-                }
-            }
-            override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {}
-        }
-
-        sensorManager.registerListener(listener, stepSensor, SensorManager.SENSOR_DELAY_UI)
-
-        onDispose {
-            sensorManager.unregisterListener(listener)
-        }
-    }
+    val settingsRepository = (context.applicationContext as LauncherApp).settingsRepository
+    val settings by settingsRepository.settingsFlow.collectAsState(initial = null)
+    val currentSteps = settings?.stepsToday ?: 0
 
     Column(
         Modifier
