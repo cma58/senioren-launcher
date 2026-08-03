@@ -1,6 +1,7 @@
 import LevelCard from './LevelCard.jsx'
 import ProgressBar from './ProgressBar.jsx'
 import curriculum, { allLessonIds } from '../data/curriculum.js'
+import resources from '../data/resources.js'
 import { useProgress } from '../context/ProgressContext.jsx'
 
 /**
@@ -48,9 +49,37 @@ export default function Dashboard({ onOpenLevel }) {
           ))}
       </div>
 
+      {/* Extra oefenen — gratis externe bronnen */}
+      <h3 className="mb-3 mt-8 px-1 text-sm font-bold uppercase tracking-wide text-slate-500">
+        Meer oefenen (gratis)
+      </h3>
+      <div className="grid gap-3">
+        {resources.map((r) => (
+          <a
+            key={r.url}
+            href={r.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="card flex items-center gap-3 p-4 hover:ring-2 hover:ring-gent-300"
+          >
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center gap-2">
+                <span className="font-bold text-slate-900">{r.name}</span>
+                <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-semibold text-slate-500">
+                  {r.tag}
+                </span>
+              </div>
+              <p className="text-sm leading-snug text-slate-500">{r.desc}</p>
+            </div>
+            <span className="text-slate-300" aria-hidden="true">
+              ↗
+            </span>
+          </a>
+        ))}
+      </div>
+
       <p className="mt-8 text-center text-xs text-slate-400">
-        Fase 1 · Dashboard &amp; leerlijn. De interactieve oefeningen (audio, spraak, AI-check)
-        volgen in de volgende stap.
+        De lessen werken offline. De bronnen hierboven openen in je browser voor extra oefening.
       </p>
     </div>
   )

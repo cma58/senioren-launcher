@@ -2,7 +2,7 @@ import { useState } from 'react'
 import Header from './components/Header.jsx'
 import Dashboard from './components/Dashboard.jsx'
 import LevelView from './components/LevelView.jsx'
-import LessonPreview from './components/LessonPreview.jsx'
+import LessonPlayer from './components/LessonPlayer.jsx'
 
 /**
  * Wortelcomponent. Eenvoudige navigatie via lokale state (geen router nodig
@@ -29,7 +29,7 @@ export default function App() {
       </main>
 
       {activeLesson && (
-        <LessonPreview lesson={activeLesson} onClose={() => setActiveLesson(null)} />
+        <LessonPlayer lesson={activeLesson} onClose={() => setActiveLesson(null)} />
       )}
     </div>
   )
