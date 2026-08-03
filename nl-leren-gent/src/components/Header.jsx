@@ -2,7 +2,7 @@
  * Bovenbalk van de app. Toont de titel en (optioneel) een terugknop
  * wanneer je in een level/module zit.
  */
-export default function Header({ onBack, subtitle }) {
+export default function Header({ onBack, subtitle, onSettings }) {
   return (
     <header className="sticky top-0 z-20 border-b border-slate-200 bg-white/85 backdrop-blur">
       <div className="mx-auto flex max-w-2xl items-center gap-3 px-4 py-3">
@@ -22,7 +22,7 @@ export default function Header({ onBack, subtitle }) {
             NL
           </span>
         )}
-        <div className="min-w-0">
+        <div className="min-w-0 flex-1">
           <h1 className="truncate text-base font-bold leading-tight text-slate-900">
             Nederlands leren in Gent
           </h1>
@@ -30,6 +30,16 @@ export default function Header({ onBack, subtitle }) {
             <p className="truncate text-xs text-slate-500">{subtitle}</p>
           )}
         </div>
+        {onSettings && (
+          <button
+            onClick={onSettings}
+            className="btn-ghost h-9 w-9 !px-0"
+            aria-label="Instellingen"
+            title="Instellingen"
+          >
+            <span aria-hidden="true">⚙️</span>
+          </button>
+        )}
       </div>
     </header>
   )

@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { isTTSAvailable, speak } from '../lib/speech.js'
 import { buildQuiz } from '../lib/quiz.js'
 import { useProgress } from '../context/ProgressContext.jsx'
+import SpeakingExercise from './SpeakingExercise.jsx'
 
 /**
  * Volledige, interactieve lesspeler — werkt zonder API's of internet.
@@ -11,11 +12,12 @@ import { useProgress } from '../context/ProgressContext.jsx'
  *   2) 'quiz'  — meerkeuzevragen (indien mogelijk voor deze les).
  *   3) 'done'  — samenvatting + de les wordt afgevinkt.
  */
-export default function LessonPlayer({ lesson, onClose }) {
+export default function LessonPlayer({ lesson, onClose, onOpenSettings }) {
   const { markDone } = useProgress()
-  const quiz = useMemo(() => buildQuiz(lesson), [lesson])
+  const isSpeaking = lesson?.type === 'speaking'
+  const quiz = useMemo(() => (isSpeaking ? [] : buildQuiz(lesson)), [lesson, isSpeaking])
 
-  const [phase, setPhase] = useState('learn')
+  const [phase, setPhase] = useState(isSpeaking ? 'speaking' : 'learn')
 
   // Sluiten met Escape.
   useEffect(() => {
@@ -42,6 +44,13 @@ export default function LessonPlayer({ lesson, onClose }) {
       </div>
 
       <div className="mx-auto flex w-full max-w-lg flex-1 flex-col overflow-hidden px-4">
+        {phase === 'speaking' && (
+          <SpeakingExercise
+            lesson={lesson}
+            onFinish={() => setPhase('done')}
+            onOpenSettings={onOpenSettings}
+          />
+        )}
         {phase === 'learn' && (
           <LearnPhase
             lesson={lesson}
@@ -59,7 +68,7 @@ export default function LessonPlayer({ lesson, onClose }) {
               markDone(lesson.id)
               onClose()
             }}
-            onRestart={() => setPhase('learn')}
+            onRestart={() => setPhase(isSpeaking ? 'speaking' : 'learn')}
           />
         )}
       </div>

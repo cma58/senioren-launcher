@@ -5,9 +5,9 @@ Oujda) stap voor stap **Vlaams-Nederlands** leert om vlot in **Gent** te
 integreren. De cursus houdt rekening met de klank- en taalverschillen tussen
 het Darija en het Nederlands.
 
-> **Status: Stap 1 afgerond.** Projectopzet, de volledige leerlijn (Niveau 0 &
-> Niveau 1) en het dashboard met niveaukeuze, voortgangsbalk en modulenavigatie.
-> De interactieve oefeningen en AI-integratie volgen in Stap 2.
+> **Status: Stap 2b afgerond.** Volledige leerlijn (~220 items), dashboard met
+> voortgang, interactieve lessen (kaartjes + audio + auto-quiz, werkt offline)
+> én de spreekoefening: opnemen met **Groq Whisper** + AI-feedback met **Gemini**.
 
 ## Tech stack
 
@@ -27,11 +27,18 @@ npm run dev
 
 De app draait dan op http://localhost:5173.
 
-Voor Stap 2 (AI/spraak):
+### Sleutels voor de spreekoefening (gratis)
 
-```bash
-cp .env.example .env   # en vul VITE_GEMINI_API_KEY en VITE_GROQ_API_KEY in
-```
+Alle lessen en quizzen werken **zonder** sleutels. Enkel de spreekoefening
+(microfoon + AI-feedback) heeft twee gratis sleutels nodig. Twee manieren:
+
+1. **In de app (makkelijkst):** open het tandwiel (⚙️) rechtsboven en plak de
+   sleutels. Ze worden lokaal op het toestel bewaard.
+2. **Via .env:** `cp .env.example .env` en vul `VITE_GEMINI_API_KEY` en
+   `VITE_GROQ_API_KEY` in.
+
+- Gemini-sleutel: https://aistudio.google.com/app/apikey
+- Groq-sleutel: https://console.groq.com/keys
 
 ## Projectstructuur
 
@@ -48,18 +55,27 @@ nl-leren-gent/
     ├── App.jsx                   # navigatie (dashboard ⇄ niveau ⇄ les)
     ├── index.css                 # Tailwind + basiscomponenten
     ├── data/
-    │   └── curriculum.js         # ⭐ de volledige leerlijn (Niveau 0 & 1)
+    │   ├── curriculum.js         # ⭐ de volledige leerlijn (Niveau 0 & 1)
+    │   └── resources.js          # externe oefenbronnen (links)
     ├── context/
     │   └── ProgressContext.jsx   # voortgang (localStorage)
+    ├── hooks/
+    │   └── useRecorder.js        # microfoon-opname (MediaRecorder)
     ├── lib/
-    │   └── speech.js             # Text-to-Speech helper (nl-BE)
+    │   ├── speech.js             # Text-to-Speech helper (nl-BE)
+    │   ├── quiz.js               # bouwt quizvragen uit een les
+    │   ├── config.js             # API-sleutels & modelnamen
+    │   ├── gemini.js             # evaluateAnswer() — AI-feedback
+    │   └── groq.js               # transcribeAudio() — Whisper
     └── components/
         ├── Header.jsx
         ├── Dashboard.jsx         # niveaukeuze + totale voortgang
         ├── LevelCard.jsx
         ├── LevelView.jsx         # modules + lessen van één niveau
         ├── LessonRow.jsx
-        ├── LessonPreview.jsx     # les-voorbeeld met voorleesknop
+        ├── LessonPlayer.jsx      # leren → quiz → klaar (of spreekoefening)
+        ├── SpeakingExercise.jsx  # opnemen → Whisper → Gemini-feedback
+        ├── Settings.jsx          # API-sleutels invullen
         └── ProgressBar.jsx
 ```
 
