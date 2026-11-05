@@ -1,4 +1,6 @@
 package com.seniorenlauncher.ui.screens
+import com.seniorenlauncher.R
+import com.seniorenlauncher.util.i18n
 
 import android.content.Intent
 import androidx.compose.foundation.ExperimentalFoundationApi
@@ -150,7 +152,7 @@ fun HomeScreenContent(
         LayoutType.GRID_3x4 -> 12
     }
 
-    // Bereken het totaal aantal items inclusief de "Toevoegen" knop
+    // Bereken het totaal aantal items inclusief de i18n(R.string.toevoegen) knop
     val totalItemsCount = allVisibleApps.size + 1
     val pageCount = max(1, ceil(totalItemsCount.toDouble() / appsPerPage.toDouble()).toInt())
     val pagerState = rememberPagerState(pageCount = { pageCount })
@@ -246,7 +248,7 @@ fun HomeScreenContent(
                     }
                 }
                 
-                // Voeg de "Toevoegen" knop toe als we op de juiste pagina zijn
+                // Voeg de i18n(R.string.toevoegen) knop toe als we op de juiste pagina zijn
                 val addBtnIdx = allVisibleApps.size
                 val start = startIdx
                 val limit = startIdx + appsPerPage
@@ -255,7 +257,7 @@ fun HomeScreenContent(
                     item {
                         BigButton(
                             emoji = "➕",
-                            label = "Toevoegen",
+                            label = i18n(R.string.toevoegen),
                             color = Color(0xFF718096),
                             small = settings.layout == LayoutType.GRID_3x4,
                             onClick = onAddApp

@@ -1,4 +1,6 @@
 package com.seniorenlauncher.ui.components
+import com.seniorenlauncher.R
+import com.seniorenlauncher.util.i18n
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.basicMarquee
@@ -64,14 +66,14 @@ fun RadioMiniPlayer(radioVm: RadioViewModel, onOpenRadio: () -> Unit) {
             
             Column(Modifier.weight(1f)) {
                 Text(
-                    text = currentStation?.name ?: "Radio",
+                    text = currentStation?.name ?: i18n(R.string.radio),
                     fontSize = 20.sp,
                     fontWeight = FontWeight.Black,
                     maxLines = 1,
                     modifier = Modifier.basicMarquee()
                 )
                 Text(
-                    text = if (isPlaying) "Bezig met spelen..." else "Gepauzeerd",
+                    text = if (isPlaying) i18n(R.string.bezig_met_spelen) else i18n(R.string.gepauzeerd),
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Medium,
                     color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.8f),
@@ -105,7 +107,7 @@ fun RadioMiniPlayer(radioVm: RadioViewModel, onOpenRadio: () -> Unit) {
                 ) {
                     Icon(
                         Icons.Default.Stop,
-                        contentDescription = "Stop",
+                        contentDescription = i18n(R.string.stop_2),
                         modifier = Modifier.size(40.dp),
                         tint = MaterialTheme.colorScheme.onErrorContainer
                     )

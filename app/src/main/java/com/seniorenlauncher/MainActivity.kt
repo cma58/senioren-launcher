@@ -1,4 +1,6 @@
 package com.seniorenlauncher
+import com.seniorenlauncher.R
+import com.seniorenlauncher.util.i18n
 
 import android.app.KeyguardManager
 import android.app.NotificationManager
@@ -39,6 +41,10 @@ class MainActivity : ComponentActivity() {
     private var navigateToIncomingCall = mutableStateOf(false)
     private var navigateToWeatherAfterAlarm = mutableStateOf(false)
     private var fallDetectedTriggered = mutableStateOf(false)
+
+    override fun attachBaseContext(newBase: Context) {
+        super.attachBaseContext(com.seniorenlauncher.util.LocaleHelper.setLocale(newBase, com.seniorenlauncher.util.LocaleHelper.saved(newBase)))
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         if (intent?.getStringExtra("NAVIGATE_TO") == "alarm_trigger" || intent?.getStringExtra("NAVIGATE_TO") == "fall_detected") {
@@ -208,7 +214,7 @@ class MainActivity : ComponentActivity() {
         intent?.let {
             val navigateTo = it.getStringExtra("NAVIGATE_TO")
             if (navigateTo == "alarm_trigger") {
-                val label = it.getStringExtra("ALARM_LABEL") ?: "Wekker"
+                val label = it.getStringExtra("ALARM_LABEL") ?: i18n(R.string.wekker)
                 val id = it.getLongExtra("ALARM_ID", -1L)
                 val isRemote = it.getStringExtra("agendaTitle") == "BERICHT VAN BEHEERDER"
                 

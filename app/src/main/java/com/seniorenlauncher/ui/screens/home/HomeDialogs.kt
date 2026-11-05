@@ -1,4 +1,6 @@
 package com.seniorenlauncher.ui.screens.home
+import com.seniorenlauncher.R
+import com.seniorenlauncher.util.i18n
 
 import android.content.Context
 import androidx.compose.animation.core.animateFloatAsState
@@ -99,7 +101,7 @@ fun PinDialog(
                     .verticalScroll(scrollState),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Text("BEVEILIGDE INSTELLINGEN", fontSize = 22.sp, fontWeight = FontWeight.Black, color = Color.White)
+                Text(i18n(R.string.beveiligde_instellingen), fontSize = 22.sp, fontWeight = FontWeight.Black, color = Color.White)
                 
                 Spacer(Modifier.height(24.dp))
                 
@@ -217,7 +219,7 @@ fun AppPickerDialog(
         ) {
             Column(Modifier.padding(24.dp)) {
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                    Text("KIES APPS", fontSize = 24.sp, fontWeight = FontWeight.Black, color = Color.White)
+                    Text(i18n(R.string.kies_apps), fontSize = 24.sp, fontWeight = FontWeight.Black, color = Color.White)
                     if (appId.startsWith("mapped_")) {
                         val interactionSource = remember { MutableInteractionSource() }
                         val pressed by interactionSource.collectIsPressedAsState()
@@ -230,7 +232,7 @@ fun AppPickerDialog(
                             interactionSource = interactionSource,
                             modifier = Modifier.scale(scale)
                         ) {
-                            Text("VERWIJDEREN", color = Color(0xFFEF4444), fontWeight = FontWeight.Black)
+                            Text(i18n(R.string.verwijderen_3), color = Color(0xFFEF4444), fontWeight = FontWeight.Black)
                         }
                     }
                 }
@@ -241,7 +243,7 @@ fun AppPickerDialog(
                     value = searchQuery,
                     onValueChange = { searchQuery = it },
                     modifier = Modifier.fillMaxWidth(),
-                    placeholder = { Text("Zoek app...", fontWeight = FontWeight.Bold, color = Color(0xFF94A3B8)) },
+                    placeholder = { Text(i18n(R.string.zoek_app), fontWeight = FontWeight.Bold, color = Color(0xFF94A3B8)) },
                     leadingIcon = { Icon(Icons.Default.Search, null, tint = Color(0xFF94A3B8)) },
                     shape = RoundedCornerShape(20.dp),
                     colors = OutlinedTextFieldDefaults.colors(
@@ -314,7 +316,7 @@ fun AppPickerDialog(
                         border = BorderStroke(1.dp, Color.White.copy(alpha = 0.1f)),
                         colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.White)
                     ) {
-                        Text("ANNULEREN", fontWeight = FontWeight.Black)
+                        Text(i18n(R.string.annuleren), fontWeight = FontWeight.Black)
                     }
 
                     val addInteractionSource = remember { MutableInteractionSource() }
@@ -332,7 +334,7 @@ fun AppPickerDialog(
                         shape = RoundedCornerShape(40.dp),
                         colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF3B82F6))
                     ) {
-                        Text("VOEG TOE", fontWeight = FontWeight.Black)
+                        Text(i18n(R.string.voeg_toe), fontWeight = FontWeight.Black)
                     }
                 }
             }
@@ -357,8 +359,8 @@ fun WifiDialog(
 
     if (!hasPermission) {
         PermissionRequestDialog(
-            title = "Wifi Toegang",
-            description = "Om wifi informatie te kunnen tonen, hebben we toestemming nodig om nabijgelegen apparaten te scannen.",
+            title = i18n(R.string.wifi_toegang),
+            description = i18n(R.string.om_wifi_informatie_te_kunnen),
             onDismiss = onDismiss,
             onGrant = {
                 permissionLauncher.launch(PermissionUtils.getRequiredWifiPermissions().toTypedArray())
@@ -374,7 +376,7 @@ fun WifiDialog(
         WifiManager.calculateSignalLevel(wifiInfo.rssi, 5)
     } else 0
     
-    val ssid = wifiInfo?.ssid?.removeSurrounding("\"") ?: "Niet verbonden"
+    val ssid = wifiInfo?.ssid?.removeSurrounding("\"") ?: i18n(R.string.niet_verbonden)
 
     Dialog(onDismissRequest = onDismiss) {
         Card(
@@ -387,7 +389,7 @@ fun WifiDialog(
                 Modifier.padding(32.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Text("WIFI VERBINDING", fontSize = 28.sp, fontWeight = FontWeight.Black, color = Color.White)
+                Text(i18n(R.string.wifi_verbinding), fontSize = 28.sp, fontWeight = FontWeight.Black, color = Color.White)
                 Spacer(Modifier.height(24.dp))
                 
                 val wifiIcon = when {
@@ -408,7 +410,7 @@ fun WifiDialog(
                 
                 if (isWifiEnabled) {
                     Text(
-                        "VERBONDEN MET:",
+                        i18n(R.string.verbonden_met),
                         fontSize = 16.sp,
                         color = Color(0xFFCBD5E1),
                         fontWeight = FontWeight.Bold
@@ -422,14 +424,14 @@ fun WifiDialog(
                     )
                     
                     val strengthText = when(signalLevel) {
-                        0 -> "Geen signaal"
-                        1 -> "Zwak signaal"
-                        2 -> "Matig signaal"
-                        3 -> "Goed signaal"
-                        else -> "Uitstekend signaal"
+                        0 -> i18n(R.string.geen_signaal)
+                        1 -> i18n(R.string.zwak_signaal)
+                        2 -> i18n(R.string.matig_signaal)
+                        3 -> i18n(R.string.goed_signaal)
+                        else -> i18n(R.string.uitstekend_signaal)
                     }
                     Text(
-                        "Signaalsterkte: $strengthText",
+                        i18n(R.string.signaalsterkte, strengthText),
                         fontSize = 18.sp,
                         fontWeight = FontWeight.Bold,
                         color = Color.White.copy(alpha = 0.7f),
@@ -437,7 +439,7 @@ fun WifiDialog(
                     )
                 } else {
                     Text(
-                        "UW WIFI STAAT UIT",
+                        i18n(R.string.uw_wifi_staat_uit),
                         fontSize = 24.sp,
                         fontWeight = FontWeight.Black,
                         textAlign = TextAlign.Center,
@@ -464,7 +466,7 @@ fun WifiDialog(
                     shape = RoundedCornerShape(40.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF3B82F6))
                 ) {
-                    Text("WIFI INSTELLINGEN", fontSize = 20.sp, fontWeight = FontWeight.Black)
+                    Text(i18n(R.string.wifi_instellingen), fontSize = 20.sp, fontWeight = FontWeight.Black)
                 }
                 
                 Spacer(Modifier.height(16.dp))
@@ -484,7 +486,7 @@ fun WifiDialog(
                     border = BorderStroke(1.dp, Color.White.copy(alpha = 0.1f)),
                     colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.White)
                 ) {
-                    Text("TERUG", fontSize = 18.sp, fontWeight = FontWeight.Black)
+                    Text(i18n(R.string.terug_2), fontSize = 18.sp, fontWeight = FontWeight.Black)
                 }
             }
         }
@@ -542,7 +544,7 @@ fun PermissionRequestDialog(
                     shape = RoundedCornerShape(40.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF3B82F6))
                 ) {
-                    Text("TOESTAAN", fontSize = 20.sp, fontWeight = FontWeight.Black)
+                    Text(i18n(R.string.toestaan_2), fontSize = 20.sp, fontWeight = FontWeight.Black)
                 }
                 Spacer(Modifier.height(16.dp))
 
@@ -552,10 +554,10 @@ fun PermissionRequestDialog(
                     }
                     context.startActivity(intent)
                 }) {
-                    Text("HANDMATIG INSTELLEN", fontWeight = FontWeight.Black, color = Color(0xFF3B82F6))
+                    Text(i18n(R.string.handmatig_instellen), fontWeight = FontWeight.Black, color = Color(0xFF3B82F6))
                 }
                 TextButton(onClick = onDismiss) {
-                    Text("ANNULEREN", color = Color(0xFFCBD5E1), fontWeight = FontWeight.Black)
+                    Text(i18n(R.string.annuleren), color = Color(0xFFCBD5E1), fontWeight = FontWeight.Black)
                 }
             }
         }
@@ -580,7 +582,7 @@ fun SOSCountdownDialog(
     if (!hasPermission) {
         PermissionRequestDialog(
             title = "SOS Toegang",
-            description = "Om hulp te kunnen inschakelen hebben we toestemming nodig voor locatie, bellen en SMS.",
+            description = i18n(R.string.om_hulp_te_kunnen_inschakelen_2),
             onDismiss = onDismiss,
             onGrant = {
                 permissionLauncher.launch(PermissionUtils.getRequiredSosPermissions().toTypedArray())
@@ -623,7 +625,7 @@ fun SOSCountdownDialog(
                 Spacer(Modifier.height(24.dp))
                 
                 Text(
-                    "SOS ALARM WORDT VERSTUURD OVER:",
+                    i18n(R.string.sos_alarm_wordt_verstuurd_over),
                     fontSize = 24.sp,
                     fontWeight = FontWeight.Black,
                     color = Color.White,
@@ -655,7 +657,7 @@ fun SOSCountdownDialog(
                     colors = ButtonDefaults.buttonColors(containerColor = Color.White, contentColor = Color(0xFFEF4444)),
                     shape = RoundedCornerShape(40.dp)
                 ) {
-                    Text("STOP / ANNULEER", fontSize = 26.sp, fontWeight = FontWeight.Black)
+                    Text(i18n(R.string.stop_annuleer), fontSize = 26.sp, fontWeight = FontWeight.Black)
                 }
             }
         }
@@ -681,7 +683,7 @@ fun BluetoothDialog(
                 Modifier.padding(32.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Text("BLUETOOTH", fontSize = 28.sp, fontWeight = FontWeight.Black, color = Color.White)
+                Text(i18n(R.string.bluetooth), fontSize = 28.sp, fontWeight = FontWeight.Black, color = Color.White)
                 Spacer(Modifier.height(24.dp))
                 
                 Icon(
@@ -694,7 +696,7 @@ fun BluetoothDialog(
                 Spacer(Modifier.height(24.dp))
                 
                 Text(
-                    if (isBluetoothEnabled) "BLUETOOTH STAAT AAN" else "BLUETOOTH STAAT UIT",
+                    if (isBluetoothEnabled) i18n(R.string.bluetooth_staat_aan) else i18n(R.string.bluetooth_staat_uit),
                     fontSize = 22.sp,
                     fontWeight = FontWeight.Black,
                     textAlign = TextAlign.Center,
@@ -720,7 +722,7 @@ fun BluetoothDialog(
                     shape = RoundedCornerShape(40.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF3B82F6))
                 ) {
-                    Text("INSTELLINGEN", fontSize = 20.sp, fontWeight = FontWeight.Black)
+                    Text(i18n(R.string.instellingen), fontSize = 20.sp, fontWeight = FontWeight.Black)
                 }
                 
                 Spacer(Modifier.height(16.dp))
@@ -740,7 +742,7 @@ fun BluetoothDialog(
                     border = BorderStroke(1.dp, Color.White.copy(alpha = 0.1f)),
                     colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.White)
                 ) {
-                    Text("TERUG", fontSize = 18.sp, fontWeight = FontWeight.Black)
+                    Text(i18n(R.string.terug_2), fontSize = 18.sp, fontWeight = FontWeight.Black)
                 }
             }
         }

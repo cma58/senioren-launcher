@@ -1,4 +1,6 @@
 package com.seniorenlauncher.ui.screens.home
+import com.seniorenlauncher.R
+import com.seniorenlauncher.util.i18n
 
 import android.content.Context
 import android.content.Intent
@@ -139,7 +141,7 @@ fun HomeTopBar(notificationCount: Int, onNotificationsClick: () -> Unit) {
                 Box(contentAlignment = Alignment.Center) {
                     Icon(
                         Icons.Default.Notifications, 
-                        contentDescription = "Meldingen",
+                        contentDescription = i18n(R.string.meldingen_2),
                         modifier = Modifier.size(34.dp),
                         tint = if (notificationCount > 0) Color(0xFF6366F1) else Color.White.copy(alpha = 0.4f)
                     )
@@ -203,7 +205,7 @@ fun HomeSOSButton(onClick: () -> Unit, modifier: Modifier = Modifier) {
                 )
                 Spacer(Modifier.width(24.dp))
                 Text(
-                    "SOS HULP NODIG",
+                    i18n(R.string.sos_hulp_nodig),
                     fontSize = 28.sp,
                     fontWeight = FontWeight.W900,
                     color = Color.White,
@@ -241,14 +243,14 @@ fun HomeStatusCard(
             Spacer(Modifier.width(24.dp))
             Column {
                 Text(
-                    "HERINNERING",
+                    i18n(R.string.herinnering_2),
                     fontSize = 13.sp,
                     fontWeight = FontWeight.Black,
                     letterSpacing = 1.5.sp,
                     color = Color(0xFF10B981)
                 )
                 Text(
-                    "Nog $pendingMedsCount medicijnen", 
+                    i18n(R.string.nog_medicijnen, pendingMedsCount), 
                     fontSize = 22.sp, 
                     fontWeight = FontWeight.Black,
                     color = Color.White

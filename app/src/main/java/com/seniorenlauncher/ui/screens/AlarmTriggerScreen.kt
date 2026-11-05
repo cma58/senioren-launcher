@@ -1,4 +1,6 @@
 package com.seniorenlauncher.ui.screens
+import com.seniorenlauncher.R
+import com.seniorenlauncher.util.i18n
 
 import android.app.Activity
 import android.app.AlarmManager
@@ -130,7 +132,7 @@ fun AlarmTriggerScreen(
     LaunchedEffect(Unit) {
         tts = TextToSpeech(appContext) { status ->
             if (status == TextToSpeech.SUCCESS) {
-                tts?.language = Locale.forLanguageTag("nl-NL")
+                tts?.language = com.seniorenlauncher.util.Str.locale()
                 tts?.setAudioAttributes(audioAttributes)
                 isTtsReady = true
             }
@@ -151,15 +153,15 @@ fun AlarmTriggerScreen(
         if (isTtsReady) {
             if (isFindPhone) {
                 while(true) {
-                    tts?.speak("Ik ben hier! Uw telefoon ligt hier!", TextToSpeech.QUEUE_FLUSH, null, "ZOEK")
+                    tts?.speak(i18n(R.string.ik_ben_hier_uw_telefoon), TextToSpeech.QUEUE_FLUSH, null, "ZOEK")
                     delay(4000)
                 }
             } else {
                 val msg = when {
-                    isRemoteMessage -> "Bericht van familie: $label"
-                    isMedication -> "Tijd voor uw medicijnen. $label"
-                    isAgendaEvent -> "Herinnering. $label"
-                    else -> "Goedemorgen. Het is tijd voor: $label"
+                    isRemoteMessage -> i18n(R.string.bericht_van_familie, label)
+                    isMedication -> i18n(R.string.tijd_voor_uw_medicijnen, label)
+                    isAgendaEvent -> i18n(R.string.herinnering, label)
+                    else -> i18n(R.string.goedemorgen_het_is_tijd_voor, label)
                 }
                 if (isRemoteMessage) {
                     tts?.speak(msg, TextToSpeech.QUEUE_FLUSH, null, "Msg1")
@@ -213,11 +215,11 @@ fun AlarmTriggerScreen(
     ) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             Text(text = when { 
-                isRemoteMessage -> "📩 BERICHT"
-                isMedication -> "💊 MEDICIJNEN"
-                isAgendaEvent -> "📅 AFSPRAAK"
-                isFindPhone -> "🔍 ZOEKEN"
-                else -> "⏰ WEKKER" 
+                isRemoteMessage -> i18n(R.string.bericht)
+                isMedication -> i18n(R.string.medicijnen)
+                isAgendaEvent -> i18n(R.string.afspraak)
+                isFindPhone -> i18n(R.string.zoeken)
+                else -> i18n(R.string.wekker_2) 
             }, fontSize = 32.sp, fontWeight = FontWeight.Bold, color = Color.White, modifier = Modifier.padding(top = 20.dp))
         }
         
@@ -243,7 +245,7 @@ fun AlarmTriggerScreen(
                     else handleSnooze(context, label, alarmId, onDismiss)
                     onDismiss()
                 }, modifier = Modifier.fillMaxWidth().height(90.dp), colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2B6CB0).copy(alpha = 0.8f)), shape = RoundedCornerShape(24.dp)) {
-                    Row(verticalAlignment = Alignment.CenterVertically) { Icon(Icons.Default.Timer, null, modifier = Modifier.size(32.dp)); Spacer(Modifier.width(12.dp)); Text("HERINNER OVER 15 MIN", fontSize = 22.sp, fontWeight = FontWeight.Black) }
+                    Row(verticalAlignment = Alignment.CenterVertically) { Icon(Icons.Default.Timer, null, modifier = Modifier.size(32.dp)); Spacer(Modifier.width(12.dp)); Text(i18n(R.string.herinner_over_15_min), fontSize = 22.sp, fontWeight = FontWeight.Black) }
                 }
             }
             Button(onClick = { 
@@ -255,7 +257,7 @@ fun AlarmTriggerScreen(
                 }
                 onDismiss() 
             }, modifier = Modifier.fillMaxWidth().height(if (isMedication || isRemoteMessage) 150.dp else 120.dp), colors = ButtonDefaults.buttonColors(containerColor = if (isMedication || isAgendaEvent || isFindPhone || isRemoteMessage) Color(0xFF10B981) else Color(0xFFEF4444)), shape = RoundedCornerShape(24.dp)) {
-                Row(verticalAlignment = Alignment.CenterVertically) { Icon(if (isMedication || isAgendaEvent || isFindPhone || isRemoteMessage) Icons.Default.Check else Icons.Default.AlarmOff, null, modifier = Modifier.size(48.dp)); Spacer(Modifier.width(16.dp)); Text(text = when { isMedication -> "NU INGENOMEN"; isRemoteMessage || isAgendaEvent || isFindPhone -> "BEGREPEN"; else -> "UITZETTEN" }, fontSize = 32.sp, fontWeight = FontWeight.Black) }
+                Row(verticalAlignment = Alignment.CenterVertically) { Icon(if (isMedication || isAgendaEvent || isFindPhone || isRemoteMessage) Icons.Default.Check else Icons.Default.AlarmOff, null, modifier = Modifier.size(48.dp)); Spacer(Modifier.width(16.dp)); Text(text = when { isMedication -> i18n(R.string.nu_ingenomen); isRemoteMessage || isAgendaEvent || isFindPhone -> i18n(R.string.begrepen); else -> i18n(R.string.uitzetten) }, fontSize = 32.sp, fontWeight = FontWeight.Black) }
             }
         }
         Spacer(Modifier.height(10.dp))
@@ -280,7 +282,7 @@ private suspend fun handleMedicationMissed(appContext: Context, medId: Long) {
             dao.update(med.copy(isPending = false))
             val sosContacts = LauncherApp.instance.database.contactDao().getSosContactsSync()
             if (sosContacts.isNotEmpty()) {
-                val message = "Sionro: Uw familielid heeft het medicijn '${med.name}' NIET ingenomen binnen 5 minuten."
+                val message = i18n(R.string.sionro_uw_familielid_heeft_het, med.name)
                 val smsManager = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) appContext.getSystemService(SmsManager::class.java) else SmsManager.getDefault()
                 sosContacts.forEach { contact -> try { smsManager?.sendTextMessage(contact.phoneNumber, null, message, null, null) } catch (e: Exception) { Log.e("AlarmTrigger", "SMS FOUT") } }
             }
@@ -293,6 +295,6 @@ private fun handleSnooze(context: Context, label: String, alarmId: Long, onDismi
     val snoozeTime = System.currentTimeMillis() + (15 * 60 * 1000L)
     val intent = Intent(context, AlarmReceiver::class.java).apply { putExtra("ALARM_ID", alarmId); putExtra("ALARM_LABEL", "$label (Sluimer)"); action = "com.seniorenlauncher.ALARM_SNOOZE_$alarmId" }
     val pi = PendingIntent.getBroadcast(context, (alarmId + 9999).toInt(), intent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
-    try { alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, snoozeTime, pi); Toast.makeText(context, "Tot over 15 minuten!", Toast.LENGTH_LONG).show() } catch (e: Exception) {}
+    try { alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, snoozeTime, pi); Toast.makeText(context, i18n(R.string.tot_over_15_minuten), Toast.LENGTH_LONG).show() } catch (e: Exception) {}
     onDismiss()
 }

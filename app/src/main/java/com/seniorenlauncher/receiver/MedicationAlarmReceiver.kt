@@ -1,4 +1,6 @@
 package com.seniorenlauncher.receiver
+import com.seniorenlauncher.R
+import com.seniorenlauncher.util.i18n
 
 import android.app.AlarmManager
 import android.app.NotificationManager
@@ -26,7 +28,7 @@ class MedicationAlarmReceiver : BroadcastReceiver() {
         val medicationId = intent.getLongExtra("medication_id", -1L)
         val isSnooze = intent.getBooleanExtra("is_snooze", false)
         val isEscalation = intent.getBooleanExtra("is_escalation", false)
-        val label = intent.getStringExtra("label") ?: "Medicijn"
+        val label = intent.getStringExtra("label") ?: i18n(R.string.medicijn)
 
         if (medicationId == -1L) return
 
@@ -88,7 +90,7 @@ class MedicationAlarmReceiver : BroadcastReceiver() {
             val sosContacts = contactDao.getSosContactsSync()
             
             if (sosContacts.isNotEmpty()) {
-                val message = "LET OP: Uw familielid heeft het medicijn '${med.name}' (${med.dose}) van een uur geleden nog niet afgevinkt in de Senioren Launcher."
+                val message = i18n(R.string.let_op_uw_familielid_heeft, med.name, med.dose)
                 val smsManager = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
                     ctx.getSystemService(SmsManager::class.java)
                 } else {
@@ -132,8 +134,8 @@ class MedicationAlarmReceiver : BroadcastReceiver() {
         )
 
         val notification = NotificationCompat.Builder(ctx, LauncherApp.CH_MEDS)
-            .setContentTitle("💊 TIJD VOOR MEDICIJNEN")
-            .setContentText("Neem nu in: ${med.name} (${med.dose})")
+            .setContentTitle(i18n(R.string.tijd_voor_medicijnen))
+            .setContentText(i18n(R.string.neem_nu_in, med.name, med.dose))
             .setSmallIcon(android.R.drawable.ic_lock_idle_alarm)
             .setPriority(NotificationCompat.PRIORITY_MAX)
             .setCategory(NotificationCompat.CATEGORY_ALARM)

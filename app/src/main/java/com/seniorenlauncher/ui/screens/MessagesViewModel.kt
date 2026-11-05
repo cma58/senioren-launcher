@@ -1,4 +1,6 @@
 package com.seniorenlauncher.ui.screens
+import com.seniorenlauncher.R
+import com.seniorenlauncher.util.i18n
 
 import android.app.role.RoleManager
 import android.content.ContentValues
@@ -95,7 +97,7 @@ class MessagesViewModel : ViewModel() {
                     while (it.moveToNext()) {
                         val threadId = it.getLong(threadIdIdx)
                         if (!conversationsMap.containsKey(threadId)) {
-                            val address = it.getString(addressIdx) ?: "Onbekend"
+                            val address = it.getString(addressIdx) ?: i18n(R.string.onbekend)
                             val snippet = it.getString(bodyIdx) ?: ""
                             val date = it.getLong(dateIdx)
                             val isRead = it.getInt(readIdx) == 1

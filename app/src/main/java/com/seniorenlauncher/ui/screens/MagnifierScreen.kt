@@ -1,4 +1,6 @@
 package com.seniorenlauncher.ui.screens
+import com.seniorenlauncher.R
+import com.seniorenlauncher.util.i18n
 
 import android.Manifest
 import android.content.Context
@@ -54,13 +56,13 @@ fun MagnifierScreen(onBack: () -> Unit) {
     }
 
     Column(Modifier.fillMaxSize().background(Color.Black)) {
-        ScreenHeader(title = "Vergrootglas", onBack = onBack)
+        ScreenHeader(title = i18n(R.string.vergrootglas), onBack = onBack)
         
         if (hasCameraPermission) {
             MagnifierCameraPreview(modifier = Modifier.weight(1f))
         } else {
             Box(Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.Center) {
-                Text("Camera toegang nodig voor het vergrootglas.", color = Color.White, textAlign = androidx.compose.ui.text.style.TextAlign.Center)
+                Text(i18n(R.string.camera_toegang_nodig_voor_het), color = Color.White, textAlign = androidx.compose.ui.text.style.TextAlign.Center)
             }
         }
     }
@@ -154,7 +156,7 @@ fun MagnifierCameraPreview(modifier: Modifier = Modifier) {
                 LargeCircleButton(
                     icon = Icons.Default.Camera,
                     onClick = {
-                        Toast.makeText(context, "Beeld vastgezet (niet echt)", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(context, i18n(R.string.beeld_vastgezet_niet_echt), Toast.LENGTH_SHORT).show()
                     },
                     color = MaterialTheme.colorScheme.primary
                 )

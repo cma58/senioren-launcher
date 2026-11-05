@@ -1,4 +1,6 @@
 package com.seniorenlauncher.ui.screens
+import com.seniorenlauncher.R
+import com.seniorenlauncher.util.i18n
 
 import android.app.AlarmManager
 import android.content.Context
@@ -62,7 +64,7 @@ fun AlarmScreen(onBack: () -> Unit, viewModel: AlarmViewModel = viewModel()) {
 
     Box(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
         Column(Modifier.fillMaxSize().padding(horizontal = 12.dp, vertical = 8.dp)) {
-            ScreenHeader("Wekker", onBack)
+            ScreenHeader(i18n(R.string.wekker), onBack)
             
             if (!canScheduleExact) {
                 Card(
@@ -83,7 +85,7 @@ fun AlarmScreen(onBack: () -> Unit, viewModel: AlarmViewModel = viewModel()) {
                         Icon(Icons.Default.Warning, null, tint = Color(0xFFE65100))
                         Spacer(Modifier.width(12.dp))
                         Text(
-                            "Toestemming nodig voor nauwkeurige wekkers. Tik hier.",
+                            i18n(R.string.toestemming_nodig_voor_nauwkeurige_wekke),
                             fontSize = 16.sp,
                             fontWeight = FontWeight.Bold,
                             color = Color(0xFFE65100)
@@ -94,7 +96,7 @@ fun AlarmScreen(onBack: () -> Unit, viewModel: AlarmViewModel = viewModel()) {
 
             if (alarms.isEmpty()) {
                 Box(Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.Center) {
-                    Text("Geen wekkers ingesteld", fontSize = 18.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text(i18n(R.string.geen_wekkers_ingesteld), fontSize = 18.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             } else {
                 LazyColumn(
@@ -128,7 +130,7 @@ fun AlarmScreen(onBack: () -> Unit, viewModel: AlarmViewModel = viewModel()) {
                 .size(72.dp),
             containerColor = MaterialTheme.colorScheme.primary
         ) {
-            Icon(Icons.Default.Add, contentDescription = "Wekker toevoegen", modifier = Modifier.size(36.dp))
+            Icon(Icons.Default.Add, contentDescription = i18n(R.string.wekker_toevoegen), modifier = Modifier.size(36.dp))
         }
     }
 
@@ -188,7 +190,7 @@ fun AlarmItem(alarm: AlarmEntry, onToggle: () -> Unit, onDelete: () -> Unit, onE
                         Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(top = 4.dp)) {
                             Icon(Icons.Default.WbSunny, null, Modifier.size(16.dp), tint = Color(0xFFE65100))
                             Spacer(Modifier.width(4.dp))
-                            Text("Met ochtendritueel", fontSize = 14.sp, color = Color(0xFFE65100))
+                            Text(i18n(R.string.met_ochtendritueel), fontSize = 14.sp, color = Color(0xFFE65100))
                         }
                     }
                 }
@@ -200,7 +202,7 @@ fun AlarmItem(alarm: AlarmEntry, onToggle: () -> Unit, onDelete: () -> Unit, onE
                 )
 
                 IconButton(onClick = onDelete) {
-                    Icon(Icons.Default.Delete, contentDescription = "Verwijderen", tint = Color.Red)
+                    Icon(Icons.Default.Delete, contentDescription = i18n(R.string.verwijderen), tint = Color.Red)
                 }
             }
             
@@ -216,10 +218,10 @@ fun AlarmItem(alarm: AlarmEntry, onToggle: () -> Unit, onDelete: () -> Unit, onE
 
 fun getDaysDisplay(daysString: String): String {
     val days = daysString.split(",").filter { it.isNotBlank() }.map { it.toInt() }
-    if (days.size == 7) return "Elke dag"
-    if (days.isEmpty()) return "Nooit"
+    if (days.size == 7) return i18n(R.string.elke_dag)
+    if (days.isEmpty()) return i18n(R.string.nooit)
     
-    val dayNames = listOf("Zo", "Ma", "Di", "Wo", "Do", "Vr", "Za")
+    val dayNames = listOf(i18n(R.string.zo), i18n(R.string.ma), i18n(R.string.di), i18n(R.string.wo), i18n(R.string.do_day), i18n(R.string.vr), i18n(R.string.za))
     return days.sorted().joinToString(", ") { dayNames[it - 1] }
 }
 
@@ -244,7 +246,7 @@ fun AlarmEditDialog(initialAlarm: AlarmEntry, isNew: Boolean, onDismiss: () -> U
     // Fetch real system sounds
     val systemSounds = remember {
         val list = mutableListOf<SoundInfo>()
-        list.add(SoundInfo("Standaard", RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM).toString()))
+        list.add(SoundInfo(i18n(R.string.standaard), RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM).toString()))
         
         val rm = RingtoneManager(context)
         rm.setType(RingtoneManager.TYPE_ALARM)
@@ -302,7 +304,7 @@ fun AlarmEditDialog(initialAlarm: AlarmEntry, isNew: Boolean, onDismiss: () -> U
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                Text(if (isNew) "Nieuwe Wekker" else "Wekker Aanpassen", fontSize = 24.sp, fontWeight = FontWeight.Bold)
+                Text(if (isNew) i18n(R.string.nieuwe_wekker) else i18n(R.string.wekker_aanpassen), fontSize = 24.sp, fontWeight = FontWeight.Bold)
                 
                 // --- Taak 2: TimeStepper (Plus/Min Knoppen) ---
                 Row(
@@ -313,7 +315,7 @@ fun AlarmEditDialog(initialAlarm: AlarmEntry, isNew: Boolean, onDismiss: () -> U
                     TimeStepper(
                         value = hour,
                         range = 0..23,
-                        label = "Uren",
+                        label = i18n(R.string.uren),
                         onValueChange = { hour = it },
                         fontSize = 52.sp,
                         buttonSize = 64.dp
@@ -322,7 +324,7 @@ fun AlarmEditDialog(initialAlarm: AlarmEntry, isNew: Boolean, onDismiss: () -> U
                     TimeStepper(
                         value = minute,
                         range = 0..59,
-                        label = "Minuten",
+                        label = i18n(R.string.minuten),
                         onValueChange = { minute = it },
                         fontSize = 52.sp,
                         buttonSize = 64.dp
@@ -332,7 +334,7 @@ fun AlarmEditDialog(initialAlarm: AlarmEntry, isNew: Boolean, onDismiss: () -> U
                 OutlinedTextField(
                     value = label,
                     onValueChange = { label = it },
-                    label = { Text("Naam van de wekker") },
+                    label = { Text(i18n(R.string.naam_van_de_wekker)) },
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(12.dp)
                 )
@@ -351,8 +353,8 @@ fun AlarmEditDialog(initialAlarm: AlarmEntry, isNew: Boolean, onDismiss: () -> U
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
                         Column(Modifier.weight(1f)) {
-                            Text("Ochtendritueel", fontSize = 18.sp, fontWeight = FontWeight.Bold)
-                            Text("Weerbericht openen", fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            Text(i18n(R.string.ochtendritueel), fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                            Text(i18n(R.string.weerbericht_openen), fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
                         }
                         Switch(
                             checked = isMorningRoutine,
@@ -361,14 +363,14 @@ fun AlarmEditDialog(initialAlarm: AlarmEntry, isNew: Boolean, onDismiss: () -> U
                         )
                     }
                     Text(
-                        "Indien ingeschakeld opent de app 's ochtends automatisch het weerbericht na het uitzetten.",
+                        i18n(R.string.indien_ingeschakeld_opent_de_app),
                         fontSize = 12.sp,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.padding(top = 8.dp)
                     )
                 }
 
-                Text("Kies Geluid:", fontWeight = FontWeight.Bold, modifier = Modifier.align(Alignment.Start))
+                Text(i18n(R.string.kies_geluid), fontWeight = FontWeight.Bold, modifier = Modifier.align(Alignment.Start))
                 var expanded by remember { mutableStateOf(false) }
                 Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
                     Box(Modifier.weight(1f)) {
@@ -404,13 +406,13 @@ fun AlarmEditDialog(initialAlarm: AlarmEntry, isNew: Boolean, onDismiss: () -> U
                         onClick = { playPreview(selectedSound.uri) },
                         modifier = Modifier.size(56.dp).background(MaterialTheme.colorScheme.secondaryContainer, RoundedCornerShape(12.dp))
                     ) {
-                        Icon(Icons.Default.PlayArrow, "Beluister", tint = MaterialTheme.colorScheme.primary)
+                        Icon(Icons.Default.PlayArrow, i18n(R.string.beluister), tint = MaterialTheme.colorScheme.primary)
                     }
                 }
 
-                Text("Dagen:", fontWeight = FontWeight.Bold, modifier = Modifier.align(Alignment.Start))
+                Text(i18n(R.string.dagen), fontWeight = FontWeight.Bold, modifier = Modifier.align(Alignment.Start))
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                    val dayNames = listOf("Zo", "Ma", "Di", "Wo", "Do", "Vr", "Za")
+                    val dayNames = listOf(i18n(R.string.zo), i18n(R.string.ma), i18n(R.string.di), i18n(R.string.wo), i18n(R.string.do_day), i18n(R.string.vr), i18n(R.string.za))
                     for (i in 1..7) {
                         val isSelected = selectedDays.contains(i)
                         Box(
@@ -444,7 +446,7 @@ fun AlarmEditDialog(initialAlarm: AlarmEntry, isNew: Boolean, onDismiss: () -> U
                         modifier = Modifier.weight(1f).height(60.dp),
                         shape = RoundedCornerShape(16.dp)
                     ) {
-                        Text("ANNULEREN", fontWeight = FontWeight.Bold)
+                        Text(i18n(R.string.annuleren), fontWeight = FontWeight.Bold)
                     }
                     Button(
                         onClick = { 
@@ -462,7 +464,7 @@ fun AlarmEditDialog(initialAlarm: AlarmEntry, isNew: Boolean, onDismiss: () -> U
                         enabled = selectedDays.isNotEmpty(),
                         shape = RoundedCornerShape(16.dp)
                     ) {
-                        Text("OPSLAAN", fontWeight = FontWeight.Bold)
+                        Text(i18n(R.string.opslaan), fontWeight = FontWeight.Bold)
                     }
                 }
             }

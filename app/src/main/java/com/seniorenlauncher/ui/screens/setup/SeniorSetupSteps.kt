@@ -1,4 +1,6 @@
 package com.seniorenlauncher.ui.screens.setup
+import com.seniorenlauncher.R
+import com.seniorenlauncher.util.i18n
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -29,10 +31,10 @@ fun SeniorWelcomeStep(onNext: () -> Unit) {
         verticalArrangement = Arrangement.Center
     ) {
         Text("👋", fontSize = 100.sp)
-        Text("Welkom", fontSize = 40.sp, fontWeight = FontWeight.Bold)
+        Text(i18n(R.string.welkom), fontSize = 40.sp, fontWeight = FontWeight.Bold)
         Spacer(Modifier.height(24.dp))
         Text(
-            "We gaan uw telefoon samen heel makkelijk maken. U kunt hierbij niets fout doen.",
+            i18n(R.string.we_gaan_uw_telefoon_samen),
             fontSize = 26.sp,
             textAlign = TextAlign.Center,
             lineHeight = 36.sp
@@ -43,7 +45,7 @@ fun SeniorWelcomeStep(onNext: () -> Unit) {
             modifier = Modifier.fillMaxWidth().height(80.dp),
             shape = RoundedCornerShape(20.dp)
         ) {
-            Text("BEGINNEN", fontSize = 22.sp, fontWeight = FontWeight.Bold)
+            Text(i18n(R.string.beginnen), fontSize = 22.sp, fontWeight = FontWeight.Bold)
         }
     }
 }
@@ -56,14 +58,14 @@ fun SeniorReadingStep(onNext: () -> Unit, settingsVm: SettingsViewModel) {
         modifier = Modifier.fillMaxSize().padding(24.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Text("Welkom. Hoe groot wilt u de letters?", fontSize = 26.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center)
+        Text(i18n(R.string.welkom_hoe_groot_wilt_u), fontSize = 26.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center)
         Spacer(Modifier.height(48.dp))
         
-        ReadingOptionCard("Dit is normale tekst.", 18, settings.fontSize == 18) { settingsVm.updateFontSize(18) }
+        ReadingOptionCard(i18n(R.string.dit_is_normale_tekst), 18, settings.fontSize == 18) { settingsVm.updateFontSize(18) }
         Spacer(Modifier.height(16.dp))
-        ReadingOptionCard("Dit is grote tekst.", 24, settings.fontSize == 24) { settingsVm.updateFontSize(24) }
+        ReadingOptionCard(i18n(R.string.dit_is_grote_tekst), 24, settings.fontSize == 24) { settingsVm.updateFontSize(24) }
         Spacer(Modifier.height(20.dp))
-        ReadingOptionCard("DIT IS REUSACHTIG.", 30, settings.fontSize == 30) { settingsVm.updateFontSize(30) }
+        ReadingOptionCard(i18n(R.string.dit_is_reusachtig), 30, settings.fontSize == 30) { settingsVm.updateFontSize(30) }
         
         Spacer(Modifier.weight(1f))
         
@@ -72,7 +74,7 @@ fun SeniorReadingStep(onNext: () -> Unit, settingsVm: SettingsViewModel) {
             modifier = Modifier.fillMaxWidth().height(80.dp),
             shape = RoundedCornerShape(20.dp)
         ) {
-            Text("VOLGENDE", fontSize = 22.sp, fontWeight = FontWeight.Bold)
+            Text(i18n(R.string.volgende_2), fontSize = 22.sp, fontWeight = FontWeight.Bold)
         }
     }
 }
@@ -104,12 +106,12 @@ fun SeniorColorsStep(onNext: () -> Unit, settingsVm: SettingsViewModel) {
         modifier = Modifier.fillMaxSize().padding(24.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Text("Welkom. Welke kleuren vindt u het fijnst?", fontSize = 26.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center)
+        Text(i18n(R.string.welkom_welke_kleuren_vindt_u), fontSize = 26.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center)
         Spacer(Modifier.height(48.dp))
         
-        SeniorThemeCard("Klassiek (Zacht)", AppTheme.CLASSIC, settings.theme == AppTheme.CLASSIC) { settingsVm.updateTheme(AppTheme.CLASSIC) }
+        SeniorThemeCard(i18n(R.string.klassiek_zacht), AppTheme.CLASSIC, settings.theme == AppTheme.CLASSIC) { settingsVm.updateTheme(AppTheme.CLASSIC) }
         Spacer(Modifier.height(32.dp))
-        SeniorThemeCard("Hoog Contrast (Fel)", AppTheme.HIGH_CONTRAST, settings.theme == AppTheme.HIGH_CONTRAST) { settingsVm.updateTheme(AppTheme.HIGH_CONTRAST) }
+        SeniorThemeCard(i18n(R.string.hoog_contrast_fel), AppTheme.HIGH_CONTRAST, settings.theme == AppTheme.HIGH_CONTRAST) { settingsVm.updateTheme(AppTheme.HIGH_CONTRAST) }
         
         Spacer(Modifier.weight(1f))
         
@@ -118,7 +120,7 @@ fun SeniorColorsStep(onNext: () -> Unit, settingsVm: SettingsViewModel) {
             modifier = Modifier.fillMaxWidth().height(80.dp),
             shape = RoundedCornerShape(20.dp)
         ) {
-            Text("VOLGENDE", fontSize = 22.sp, fontWeight = FontWeight.Bold)
+            Text(i18n(R.string.volgende_2), fontSize = 22.sp, fontWeight = FontWeight.Bold)
         }
     }
 }
@@ -154,13 +156,13 @@ fun SeniorEmergencyStep(onNext: () -> Unit) {
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text("🆘", fontSize = 60.sp)
-        Text("Wie wilt u bellen in geval van nood?", fontSize = 26.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center)
+        Text(i18n(R.string.wie_wilt_u_bellen_in), fontSize = 26.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center)
         Spacer(Modifier.height(32.dp))
         
         OutlinedTextField(
             value = name,
             onValueChange = { name = it },
-            label = { Text("Naam") },
+            label = { Text(i18n(R.string.naam)) },
             modifier = Modifier.fillMaxWidth(),
             textStyle = LocalTextStyle.current.copy(fontSize = 20.sp)
         )
@@ -168,7 +170,7 @@ fun SeniorEmergencyStep(onNext: () -> Unit) {
         OutlinedTextField(
             value = phone,
             onValueChange = { phone = it },
-            label = { Text("Telefoonnummer") },
+            label = { Text(i18n(R.string.telefoonnummer)) },
             modifier = Modifier.fillMaxWidth(),
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
             textStyle = LocalTextStyle.current.copy(fontSize = 20.sp)
@@ -189,10 +191,10 @@ fun SeniorEmergencyStep(onNext: () -> Unit) {
             enabled = name.isNotBlank() && phone.isNotBlank(),
             shape = RoundedCornerShape(20.dp)
         ) {
-            Text("BEWAAR CONTACT", fontSize = 20.sp, fontWeight = FontWeight.Bold)
+            Text(i18n(R.string.bewaar_contact), fontSize = 20.sp, fontWeight = FontWeight.Bold)
         }
         
         Spacer(Modifier.height(24.dp))
-        Text("De app zal hierna om toestemming vragen om dit nummer te mogen bellen.", fontSize = 16.sp, textAlign = TextAlign.Center, color = Color.Gray)
+        Text(i18n(R.string.de_app_zal_hierna_om), fontSize = 16.sp, textAlign = TextAlign.Center, color = Color.Gray)
     }
 }

@@ -1,4 +1,6 @@
 package com.seniorenlauncher.ui.screens
+import com.seniorenlauncher.R
+import com.seniorenlauncher.util.i18n
 
 import android.Manifest
 import android.content.pm.PackageManager
@@ -112,9 +114,9 @@ fun MessagesScreen(
                 Box(Modifier.weight(1f)) {
                     ScreenHeader(
                         title = when (activeView) {
-                            MessageView.Overview -> "Berichten"
+                            MessageView.Overview -> i18n(R.string.berichten)
                             MessageView.Chat -> selectedName ?: selectedAddress ?: "Chat"
-                            MessageView.NewMessage -> "Nieuw"
+                            MessageView.NewMessage -> i18n(R.string.nieuw_2)
                         },
                         onBack = backHandler
                     )
@@ -128,11 +130,11 @@ fun MessagesScreen(
                 ) {
                     Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(4.dp)) {
                         IconButton(onClick = { if (textZoom > 0.8f) textZoom -= 0.1f }) {
-                            Icon(Icons.Default.Remove, "Kleiner", tint = Color.White)
+                            Icon(Icons.Default.Remove, i18n(R.string.kleiner), tint = Color.White)
                         }
                         Text("A", fontSize = 16.sp, fontWeight = FontWeight.Black, color = Color.White)
                         IconButton(onClick = { if (textZoom < 1.8f) textZoom += 0.1f }) {
-                            Icon(Icons.Default.Add, "Groter", tint = Color.White)
+                            Icon(Icons.Default.Add, i18n(R.string.groter), tint = Color.White)
                         }
                     }
                 }
@@ -207,7 +209,7 @@ fun ConversationOverview(messagesVm: MessagesViewModel, onConversationClick: (Co
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.Center) {
                 Icon(Icons.Default.Edit, null, tint = Color.White, modifier = Modifier.size(28.dp))
                 Spacer(Modifier.width(12.dp))
-                Text("NIEUW BERICHT SCHRIJVEN", fontSize = 20.sp, fontWeight = FontWeight.Black, color = Color.White)
+                Text(i18n(R.string.nieuw_bericht_schrijven), fontSize = 20.sp, fontWeight = FontWeight.Black, color = Color.White)
             }
         }
 
@@ -305,7 +307,7 @@ fun ChatScreen(address: String, messagesVm: MessagesViewModel, zoom: Float) {
                     value = newMessageBody,
                     onValueChange = { newMessageBody = it },
                     modifier = Modifier.weight(1f),
-                    placeholder = { Text("Typ een bericht...", fontSize = (18 * zoom).sp, fontWeight = FontWeight.Bold) },
+                    placeholder = { Text(i18n(R.string.typ_een_bericht), fontSize = (18 * zoom).sp, fontWeight = FontWeight.Bold) },
                     colors = TextFieldDefaults.colors(
                         focusedContainerColor = Color.Transparent,
                         unfocusedContainerColor = Color.Transparent,
@@ -392,7 +394,7 @@ fun NewMessageScreen(onContactSelected: (String, String) -> Unit) {
                 val nIdx = cursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME)
                 val pIdx = cursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER)
                 while (cursor.moveToNext()) {
-                    val name = cursor.getString(nIdx) ?: "Onbekend"
+                    val name = cursor.getString(nIdx) ?: i18n(R.string.onbekend)
                     val phone = cursor.getString(pIdx) ?: ""
                     list.add(name to phone)
                 }
@@ -406,7 +408,7 @@ fun NewMessageScreen(onContactSelected: (String, String) -> Unit) {
             value = searchQuery,
             onValueChange = { searchQuery = it },
             modifier = Modifier.fillMaxWidth(),
-            placeholder = { Text("Zoek contact...", fontWeight = FontWeight.Black) },
+            placeholder = { Text(i18n(R.string.zoek_contact), fontWeight = FontWeight.Black) },
             leadingIcon = { Icon(Icons.Default.Search, null, tint = MaterialTheme.colorScheme.primary) },
             shape = RoundedCornerShape(40.dp),
             colors = TextFieldDefaults.colors(
@@ -456,10 +458,10 @@ fun PermissionRequestView(onGrant: () -> Unit) {
         Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.padding(24.dp)) {
             Icon(Icons.Default.Lock, null, modifier = Modifier.size(80.dp), tint = MaterialTheme.colorScheme.primary)
             Spacer(Modifier.height(24.dp))
-            Text("Berichten Beveiligd", fontSize = 24.sp, fontWeight = FontWeight.Black)
-            Text("Geef toestemming om uw berichten veilig te tonen.", textAlign = TextAlign.Center, modifier = Modifier.padding(vertical = 16.dp), fontWeight = FontWeight.Bold)
+            Text(i18n(R.string.berichten_beveiligd), fontSize = 24.sp, fontWeight = FontWeight.Black)
+            Text(i18n(R.string.geef_toestemming_om_uw_berichten), textAlign = TextAlign.Center, modifier = Modifier.padding(vertical = 16.dp), fontWeight = FontWeight.Bold)
             Button(onClick = onGrant, modifier = Modifier.fillMaxWidth().height(80.dp), shape = RoundedCornerShape(40.dp)) {
-                Text("TOESTEMMING GEVEN", fontSize = 20.sp, fontWeight = FontWeight.Black)
+                Text(i18n(R.string.toestemming_geven), fontSize = 20.sp, fontWeight = FontWeight.Black)
             }
         }
     }
@@ -474,10 +476,10 @@ fun DefaultSmsBanner(onSet: () -> Unit) {
         modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp)
     ) {
         Column(Modifier.padding(20.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-            Text("Stel in als standaard SMS-app", fontWeight = FontWeight.Black, fontSize = 18.sp)
+            Text(i18n(R.string.stel_in_als_standaard_sms), fontWeight = FontWeight.Black, fontSize = 18.sp)
             Spacer(Modifier.height(12.dp))
             Button(onClick = onSet, colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error), shape = RoundedCornerShape(16.dp)) {
-                Text("FIX NU", fontWeight = FontWeight.Black)
+                Text(i18n(R.string.fix_nu), fontWeight = FontWeight.Black)
             }
         }
     }

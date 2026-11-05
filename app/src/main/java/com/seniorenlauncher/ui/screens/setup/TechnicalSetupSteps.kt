@@ -1,4 +1,6 @@
 package com.seniorenlauncher.ui.screens.setup
+import com.seniorenlauncher.R
+import com.seniorenlauncher.util.i18n
 
 import android.app.role.RoleManager
 import android.content.Context
@@ -78,7 +80,7 @@ fun DefaultAppsSetupScreen(onNext: () -> Unit, isSenior: Boolean = false) {
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(
-            text = if (isSenior) "De telefoon veilig maken" else "Standaard Apps",
+            text = if (isSenior) i18n(R.string.de_telefoon_veilig_maken) else i18n(R.string.standaard_apps),
             fontSize = if (isSenior) 36.sp else 32.sp,
             fontWeight = FontWeight.ExtraBold,
             textAlign = TextAlign.Center,
@@ -89,8 +91,8 @@ fun DefaultAppsSetupScreen(onNext: () -> Unit, isSenior: Boolean = false) {
         
         Text(
             text = if (isSenior) 
-                "We maken de Senioren Launcher uw vaste hulp voor bellen en berichten. Klik op de rode vakken."
-                else "Stel de launcher in als standaard for Home, Telefoon en SMS om de stabiliteit te garanderen.",
+                i18n(R.string.we_maken_de_senioren_launcher)
+                else i18n(R.string.stel_de_launcher_in_als),
             fontSize = if (isSenior) 22.sp else 18.sp, 
             textAlign = TextAlign.Center,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -100,8 +102,8 @@ fun DefaultAppsSetupScreen(onNext: () -> Unit, isSenior: Boolean = false) {
         Spacer(Modifier.height(32.dp))
 
         DefaultAppRow(
-            title = if (isSenior) "1. Basis scherm" else "Startscherm (Home)",
-            description = if (isSenior) "Zodat u altijd de grote knoppen ziet." else "Maak dit de standaard launcher.",
+            title = if (isSenior) i18n(R.string.s_1_basis_scherm) else i18n(R.string.startscherm_home),
+            description = if (isSenior) i18n(R.string.zodat_u_altijd_de_grote) else i18n(R.string.maak_dit_de_standaard_launcher),
             isGranted = isDefaultHome,
             icon = Icons.Default.Home,
             isSenior = isSenior,
@@ -117,8 +119,8 @@ fun DefaultAppsSetupScreen(onNext: () -> Unit, isSenior: Boolean = false) {
         Spacer(Modifier.height(16.dp))
 
         DefaultAppRow(
-            title = if (isSenior) "2. Telefoon knop" else "Telefoon (Bellen)",
-            description = if (isSenior) "Om makkelijk uw familie te kunnen bellen." else "Nodig voor de versimpelde bel-interface.",
+            title = if (isSenior) i18n(R.string.s_2_telefoon_knop) else i18n(R.string.telefoon_bellen),
+            description = if (isSenior) i18n(R.string.om_makkelijk_uw_familie_te) else i18n(R.string.nodig_voor_de_versimpelde_bel),
             isGranted = isDefaultDialer,
             icon = Icons.Default.Phone,
             isSenior = isSenior,
@@ -139,8 +141,8 @@ fun DefaultAppsSetupScreen(onNext: () -> Unit, isSenior: Boolean = false) {
         Spacer(Modifier.height(16.dp))
 
         DefaultAppRow(
-            title = if (isSenior) "3. Berichten knop" else "Berichten (SMS)",
-            description = if (isSenior) "Zodat u veilig berichten kunt ontvangen." else "Nodig voor SOS en batterijmeldingen.",
+            title = if (isSenior) i18n(R.string.s_3_berichten_knop) else i18n(R.string.berichten_sms),
+            description = if (isSenior) i18n(R.string.zodat_u_veilig_berichten_kunt) else i18n(R.string.nodig_voor_sos_en_batterijmeldingen),
             isGranted = isDefaultSms,
             icon = Icons.Default.Sms,
             isSenior = isSenior,
@@ -171,8 +173,8 @@ fun DefaultAppsSetupScreen(onNext: () -> Unit, isSenior: Boolean = false) {
             )
         ) {
             Text(
-                text = if (allDone) (if (isSenior) "HET IS GELUKT, GA VERDER" else "VOLGENDE") 
-                       else (if (isSenior) "STEL DE 3 KNOPPEN IN" else "STEL ALLES IN"), 
+                text = if (allDone) (if (isSenior) i18n(R.string.het_is_gelukt_ga_verder) else i18n(R.string.volgende_2)) 
+                       else (if (isSenior) i18n(R.string.stel_de_3_knoppen_in) else i18n(R.string.stel_alles_in)), 
                 fontSize = if (isSenior) 24.sp else 22.sp, 
                 fontWeight = FontWeight.Black,
                 textAlign = TextAlign.Center
@@ -206,7 +208,7 @@ fun SosSetupScreen(onNext: () -> Unit, settingsVm: SettingsViewModel) {
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(
-            text = "Hoofdcontacten instellen",
+            text = i18n(R.string.hoofdcontacten_instellen),
             fontSize = 32.sp,
             fontWeight = FontWeight.ExtraBold,
             textAlign = TextAlign.Center
@@ -215,7 +217,7 @@ fun SosSetupScreen(onNext: () -> Unit, settingsVm: SettingsViewModel) {
         Spacer(Modifier.height(16.dp))
         
         Text(
-            text = "Kies tot maximaal 4 contactpersonen. Deze nummers worden direct als favoriet en SOS-contact ingesteld.",
+            text = i18n(R.string.kies_tot_maximaal_4_contactpersonen),
             fontSize = 18.sp,
             textAlign = TextAlign.Center,
             color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -228,7 +230,7 @@ fun SosSetupScreen(onNext: () -> Unit, settingsVm: SettingsViewModel) {
                 OutlinedTextField(
                     value = manualName,
                     onValueChange = { manualName = it },
-                    label = { Text("Naam") },
+                    label = { Text(i18n(R.string.naam)) },
                     singleLine = true,
                     shape = RoundedCornerShape(12.dp),
                     modifier = Modifier.fillMaxWidth()
@@ -237,7 +239,7 @@ fun SosSetupScreen(onNext: () -> Unit, settingsVm: SettingsViewModel) {
                 OutlinedTextField(
                     value = manualPhone,
                     onValueChange = { manualPhone = it },
-                    label = { Text("Nummer") },
+                    label = { Text(i18n(R.string.nummer)) },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
                     singleLine = true,
                     shape = RoundedCornerShape(12.dp),
@@ -271,7 +273,7 @@ fun SosSetupScreen(onNext: () -> Unit, settingsVm: SettingsViewModel) {
                 if (selectedContacts.isEmpty()) {
                     item {
                         Box(Modifier.fillParentMaxSize(), contentAlignment = Alignment.Center) {
-                            Text("Nog geen contacten gekozen", color = Color.Gray)
+                            Text(i18n(R.string.nog_geen_contacten_gekozen), color = Color.Gray)
                         }
                     }
                 } else {
@@ -308,7 +310,7 @@ fun SosSetupScreen(onNext: () -> Unit, settingsVm: SettingsViewModel) {
             ) {
                 Icon(Icons.Default.ContactPhone, null, modifier = Modifier.size(32.dp))
                 Spacer(Modifier.width(16.dp))
-                Text("KIES UIT CONTACTEN", fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                Text(i18n(R.string.kies_uit_contacten), fontSize = 18.sp, fontWeight = FontWeight.Bold)
             }
         }
         
@@ -337,7 +339,7 @@ fun SosSetupScreen(onNext: () -> Unit, settingsVm: SettingsViewModel) {
                 .height(70.dp),
             shape = RoundedCornerShape(20.dp)
         ) {
-            Text("VOLGENDE", fontSize = 20.sp, fontWeight = FontWeight.Bold)
+            Text(i18n(R.string.volgende_2), fontSize = 20.sp, fontWeight = FontWeight.Bold)
         }
     }
 
@@ -366,7 +368,7 @@ fun FallDetectionSetupScreen(onNext: () -> Unit, settingsVm: SettingsViewModel) 
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(
-            text = "Valdetectie",
+            text = i18n(R.string.valdetectie_2),
             fontSize = 32.sp,
             fontWeight = FontWeight.ExtraBold,
             textAlign = TextAlign.Center
@@ -380,7 +382,7 @@ fun FallDetectionSetupScreen(onNext: () -> Unit, settingsVm: SettingsViewModel) 
             border = BorderStroke(1.dp, Color(0xFFF97316))
         ) {
             Text(
-                "BETA FASE: Deze functie is nog in ontwikkeling en dient als extra hulpmiddel, niet als vervanging voor professionele hulp.",
+                i18n(R.string.beta_fase_deze_functie_is),
                 modifier = Modifier.padding(12.dp),
                 fontSize = 14.sp,
                 color = Color(0xFF9A3412),
@@ -392,7 +394,7 @@ fun FallDetectionSetupScreen(onNext: () -> Unit, settingsVm: SettingsViewModel) 
         Spacer(Modifier.height(24.dp))
         
         Text(
-            text = "De telefoon kan met zijn sensoren een harde val herkennen. Als dat gebeurt, slaat de telefoon alarm en worden de SOS-contacten gewaarschuwd.",
+            text = i18n(R.string.de_telefoon_kan_met_zijn),
             fontSize = 18.sp,
             textAlign = TextAlign.Center,
             color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -410,8 +412,8 @@ fun FallDetectionSetupScreen(onNext: () -> Unit, settingsVm: SettingsViewModel) 
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Column(Modifier.weight(1f)) {
-                    Text("Valdetectie inschakelen", fontSize = 20.sp, fontWeight = FontWeight.Bold)
-                    Text("Gebruikt bewegingssensoren.", fontSize = 16.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text(i18n(R.string.valdetectie_inschakelen), fontSize = 20.sp, fontWeight = FontWeight.Bold)
+                    Text(i18n(R.string.gebruikt_bewegingssensoren), fontSize = 16.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
                 Switch(
                     checked = settings.fallDetectionEnabled,
@@ -427,7 +429,7 @@ fun FallDetectionSetupScreen(onNext: () -> Unit, settingsVm: SettingsViewModel) 
             modifier = Modifier.fillMaxWidth().height(70.dp),
             shape = RoundedCornerShape(20.dp)
         ) {
-            Text("VOLGENDE", fontSize = 20.sp, fontWeight = FontWeight.Bold)
+            Text(i18n(R.string.volgende_2), fontSize = 20.sp, fontWeight = FontWeight.Bold)
         }
     }
 }
@@ -445,7 +447,7 @@ fun SecuritySetupScreen(onNext: () -> Unit, settingsVm: SettingsViewModel) {
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(
-            text = "Beveiliging instellen",
+            text = i18n(R.string.beveiliging_instellen),
             fontSize = 32.sp,
             lineHeight = 38.sp,
             fontWeight = FontWeight.ExtraBold,
@@ -460,8 +462,8 @@ fun SecuritySetupScreen(onNext: () -> Unit, settingsVm: SettingsViewModel) {
             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f))
         ) {
             Column(Modifier.padding(20.dp)) {
-                Text("4-cijferige PIN", fontSize = 20.sp, fontWeight = FontWeight.Bold)
-                Text("Dit vergrendelt de instellingen for de senior.", fontSize = 16.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(i18n(R.string.s_4_cijferige_pin), fontSize = 20.sp, fontWeight = FontWeight.Bold)
+                Text(i18n(R.string.dit_vergrendelt_de_instellingen_for), fontSize = 16.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 
                 Spacer(Modifier.height(16.dp))
                 
@@ -469,7 +471,7 @@ fun SecuritySetupScreen(onNext: () -> Unit, settingsVm: SettingsViewModel) {
                     value = pin,
                     onValueChange = { if (it.length <= 4 && it.all { char -> char.isDigit() }) pin = it },
                     modifier = Modifier.fillMaxWidth(),
-                    placeholder = { Text("Bijv. 1234") },
+                    placeholder = { Text(i18n(R.string.bijv_1234)) },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                     visualTransformation = PasswordVisualTransformation(),
                     shape = RoundedCornerShape(12.dp)
@@ -489,8 +491,8 @@ fun SecuritySetupScreen(onNext: () -> Unit, settingsVm: SettingsViewModel) {
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Column(Modifier.weight(1f)) {
-                    Text("Hulp op afstand", fontSize = 20.sp, fontWeight = FontWeight.Bold)
-                    Text("Maakt meekijken via RustDesk mogelijk.", fontSize = 16.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text(i18n(R.string.hulp_op_afstand), fontSize = 20.sp, fontWeight = FontWeight.Bold)
+                    Text(i18n(R.string.maakt_meekijken_via_rustdesk_mogelijk), fontSize = 16.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
                 Switch(
                     checked = remoteSupportEnabled,
@@ -514,7 +516,7 @@ fun SecuritySetupScreen(onNext: () -> Unit, settingsVm: SettingsViewModel) {
                 .height(70.dp),
             shape = RoundedCornerShape(20.dp)
         ) {
-            Text("BEVEILIGING OPSLAAN", fontSize = 20.sp, fontWeight = FontWeight.Bold)
+            Text(i18n(R.string.beveiliging_opslaan), fontSize = 20.sp, fontWeight = FontWeight.Bold)
         }
     }
 }
@@ -532,7 +534,7 @@ fun HandoverScreen(onNext: () -> Unit) {
         Text("✨", fontSize = 80.sp)
         
         Text(
-            text = "De techniek is klaar!",
+            text = i18n(R.string.de_techniek_is_klaar),
             fontSize = 32.sp,
             fontWeight = FontWeight.ExtraBold,
             textAlign = TextAlign.Center
@@ -541,7 +543,7 @@ fun HandoverScreen(onNext: () -> Unit) {
         Spacer(Modifier.height(24.dp))
         
         Text(
-            text = "Geef de telefoon nu aan de gebruiker, zodat zij zelf kunnen kiezen hoe groot de letters en knoppen moeten zijn.",
+            text = i18n(R.string.geef_de_telefoon_nu_aan),
             fontSize = 20.sp,
             textAlign = TextAlign.Center,
             lineHeight = 28.sp,
@@ -558,7 +560,7 @@ fun HandoverScreen(onNext: () -> Unit) {
             shape = RoundedCornerShape(20.dp),
             colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF10B981))
         ) {
-            Text("START VISUELE INSTELLINGEN", fontSize = 20.sp, fontWeight = FontWeight.Bold)
+            Text(i18n(R.string.start_visuele_instellingen), fontSize = 20.sp, fontWeight = FontWeight.Bold)
         }
     }
 }

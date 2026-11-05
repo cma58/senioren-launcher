@@ -1,4 +1,6 @@
 package com.seniorenlauncher.service
+import com.seniorenlauncher.R
+import com.seniorenlauncher.util.i18n
 
 import android.app.Service
 import android.content.Context
@@ -33,7 +35,7 @@ class StepCounterService : Service(), SensorEventListener {
         }
 
         val notification = NotificationCompat.Builder(this, LauncherApp.CH_GENERAL)
-            .setContentTitle("Stappenteller actief")
+            .setContentTitle(i18n(R.string.stappenteller_actief))
             .setSmallIcon(android.R.drawable.ic_dialog_info)
             .setOngoing(true)
             .build()
