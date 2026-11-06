@@ -300,25 +300,7 @@ fun AppPickerDialog(
                     }
                 }
                 
-                Row(Modifier.fillMaxWidth().padding(top = 16.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                    val cancelInteractionSource = remember { MutableInteractionSource() }
-                    val cancelPressed by cancelInteractionSource.collectIsPressedAsState()
-                    val cancelScale by animateFloatAsState(
-                        targetValue = if (cancelPressed) 0.94f else 1f,
-                        animationSpec = spring(dampingRatio = 0.7f, stiffness = 500f)
-                    )
-
-                    OutlinedButton(
-                        onClick = onDismiss, 
-                        interactionSource = cancelInteractionSource,
-                        modifier = Modifier.weight(1f).height(80.dp).scale(cancelScale),
-                        shape = RoundedCornerShape(40.dp),
-                        border = BorderStroke(1.dp, Color.White.copy(alpha = 0.1f)),
-                        colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.White)
-                    ) {
-                        Text(i18n(R.string.annuleren), fontWeight = FontWeight.Black)
-                    }
-
+                Column(Modifier.fillMaxWidth().padding(top = 16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                     val addInteractionSource = remember { MutableInteractionSource() }
                     val addPressed by addInteractionSource.collectIsPressedAsState()
                     val addScale by animateFloatAsState(
@@ -329,13 +311,31 @@ fun AppPickerDialog(
                     Button(
                         onClick = { onAppsSelected(selectedPackages.toList()) }, 
                         interactionSource = addInteractionSource,
-                        modifier = Modifier.weight(1f).height(80.dp).scale(addScale),
+                        modifier = Modifier.fillMaxWidth().height(64.dp).scale(addScale),
                         enabled = selectedPackages.isNotEmpty(),
                         shape = RoundedCornerShape(40.dp),
                         colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF3B82F6))
                     ) {
                         Text(i18n(R.string.voeg_toe), fontWeight = FontWeight.Black)
                     }
+                    val cancelInteractionSource = remember { MutableInteractionSource() }
+                    val cancelPressed by cancelInteractionSource.collectIsPressedAsState()
+                    val cancelScale by animateFloatAsState(
+                        targetValue = if (cancelPressed) 0.94f else 1f,
+                        animationSpec = spring(dampingRatio = 0.7f, stiffness = 500f)
+                    )
+
+                    OutlinedButton(
+                        onClick = onDismiss, 
+                        interactionSource = cancelInteractionSource,
+                        modifier = Modifier.fillMaxWidth().height(64.dp).scale(cancelScale),
+                        shape = RoundedCornerShape(40.dp),
+                        border = BorderStroke(1.dp, Color.White.copy(alpha = 0.1f)),
+                        colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.White)
+                    ) {
+                        Text(i18n(R.string.annuleren), fontWeight = FontWeight.Black)
+                    }
+
                 }
             }
         }
