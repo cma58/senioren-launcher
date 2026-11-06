@@ -48,7 +48,7 @@ class SettingsRepository(private val context: Context) {
             theme = try { AppTheme.valueOf(prefs[THEME] ?: AppTheme.CLASSIC.name) } catch(e: Exception) { AppTheme.CLASSIC },
             layout = try { LayoutType.valueOf(prefs[LAYOUT] ?: LayoutType.GRID_2x3.name) } catch(e: Exception) { LayoutType.GRID_2x3 },
             fontSize = prefs[FONT_SIZE] ?: 18,
-            language = prefs[LANGUAGE] ?: "nl",
+            language = prefs[LANGUAGE] ?: "ru",
             nightModeAuto = prefs[NIGHT_MODE_AUTO] ?: true,
             fallDetectionEnabled = prefs[FALL_DETECTION] ?: false,
             batteryAlertEnabled = prefs[BATTERY_ALERT] ?: true,

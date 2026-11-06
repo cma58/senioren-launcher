@@ -12,7 +12,7 @@ data class AppSettings(
     val theme: AppTheme = AppTheme.CLASSIC,
     val layout: LayoutType = LayoutType.GRID_2x3,
     val fontSize: Int = 18,
-    val language: String = "nl",
+    val language: String = "ru",
     val nightModeAuto: Boolean = true,
     val visibleApps: Set<String> = setOf("phone", "sms", "camera", "photos", "radio", "meds", "emergency", "sos", "remote_support", "wifi", "bluetooth", "settings"),
     val appMappings: Map<String, String> = emptyMap(),

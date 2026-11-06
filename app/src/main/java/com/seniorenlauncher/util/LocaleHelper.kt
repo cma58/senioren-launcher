@@ -6,7 +6,7 @@ import java.util.Locale
 object LocaleHelper {
     private const val PREFS = "locale_prefs"
     private const val KEY = "language"
-    const val DEFAULT = "nl"
+    const val DEFAULT = "ru"
 
     fun setLocale(ctx: Context, lang: String): Context {
         val locale = Locale(lang); Locale.setDefault(locale)

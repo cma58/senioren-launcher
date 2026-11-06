@@ -225,30 +225,30 @@ fun ScreenHeader(title: String, onBack: () -> Unit) {
         ) {
             Surface(
                 onClick = onBack,
-                modifier = Modifier.size(80.dp),
-                shape = RoundedCornerShape(32.dp),
+                modifier = Modifier.size(64.dp),
+                shape = RoundedCornerShape(28.dp),
                 color = Color(0xFF1E293B), // Slate 800
                 border = BorderStroke(1.dp, Color.White.copy(alpha = 0.1f))
             ) {
                 Box(contentAlignment = Alignment.Center) {
                     Text(
                         "←", 
-                        fontSize = 44.sp, 
+                        fontSize = 36.sp, 
                         fontWeight = FontWeight.Black, 
                         color = Color.White
                     )
                 }
             }
-            Spacer(Modifier.width(24.dp))
+            Spacer(Modifier.width(12.dp))
             Text(
                 title, 
-                fontSize = 34.sp,
+                fontSize = 26.sp,
                 fontWeight = FontWeight.Black, 
                 color = Color.White,
-                maxLines = 1,
+                maxLines = 3,
                 overflow = TextOverflow.Ellipsis,
                 modifier = Modifier.weight(1f),
-                lineHeight = 42.sp
+                lineHeight = 32.sp
             )
         }
     }
