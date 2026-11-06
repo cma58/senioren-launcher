@@ -5,6 +5,8 @@ import com.seniorenlauncher.util.i18n
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
@@ -58,17 +60,21 @@ fun SeniorReadingStep(onNext: () -> Unit, settingsVm: SettingsViewModel) {
         modifier = Modifier.fillMaxSize().padding(24.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Text(i18n(R.string.welkom_hoe_groot_wilt_u), fontSize = 26.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center)
-        Spacer(Modifier.height(48.dp))
-        
-        ReadingOptionCard(i18n(R.string.dit_is_normale_tekst), 18, settings.fontSize == 18) { settingsVm.updateFontSize(18) }
-        Spacer(Modifier.height(16.dp))
-        ReadingOptionCard(i18n(R.string.dit_is_grote_tekst), 24, settings.fontSize == 24) { settingsVm.updateFontSize(24) }
-        Spacer(Modifier.height(20.dp))
-        ReadingOptionCard(i18n(R.string.dit_is_reusachtig), 30, settings.fontSize == 30) { settingsVm.updateFontSize(30) }
-        
-        Spacer(Modifier.weight(1f))
-        
+        Column(
+            Modifier.weight(1f).fillMaxWidth().verticalScroll(rememberScrollState()),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text(i18n(R.string.welkom_hoe_groot_wilt_u), fontSize = 26.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center)
+            Spacer(Modifier.height(32.dp))
+
+            ReadingOptionCard(i18n(R.string.dit_is_normale_tekst), 18, settings.fontSize == 18) { settingsVm.updateFontSize(18) }
+            Spacer(Modifier.height(16.dp))
+            ReadingOptionCard(i18n(R.string.dit_is_grote_tekst), 24, settings.fontSize == 24) { settingsVm.updateFontSize(24) }
+            Spacer(Modifier.height(20.dp))
+            ReadingOptionCard(i18n(R.string.dit_is_reusachtig), 30, settings.fontSize == 30) { settingsVm.updateFontSize(30) }
+            Spacer(Modifier.height(16.dp))
+        }
+
         Button(
             onClick = onNext,
             modifier = Modifier.fillMaxWidth().height(80.dp),
@@ -106,15 +112,19 @@ fun SeniorColorsStep(onNext: () -> Unit, settingsVm: SettingsViewModel) {
         modifier = Modifier.fillMaxSize().padding(24.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Text(i18n(R.string.welkom_welke_kleuren_vindt_u), fontSize = 26.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center)
-        Spacer(Modifier.height(48.dp))
-        
-        SeniorThemeCard(i18n(R.string.klassiek_zacht), AppTheme.CLASSIC, settings.theme == AppTheme.CLASSIC) { settingsVm.updateTheme(AppTheme.CLASSIC) }
-        Spacer(Modifier.height(32.dp))
-        SeniorThemeCard(i18n(R.string.hoog_contrast_fel), AppTheme.HIGH_CONTRAST, settings.theme == AppTheme.HIGH_CONTRAST) { settingsVm.updateTheme(AppTheme.HIGH_CONTRAST) }
-        
-        Spacer(Modifier.weight(1f))
-        
+        Column(
+            Modifier.weight(1f).fillMaxWidth().verticalScroll(rememberScrollState()),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text(i18n(R.string.welkom_welke_kleuren_vindt_u), fontSize = 26.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center)
+            Spacer(Modifier.height(32.dp))
+
+            SeniorThemeCard(i18n(R.string.klassiek_zacht), AppTheme.CLASSIC, settings.theme == AppTheme.CLASSIC) { settingsVm.updateTheme(AppTheme.CLASSIC) }
+            Spacer(Modifier.height(24.dp))
+            SeniorThemeCard(i18n(R.string.hoog_contrast_fel), AppTheme.HIGH_CONTRAST, settings.theme == AppTheme.HIGH_CONTRAST) { settingsVm.updateTheme(AppTheme.HIGH_CONTRAST) }
+            Spacer(Modifier.height(16.dp))
+        }
+
         Button(
             onClick = onNext,
             modifier = Modifier.fillMaxWidth().height(80.dp),
@@ -152,7 +162,7 @@ fun SeniorEmergencyStep(onNext: () -> Unit) {
     var phone by remember { mutableStateOf("") }
 
     Column(
-        modifier = Modifier.fillMaxSize().padding(24.dp),
+        modifier = Modifier.fillMaxSize().imePadding().verticalScroll(rememberScrollState()).padding(24.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text("🆘", fontSize = 60.sp)

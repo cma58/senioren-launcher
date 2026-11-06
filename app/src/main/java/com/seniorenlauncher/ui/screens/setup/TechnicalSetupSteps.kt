@@ -364,6 +364,7 @@ fun FallDetectionSetupScreen(onNext: () -> Unit, settingsVm: SettingsViewModel) 
         modifier = Modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
+            .verticalScroll(rememberScrollState())
             .padding(24.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
@@ -422,7 +423,7 @@ fun FallDetectionSetupScreen(onNext: () -> Unit, settingsVm: SettingsViewModel) 
             }
         }
         
-        Spacer(Modifier.weight(1f))
+        Spacer(Modifier.height(24.dp))
         
         Button(
             onClick = onNext,
@@ -443,6 +444,7 @@ fun SecuritySetupScreen(onNext: () -> Unit, settingsVm: SettingsViewModel) {
         modifier = Modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
+            .verticalScroll(rememberScrollState())
             .padding(24.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
@@ -501,7 +503,7 @@ fun SecuritySetupScreen(onNext: () -> Unit, settingsVm: SettingsViewModel) {
             }
         }
         
-        Spacer(Modifier.weight(1f))
+        Spacer(Modifier.height(24.dp))
         
         Button(
             onClick = {
@@ -527,6 +529,7 @@ fun HandoverScreen(onNext: () -> Unit) {
         modifier = Modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
+            .verticalScroll(rememberScrollState())
             .padding(24.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
