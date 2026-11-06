@@ -20,6 +20,8 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -112,7 +114,7 @@ fun BigButton(
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center,
-            modifier = Modifier.padding(16.dp)
+            modifier = Modifier.padding(horizontal = 8.dp, vertical = 16.dp)
         ) {
             Box(contentAlignment = Alignment.Center) {
                 if (vectorIcon != null) {
@@ -165,15 +167,19 @@ fun BigButton(
             
             Spacer(Modifier.height(14.dp))
             
+            // Verklein het lettertype tot het label past (grote tekstgrootte / langere vertalingen)
+            var labelSize by remember(label) { mutableStateOf(if (small) 15f else 19f) }
             Text(
                 label.uppercase(), 
-                fontSize = if (small) 15.sp else 19.sp, 
+                fontSize = labelSize.sp, 
                 fontWeight = FontWeight.Black,
                 color = Color.White, 
                 textAlign = TextAlign.Center, 
                 maxLines = 1,
-                letterSpacing = 1.2.sp,
-                overflow = TextOverflow.Ellipsis
+                softWrap = false,
+                letterSpacing = 0.6.sp,
+                overflow = TextOverflow.Clip,
+                onTextLayout = { if (it.hasVisualOverflow && labelSize > 8f) labelSize -= 0.5f }
             )
         }
         

@@ -69,109 +69,111 @@ fun HomeTopBar(notificationCount: Int, onNotificationsClick: () -> Unit) {
         color = Color.Transparent,
         modifier = Modifier.fillMaxWidth()
     ) {
-        Row(
+        // Het hele scherm schaalt mee met de tekstgrootte (Theme.kt), dus de balk moet
+        // in twee rijen: status + meldingen bovenaan, de klok op volle breedte eronder.
+        Column(
             Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 24.dp),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            verticalAlignment = Alignment.CenterVertically
+                .padding(horizontal = 16.dp, vertical = 12.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // Links: Status Capsule (Glass Effect)
-            Surface(
-                shape = RoundedCornerShape(30.dp),
-                color = Color(0xFF1E293B).copy(alpha = 0.6f),
-                modifier = Modifier.height(76.dp),
-                border = BorderStroke(1.dp, Color.White.copy(alpha = 0.1f))
+            Row(
+                Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Row(
-                    Modifier.padding(horizontal = 12.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                // Links: Status Capsule (Glass Effect)
+                Surface(
+                    shape = RoundedCornerShape(30.dp),
+                    color = Color(0xFF1E293B).copy(alpha = 0.6f),
+                    modifier = Modifier.weight(1f).height(60.dp),
+                    border = BorderStroke(1.dp, Color.White.copy(alpha = 0.1f))
                 ) {
-                    Icon(
-                        imageVector = if (isCharging) Icons.Default.BatteryChargingFull else if (batteryLevel < 20) Icons.Default.BatteryAlert else Icons.Default.BatteryFull,
-                        contentDescription = null,
-                        modifier = Modifier.size(28.dp),
-                        tint = if (batteryLevel < 20 && !isCharging) Color(0xFFEF4444) else Color(0xFF10B981)
-                    )
-                    Text(
-                        text = "$batteryLevel%",
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.Black,
-                        color = Color.White
-                    )
-                    Box(Modifier.width(1.dp).height(24.dp).background(Color.White.copy(alpha = 0.2f)))
-                    Icon(
-                        imageVector = if (isWifiConnected) Icons.Default.Wifi else Icons.Default.SignalCellularAlt,
-                        contentDescription = null,
-                        modifier = Modifier.size(26.dp),
-                        tint = Color.White.copy(alpha = 0.6f)
-                    )
+                    Row(
+                        Modifier.padding(horizontal = 8.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceEvenly
+                    ) {
+                        Icon(
+                            imageVector = if (isCharging) Icons.Default.BatteryChargingFull else if (batteryLevel < 20) Icons.Default.BatteryAlert else Icons.Default.BatteryFull,
+                            contentDescription = null,
+                            modifier = Modifier.size(24.dp),
+                            tint = if (batteryLevel < 20 && !isCharging) Color(0xFFEF4444) else Color(0xFF10B981)
+                        )
+                        Text(
+                            text = "$batteryLevel%",
+                            fontSize = 16.sp,
+                            maxLines = 1,
+                            fontWeight = FontWeight.Black,
+                            color = Color.White
+                        )
+                        Icon(
+                            imageVector = if (isWifiConnected) Icons.Default.Wifi else Icons.Default.SignalCellularAlt,
+                            contentDescription = null,
+                            modifier = Modifier.size(22.dp),
+                            tint = Color.White.copy(alpha = 0.6f)
+                        )
+                    }
                 }
-            }
 
-            // Midden: Elegante Klok (Hyper-Refined)
-            Column(
-                Modifier.weight(1f),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Text(
-                    currentTime, 
-                    maxLines = 1,
-                    softWrap = false,
-                    fontSize = 52.sp, 
-                    fontWeight = FontWeight.W900,
-                    color = Color.White,
-                    letterSpacing = (-2).sp
-                )
-                Text(
-                    currentDate.uppercase(), 
-                    maxLines = 2,
-                    textAlign = androidx.compose.ui.text.style.TextAlign.Center,
-                    fontSize = 12.sp, 
-                    fontWeight = FontWeight.Black,
-                    color = Color(0xFF6366F1), // Modern Indigo
-                    letterSpacing = 1.sp
-                )
-            }
-
-            // Rechts: Notification Avatar (Glass Effect)
-            Surface(
-                onClick = onNotificationsClick,
-                modifier = Modifier.size(76.dp),
-                shape = CircleShape,
-                color = Color(0xFF1E293B).copy(alpha = 0.6f),
-                border = BorderStroke(1.dp, Color.White.copy(alpha = 0.1f))
-            ) {
-                Box(contentAlignment = Alignment.Center) {
-                    Icon(
-                        Icons.Default.Notifications, 
-                        contentDescription = i18n(R.string.meldingen_2),
-                        modifier = Modifier.size(34.dp),
-                        tint = if (notificationCount > 0) Color(0xFF6366F1) else Color.White.copy(alpha = 0.4f)
-                    )
-                    if (notificationCount > 0) {
-                        Surface(
-                            modifier = Modifier
-                                .align(Alignment.TopEnd)
-                                .padding(4.dp)
-                                .size(24.dp),
-                            shape = CircleShape,
-                            color = Color(0xFFEF4444),
-                            border = BorderStroke(2.dp, Color(0xFF0F172A))
-                        ) {
-                            Box(contentAlignment = Alignment.Center) {
-                                Text(
-                                    "$notificationCount",
-                                    color = Color.White,
-                                    fontSize = 12.sp,
-                                    fontWeight = FontWeight.Black
-                                )
+                // Rechts: Notification Avatar (Glass Effect)
+                Surface(
+                    onClick = onNotificationsClick,
+                    modifier = Modifier.size(60.dp),
+                    shape = CircleShape,
+                    color = Color(0xFF1E293B).copy(alpha = 0.6f),
+                    border = BorderStroke(1.dp, Color.White.copy(alpha = 0.1f))
+                ) {
+                    Box(contentAlignment = Alignment.Center) {
+                        Icon(
+                            Icons.Default.Notifications, 
+                            contentDescription = i18n(R.string.meldingen_2),
+                            modifier = Modifier.size(30.dp),
+                            tint = if (notificationCount > 0) Color(0xFF6366F1) else Color.White.copy(alpha = 0.4f)
+                        )
+                        if (notificationCount > 0) {
+                            Surface(
+                                modifier = Modifier
+                                    .align(Alignment.TopEnd)
+                                    .padding(4.dp)
+                                    .size(24.dp),
+                                shape = CircleShape,
+                                color = Color(0xFFEF4444),
+                                border = BorderStroke(2.dp, Color(0xFF0F172A))
+                            ) {
+                                Box(contentAlignment = Alignment.Center) {
+                                    Text(
+                                        "$notificationCount",
+                                        color = Color.White,
+                                        fontSize = 12.sp,
+                                        fontWeight = FontWeight.Black
+                                    )
+                                }
                             }
                         }
                     }
                 }
             }
+
+            // Klok op volle breedte
+            Text(
+                currentTime,
+                maxLines = 1,
+                softWrap = false,
+                fontSize = 52.sp,
+                fontWeight = FontWeight.W900,
+                color = Color.White,
+                letterSpacing = (-2).sp
+            )
+            Text(
+                currentDate.uppercase(),
+                maxLines = 2,
+                textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                fontSize = 12.sp,
+                fontWeight = FontWeight.Black,
+                color = Color(0xFF6366F1), // Modern Indigo
+                letterSpacing = 1.sp
+            )
         }
     }
 }
