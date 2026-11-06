@@ -30,6 +30,7 @@ class SettingsRepository(private val context: Context) {
         val SETTINGS_LOCKED = booleanPreferencesKey("settings_locked")
         val VISIBLE_APPS = stringPreferencesKey("visible_apps")
         val APP_MAPPINGS = stringPreferencesKey("app_mappings")
+        val APP_ORDER = stringPreferencesKey("app_order")
         val HAS_COMPLETED_SETUP = booleanPreferencesKey("has_completed_setup")
         val PRIVACY_ACCEPTED = booleanPreferencesKey("privacy_accepted")
         val USER_PHONE_NUMBER = stringPreferencesKey("user_phone_number")
@@ -56,6 +57,7 @@ class SettingsRepository(private val context: Context) {
             scamProtectionEnabled = prefs[SCAM_PROTECTION] ?: false,
             pinCode = prefs[PIN_CODE] ?: "1234",
             settingsLocked = prefs[SETTINGS_LOCKED] ?: false,
+            appOrder = prefs[APP_ORDER]?.split(",")?.filter { it.isNotEmpty() } ?: emptyList(),
             visibleApps = prefs[VISIBLE_APPS]?.split(",")?.filter { it.isNotEmpty() }?.toSet() ?: AppSettings().visibleApps,
             appMappings = prefs[APP_MAPPINGS]?.let { jsonStr ->
                 try {
@@ -149,6 +151,10 @@ class SettingsRepository(private val context: Context) {
 
     suspend fun setVisibleApps(apps: Set<String>) {
         context.dataStore.edit { it[VISIBLE_APPS] = apps.joinToString(",") }
+    }
+
+    suspend fun setAppOrder(order: List<String>) {
+        context.dataStore.edit { it[APP_ORDER] = order.joinToString(",") }
     }
 
     suspend fun setAppMappings(mappings: Map<String, String>) {

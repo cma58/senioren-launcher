@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="tile_move_title">Volgorde wijzigen</string>
+    <string name="tile_position">%1$s: plek %2$d van %3$d</string>
+    <string name="tile_move_earlier">◀ Eerder</string>
+    <string name="tile_move_later">Later ▶</string>
+    <string name="tile_more">Wijzigen of verwijderen</string>
+    <string name="tile_done">KLAAR</string>
+</resources>

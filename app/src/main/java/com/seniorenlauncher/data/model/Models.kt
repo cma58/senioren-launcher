@@ -16,6 +16,7 @@ data class AppSettings(
     val nightModeAuto: Boolean = true,
     val visibleApps: Set<String> = setOf("phone", "sms", "camera", "photos", "radio", "meds", "emergency", "sos", "remote_support", "wifi", "bluetooth", "settings"),
     val appMappings: Map<String, String> = emptyMap(),
+    val appOrder: List<String> = emptyList(),
     val settingsLocked: Boolean = false,
     val pinCode: String? = "1234",
     val fallDetectionEnabled: Boolean = false,

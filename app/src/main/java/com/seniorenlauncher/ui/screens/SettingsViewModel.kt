@@ -117,6 +117,18 @@ class SettingsViewModel : ViewModel() {
         }
     }
 
+    /** Verplaats een tegel [delta] plaatsen (-1 = eerder, +1 = later) binnen de huidige volgorde. */
+    fun moveApp(id: String, delta: Int, current: List<String>) {
+        viewModelScope.launch {
+            val l = current.toMutableList()
+            val i = l.indexOf(id)
+            val j = i + delta
+            if (i < 0 || j !in l.indices) return@launch
+            l.removeAt(i); l.add(j, id)
+            repository.setAppOrder(l)
+        }
+    }
+
     fun updateVisibleApps(apps: Set<String>) {
         viewModelScope.launch {
             repository.setVisibleApps(apps)

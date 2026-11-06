@@ -4,6 +4,7 @@ import com.seniorenlauncher.util.i18n
 
 import android.content.Intent
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.*
 import androidx.compose.foundation.pager.HorizontalPager
@@ -49,6 +50,7 @@ fun HomeScreen(onNavigate: (String) -> Unit, settingsVm: SettingsViewModel) {
     }
 
     var showAppPickerFor by remember { mutableStateOf<String?>(null) }
+    var showTileOptionsFor by remember { mutableStateOf<String?>(null) }
     var showPinDialogForSettings by remember { mutableStateOf(false) }
     var showWifiDialog by remember { mutableStateOf(false) }
     var showBluetoothDialog by remember { mutableStateOf(false) }
@@ -62,12 +64,35 @@ fun HomeScreen(onNavigate: (String) -> Unit, settingsVm: SettingsViewModel) {
         pendingMedsCount = uiState.pendingMedsCount,
         onNavigate = onNavigate,
         onAddApp = { showAppPickerFor = "new" },
-        onAppLongClick = { id -> showAppPickerFor = id },
+        onAppLongClick = { id -> showTileOptionsFor = id },
         onSettingsClick = { showPinDialogForSettings = true },
         onWifiClick = { showWifiDialog = true },
         onBluetoothClick = { showBluetoothDialog = true },
         onSOSClick = { showSOSCountdown = true }
     )
+
+    showTileOptionsFor?.let { tileId ->
+        val ids = uiState.allVisibleApps.map { it.id }
+        val idx = ids.indexOf(tileId)
+        if (idx < 0) {
+            showTileOptionsFor = null
+        } else {
+            TileOptionsDialog(
+                appName = uiState.allVisibleApps[idx].name,
+                position = idx + 1,
+                total = ids.size,
+                onMoveEarlier = { settingsVm.moveApp(tileId, -1, ids) },
+                onMoveLater = { settingsVm.moveApp(tileId, 1, ids) },
+                // vaste tegels (instellingen, wifi, bluetooth) kunnen niet verwijderd worden
+                showMore = tileId != "settings" && tileId != "wifi" && tileId != "bluetooth",
+                onMore = {
+                    showTileOptionsFor = null
+                    showAppPickerFor = tileId
+                },
+                onDismiss = { showTileOptionsFor = null }
+            )
+        }
+    }
 
     if (showAppPickerFor != null) {
         val pickerAppId = showAppPickerFor!!
@@ -146,16 +171,14 @@ fun HomeScreenContent(
         LayoutType.GRID_3x4 -> 3
     }
     
-    val appsPerPage = when (settings.layout) {
+    val layoutRows = when (settings.layout) {
         LayoutType.GRID_1x1 -> 1
-        LayoutType.GRID_2x3 -> 6
-        LayoutType.GRID_3x4 -> 12
+        LayoutType.GRID_2x3 -> 3
+        LayoutType.GRID_3x4 -> 4
     }
 
-    // Bereken het totaal aantal items inclusief de i18n(R.string.toevoegen) knop
+    // Totaal aantal items inclusief de i18n(R.string.toevoegen) knop
     val totalItemsCount = allVisibleApps.size + 1
-    val pageCount = max(1, ceil(totalItemsCount.toDouble() / appsPerPage.toDouble()).toInt())
-    val pagerState = rememberPagerState(pageCount = { pageCount })
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
@@ -193,28 +216,36 @@ fun HomeScreenContent(
                 )
             }
 
-            // App Grid Pager
+            // App Grid Pager: het aantal rijen volgt de beschikbare ruimte (schermhoogte, tekstgrootte)
+            BoxWithConstraints(Modifier.weight(1f).fillMaxWidth()) {
+            val gap = 12.dp
+            val dotsH = 24.dp
+            val pagerPad = 8.dp
+            val availH = maxHeight - dotsH - pagerPad * 2
+            val minTile = 100.dp
+            val origH = if (settings.layout == LayoutType.GRID_3x4) 120.dp else 168.dp
+            val fitRows = ((availH + gap) / (minTile + gap)).toInt().coerceAtLeast(1)
+            val rows = minOf(layoutRows, fitRows)
+            val tileH = ((availH - gap * (rows - 1)) / rows).coerceIn(64.dp, origH)
+            val appsPerPage = rows * cols
+            val pageCount = max(1, ceil(totalItemsCount.toDouble() / appsPerPage.toDouble()).toInt())
+            val pagerState = rememberPagerState(pageCount = { pageCount })
+
+            Column(Modifier.fillMaxSize()) {
             HorizontalPager(
                 state = pagerState,
                 modifier = Modifier.weight(1f).fillMaxWidth(),
-                contentPadding = PaddingValues(horizontal = 24.dp, vertical = 8.dp),
+                contentPadding = PaddingValues(horizontal = 24.dp, vertical = pagerPad),
                 pageSpacing = 32.dp
             ) { pageIndex ->
             val startIdx = pageIndex * appsPerPage
             
-            BoxWithConstraints(Modifier.fillMaxSize()) {
-            // Tegelhoogte uit de beschikbare ruimte: bij grote tekstgrootte blijven minstens 2 rijen zichtbaar
-            val gap = 12.dp
-            val rows = ceil(appsPerPage.toDouble() / cols).toInt()
-            val origH = if (settings.layout == LayoutType.GRID_3x4) 120.dp else 168.dp
-            val fitAll = (maxHeight - gap * (rows - 1)) / rows
-            val fitTwo = (maxHeight - gap) / 2
-            val tileH = (if (fitAll >= 100.dp) fitAll else fitTwo).coerceIn(84.dp, origH)
             LazyVerticalGrid(
                 columns = GridCells.Fixed(cols),
                 modifier = Modifier.fillMaxSize(),
                 verticalArrangement = Arrangement.spacedBy(gap),
-                horizontalArrangement = Arrangement.spacedBy(gap)
+                horizontalArrangement = Arrangement.spacedBy(gap),
+                userScrollEnabled = false
             ) {
                 // Apps voor deze pagina
                 val endIdx = Math.min(startIdx + appsPerPage, allVisibleApps.size)
@@ -247,11 +278,7 @@ fun HomeScreenContent(
                                     else -> onNavigate(app.id)
                                 }
                             },
-                            onLongClick = {
-                                if (app.id != "settings" && app.id != "wifi" && app.id != "bluetooth") {
-                                    onAppLongClick(app.id)
-                                }
-                            }
+                            onLongClick = { onAppLongClick(app.id) }
                         )
                     }
                 }
@@ -274,7 +301,25 @@ fun HomeScreenContent(
                     }
                 }
             }
+        }
+        if (pageCount > 1) {
+            Row(
+                Modifier.fillMaxWidth().height(dotsH),
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                repeat(pageCount) { i ->
+                    val active = pagerState.currentPage == i
+                    Box(
+                        Modifier
+                            .padding(horizontal = 4.dp)
+                            .size(if (active) 12.dp else 8.dp)
+                            .background(if (active) Color.White else Color.White.copy(alpha = 0.3f), androidx.compose.foundation.shape.CircleShape)
+                    )
+                }
             }
+        }
+        }
         }
     }
 }

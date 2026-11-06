@@ -748,3 +748,58 @@ fun BluetoothDialog(
         }
     }
 }
+
+@Composable
+fun TileOptionsDialog(
+    appName: String,
+    position: Int,
+    total: Int,
+    onMoveEarlier: () -> Unit,
+    onMoveLater: () -> Unit,
+    showMore: Boolean,
+    onMore: () -> Unit,
+    onDismiss: () -> Unit
+) {
+    Dialog(onDismissRequest = onDismiss) {
+        Card(
+            shape = RoundedCornerShape(40.dp),
+            colors = CardDefaults.cardColors(containerColor = Color(0xFF1E293B)),
+            border = BorderStroke(1.dp, Color.White.copy(alpha = 0.1f))
+        ) {
+            Column(
+                Modifier.padding(20.dp).verticalScroll(rememberScrollState()),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Text(i18n(R.string.tile_move_title), fontSize = 22.sp, fontWeight = FontWeight.Black, color = Color.White, textAlign = TextAlign.Center)
+                Text(
+                    i18n(R.string.tile_position, appName, position, total),
+                    fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color(0xFFCBD5E1), textAlign = TextAlign.Center
+                )
+                Button(
+                    onClick = onMoveEarlier,
+                    enabled = position > 1,
+                    modifier = Modifier.fillMaxWidth().height(72.dp),
+                    shape = RoundedCornerShape(36.dp)
+                ) { Text(i18n(R.string.tile_move_earlier), fontSize = 22.sp, fontWeight = FontWeight.Black) }
+                Button(
+                    onClick = onMoveLater,
+                    enabled = position < total,
+                    modifier = Modifier.fillMaxWidth().height(72.dp),
+                    shape = RoundedCornerShape(36.dp)
+                ) { Text(i18n(R.string.tile_move_later), fontSize = 22.sp, fontWeight = FontWeight.Black) }
+                if (showMore) OutlinedButton(
+                    onClick = onMore,
+                    modifier = Modifier.fillMaxWidth().height(56.dp),
+                    shape = RoundedCornerShape(28.dp)
+                ) { Text(i18n(R.string.tile_more), fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color.White) }
+                Button(
+                    onClick = onDismiss,
+                    modifier = Modifier.fillMaxWidth().height(72.dp),
+                    shape = RoundedCornerShape(36.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF10B981))
+                ) { Text(i18n(R.string.tile_done), fontSize = 22.sp, fontWeight = FontWeight.Black, color = Color.White) }
+            }
+        }
+    }
+}
