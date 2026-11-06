@@ -19,8 +19,14 @@ object LocaleHelper {
         ctx.applicationContext.getSharedPreferences(PREFS, Context.MODE_PRIVATE).getString(KEY, DEFAULT) ?: DEFAULT
 
     fun save(ctx: Context, lang: String) {
-        ctx.applicationContext.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit().putString(KEY, lang).apply()
+        ctx.applicationContext.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit().putString(KEY, lang).putBoolean(CHOSEN, true).apply()
     }
+
+    private const val CHOSEN = "chosen"
+
+    /** True zodra de gebruiker (of een bestaande installatie) een taal heeft vastgelegd. */
+    fun isChosen(ctx: Context): Boolean =
+        ctx.applicationContext.getSharedPreferences(PREFS, Context.MODE_PRIVATE).getBoolean(CHOSEN, false)
 
     /** BCP-47 tag voor TextToSpeech en dergelijke. */
     fun ttsTag(lang: String): String = when (lang) {

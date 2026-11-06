@@ -52,6 +52,17 @@ fun SetupWizardScreen(
     var caregiverStep by remember { mutableIntStateOf(1) }
     var seniorStep by remember { mutableIntStateOf(1) }
 
+    val ctx = LocalContext.current
+    if (!settings.privacyAccepted && !com.seniorenlauncher.util.LocaleHelper.isChosen(ctx)) {
+        LanguageSelectionScreen(onSelected = { code ->
+            com.seniorenlauncher.util.LocaleHelper.save(ctx, code)
+            com.seniorenlauncher.util.Str.refresh(ctx)
+            settingsVm.updateLanguage(code)
+            (ctx as? android.app.Activity)?.recreate()
+        })
+        return
+    }
+
     if (!settings.privacyAccepted) {
         PrivacyConsentScreen(onAccepted = { settingsVm.acceptPrivacy() })
         return
@@ -100,6 +111,38 @@ fun SetupWizardScreen(
                 else -> {}
             }
         }
+    }
+}
+
+@Composable
+fun LanguageSelectionScreen(onSelected: (String) -> Unit) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color(0xFF0F172A))
+            .padding(24.dp)
+            .verticalScroll(rememberScrollState()),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Spacer(Modifier.height(32.dp))
+        Icon(Icons.Default.Language, null, modifier = Modifier.size(72.dp), tint = Color(0xFF3B82F6))
+        Spacer(Modifier.height(16.dp))
+        Text(
+            "Taal / Язык / Language",
+            fontSize = 30.sp, fontWeight = FontWeight.Black, color = Color.White, textAlign = TextAlign.Center
+        )
+        Spacer(Modifier.height(24.dp))
+        com.seniorenlauncher.util.LocaleHelper.SUPPORTED.forEach { (code, name) ->
+            Button(
+                onClick = { onSelected(code) },
+                modifier = Modifier.fillMaxWidth().height(76.dp).padding(vertical = 4.dp),
+                shape = RoundedCornerShape(40.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1E293B))
+            ) {
+                Text(name, fontSize = 24.sp, fontWeight = FontWeight.Black, color = Color.White)
+            }
+        }
+        Spacer(Modifier.height(16.dp))
     }
 }
 
