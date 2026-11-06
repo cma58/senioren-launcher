@@ -183,7 +183,6 @@ fun HomeSOSButton(onClick: () -> Unit, modifier: Modifier = Modifier) {
     Surface(
         onClick = onClick,
         modifier = modifier
-            .heightIn(min = 72.dp)
             .fillMaxWidth(),
         shape = RoundedCornerShape(40.dp),
         color = Color(0xFFEF4444),
@@ -191,7 +190,9 @@ fun HomeSOSButton(onClick: () -> Unit, modifier: Modifier = Modifier) {
     ) {
         Box(
             modifier = Modifier
-                .fillMaxSize()
+                .fillMaxWidth()
+                .heightIn(min = 72.dp)
+                .padding(vertical = 8.dp)
                 .background(
                     Brush.horizontalGradient(
                         colors = listOf(Color(0xFFEF4444), Color(0xFF991B1B))
