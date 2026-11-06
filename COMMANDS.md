@@ -1,5 +1,7 @@
 # 📟 Full Overview of SMS Commands (v0.8.5)
 
+**🌐 Language:** **English** · [Русский](COMMANDS_RU.md) · [Nederlands](COMMANDS_NL.md)
+
 This page contains all available commands to manage the Senior Launcher remotely. Send these codes via a standard SMS from your own phone to the senior's phone.
 
 > **Note:** Commands only work if your number is registered as an **SOS contact** (Golden Star in contacts) on the senior's phone.

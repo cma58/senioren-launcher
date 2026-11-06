@@ -1,5 +1,7 @@
 # 📖 Handleiding voor Beheerders & Familie (v0.8.5)
 
+**🌐 Taal:** [English](DOCS_ADMIN.md) · [Русский](DOCS_ADMIN_RU.md) · **Nederlands**
+
 Welkom bij de Senioren Launcher. Deze handleiding is bedoeld voor familieleden, mantelzorgers en beheerders. De launcher is volledig voorbereid op **Android 16 (Baklava)** en voldoet aan de strenge Europese privacywetgeving (**AVG/GDPR**).
 
 ---

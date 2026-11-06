@@ -3,6 +3,8 @@
 [![Open Source Love](https://badges.frapsoft.com/os/v1/open-source.svg?v=103)](https://github.com/cma58/senioren-launcher)
 [![License: GPL-3.0](https://img.shields.io/badge/License-GPL%20v3-blue.svg)](LICENSE)
 [![Privacy](https://img.shields.io/badge/Privacy-100%25-brightgreen.svg)](PRIVACY.md)
+**🌐 Language / Язык / Taal:** **English** · [Русский](README_RU.md) · [Nederlands](README_NL.md)
+
 [![Android 14+](https://img.shields.io/badge/Android-14%2B-green.svg)](https://developer.android.com)
 
 **The honest, open-source Android launcher for our elders. Created to make technology accessible, safe, and human again.**
@@ -32,6 +34,9 @@ Most smartphones are designed for digital natives. We turn that around. The Seni
 
 ### 🏠 Intelligent Home Screen
 - **Flexible Layouts:** Choose between 1x1 (Massive), 2x3 (Large), or 3x4 (Compact) grids.
+- **Adaptive Rows:** The number of tile rows is calculated from the free screen height (screen resolution, header, SOS button and the chosen text size), so tiles are never cut off. Tiles that do not fit move to swipeable pages, with page dots below the grid.
+- **Senior-Proof Tile Reordering:** Long-press a tile and use the two big buttons **"◀ Earlier"** and **"Later ▶"**. No drag-and-drop, every step is visible immediately and can be undone with the opposite button. Replacing or removing an app is a smaller secondary button, so an accidental long-press can no longer remove anything. The fixed tiles (Settings, Wi-Fi, Bluetooth) can be moved but not removed. The order is saved.
+- **Safe at Any Text Size:** The whole UI scales with the chosen text size. Setup steps scroll while the *Next* button stays pinned, the top bar uses two rows, and tile labels shrink automatically instead of being cut off.
 - **Smart Status Badges:** Visual feedback for missed calls and unread messages.
 - **Night Lamp Mode:** Long-press the alarm screen to transform the display into a soft orange night light.
 - **PIN-Protected Settings:** The management menu is locked to prevent accidental configuration changes.
@@ -52,6 +57,15 @@ Most smartphones are designed for digital natives. We turn that around. The Seni
 - **Safety Traffic Light:** Color codes (Green/Orange/Red) indicate whether it's safe to go outside based on weather extremes.
 - **Personalized Tips:** Contextual advice for clothing ("wear a scarf"), garden care, window safety, and UV protection.
 - **Day-Part Forecast:** A simplified view of conditions for Morning, Afternoon, Evening, and Night.
+
+---
+
+## 🌍 Languages & Localization
+- **Russian (default) and Dutch** are fully translated (about 570 UI strings, notifications, alarms, SOS messages and TTS voice included).
+- **Language picker at install:** the first screen of the setup wizard asks for the language, before the privacy consent. It can be changed later in *Settings*.
+- English, French, German, Turkish and Arabic appear in the language list, but only the app name and the SOS label are translated for them so far; everything else falls back to Dutch. Contributions are welcome, see [CONTRIBUTING_EN.md](CONTRIBUTING_EN.md).
+- Weather place search and text-to-speech follow the selected language.
+- The **SMS remote commands stay in Dutch** (`#WAAR`, `#PING`, ...) in every language. They are a protocol between the two apps, not UI text. See [COMMANDS.md](COMMANDS.md).
 
 ---
 
@@ -79,6 +93,16 @@ Senior safety is our priority. The app requires access to essential system funct
 - **Local Storage:** Uses **Room Database** for offline storage of contacts, medication, and logs.
 - **Background Reliability:** Utilizes **Foreground Services** and **WorkManager** to ensure emergency functions remain active 24/7.
 - **Architecture:** Follows **MVVM (Model-View-ViewModel)** patterns for clean and maintainable code.
+- **Localization:** Strings live in `res/values/` (Dutch, default) and `res/values-ru/` (Russian), in `strings_ui.xml` and `strings_tiles.xml`. Code uses the `i18n(R.string.key, args)` helper, which also works in services and receivers. The language is stored in SharedPreferences and applied in `MainActivity.attachBaseContext`.
+- **Requirements:** `minSdk 26`, `compileSdk 36`, JDK 17, Gradle wrapper included.
+
+### 🔧 Building from source
+```bash
+# JDK 17 required (set JAVA_HOME)
+./gradlew assembleDebug          # Windows: gradlew.bat assembleDebug
+# APK: app/build/outputs/apk/debug/app-debug.apk
+```
+Some phones (e.g. Xiaomi/MIUI without a SIM card) block `adb install`. In that case copy the APK to the phone and open it with the Files app.
 
 ---
 
@@ -98,8 +122,18 @@ Senior safety is our priority. The app requires access to essential system funct
 
 ---
 
-## 🇳🇱 Nederlandse Versie
-Zie de **[README_NL.md](README_NL.md)** voor de Nederlandstalige versie.
+## 🌐 Other languages
+- 🇷🇺 **[README_RU.md](README_RU.md)** — Русская версия
+- 🇳🇱 **[README_NL.md](README_NL.md)** — Nederlandse versie
+
+## 📚 More documentation
+| Document | English | Русский | Nederlands |
+|:---|:---|:---|:---|
+| Caregiver guide | [DOCS_ADMIN.md](DOCS_ADMIN.md) | [DOCS_ADMIN_RU.md](DOCS_ADMIN_RU.md) | [DOCS_BEHEERDER_NL.md](DOCS_BEHEERDER_NL.md) |
+| SMS commands | [COMMANDS.md](COMMANDS.md) | [COMMANDS_RU.md](COMMANDS_RU.md) | [COMMANDS_NL.md](COMMANDS_NL.md) |
+| Privacy policy | [PRIVACY_EN.md](PRIVACY_EN.md) | [PRIVACY_RU.md](PRIVACY_RU.md) | [PRIVACY.md](PRIVACY.md) |
+| Contributing | [CONTRIBUTING_EN.md](CONTRIBUTING_EN.md) | [CONTRIBUTING_RU.md](CONTRIBUTING_RU.md) | [CONTRIBUTING.md](CONTRIBUTING.md) |
+| Code of conduct | [CODE_OF_CONDUCT_EN.md](CODE_OF_CONDUCT_EN.md) | [CODE_OF_CONDUCT_RU.md](CODE_OF_CONDUCT_RU.md) | [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md) |
 
 ## ❤️ Support & Future
 Senior Launcher is and will always remain free and open-source. Digital inclusion for seniors is a right, not a luxury.

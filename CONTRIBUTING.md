@@ -1,5 +1,7 @@
 # Bijdragen aan Senioren Launcher
 
+**🌐 Taal:** [English](CONTRIBUTING_EN.md) · [Русский](CONTRIBUTING_RU.md) · **Nederlands**
+
 Bedankt dat je wilt bijdragen!
 
 ## Hoe bij te dragen
@@ -14,10 +16,18 @@ Open een issue met het Bug Report template.
 4. Push: `git push origin feature/mijn-functie`
 5. Open een Pull Request
 
+### Bouwen
+- JDK 17 vereist (stel `JAVA_HOME` in); `./gradlew assembleDebug` (Windows: `gradlew.bat assembleDebug`).
+
 ### Vertalen
-1. Kopieer `app/src/main/res/values/strings.xml`
-2. Maak een map `values-XX` (XX = taalcode)
-3. Vertaal alle strings
+Zichtbare tekst staat in resourcebestanden, niet in de code.
+1. Standaardtaal is Nederlands: `app/src/main/res/values/strings.xml`, `strings_ui.xml` en `strings_tiles.xml`.
+2. Russisch staat in `app/src/main/res/values-ru/` (zelfde bestandsnamen) en dient als voorbeeld.
+3. Maak voor een nieuwe taal een map `values-XX` (XX = taalcode), kopieer de drie bestanden en vertaal alle strings. Behoud plaatshouders (`%1$s`, `%2$d`).
+4. Voeg de taalcode toe aan `LocaleHelper.SUPPORTED` en aan de taallijst in `SettingsScreen.kt`.
+5. Gebruik in code `i18n(R.string.sleutel, args)` in plaats van tekstliteralen.
+6. Vertaal de SMS-commando's (`#WAAR`, `#PING`, ...) **niet**; dat is een protocol tussen de twee apps.
+7. Test met de grootste tekstgrootte.
 
 ## Ontwerp Principes
 1. **Simpel** — als oma het niet snapt, is het te complex

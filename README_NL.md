@@ -3,6 +3,8 @@
 [![Open Source Love](https://badges.frapsoft.com/os/v1/open-source.svg?v=103)](https://github.com/cma58/senioren-launcher)
 [![License: GPL-3.0](https://img.shields.io/badge/License-GPL%20v3-blue.svg)](LICENSE)
 [![Privacy](https://img.shields.io/badge/Privacy-100%25-brightgreen.svg)](PRIVACY.md)
+**🌐 Taal / Язык / Language:** [English](README.md) · [Русский](README_RU.md) · **Nederlands**
+
 [![Android 14+](https://img.shields.io/badge/Android-14%2B-green.svg)](https://developer.android.com)
 
 **De eerlijke, open-source Android launcher voor onze ouderen. Gemaakt om technologie weer toegankelijk, veilig en menselijk te maken.**
@@ -32,6 +34,9 @@ De meeste smartphones zijn ontworpen voor "digital natives". Wij draaien dat om.
 
 ### 🏠 Intelligent Startscherm
 - **Flexibele Lay-outs:** Kies het perfecte raster: 1x1 (Enorm), 2x3 (Groot) of 3x4 (Compact).
+- **Adaptieve Rijen:** Het aantal rijen wordt berekend uit de vrije schermhoogte (resolutie, kop, SOS-knop en gekozen tekstgrootte), zodat tegels nooit worden afgesneden. Tegels die niet passen staan op veegbare pagina's, met paginapuntjes onder het raster.
+- **Seniorvriendelijk Tegels Verplaatsen:** Houd een tegel ingedrukt en gebruik de twee grote knoppen **"◀ Eerder"** en **"Later ▶"**. Geen slepen; elke stap is direct zichtbaar en ongedaan te maken met de andere knop. Een app vervangen of verwijderen zit achter een kleinere knop, dus per ongeluk lang drukken verwijdert niets meer. De vaste tegels (Instellingen, Wifi, Bluetooth) kunnen worden verplaatst maar niet verwijderd. De volgorde wordt bewaard.
+- **Veilig bij Elke Tekstgrootte:** De hele interface schaalt mee. Installatiestappen scrollen terwijl *Volgende* vastzit, de bovenbalk gebruikt twee rijen en tegellabels worden automatisch kleiner in plaats van afgekapt.
 - **Slimme Status Badges:** Zie in één oogopslag hoeveel onbeantwoorde oproepen of berichten er zijn.
 - **Nachtlamp Modus:** Houd het wekkerscherm lang ingedrukt om het scherm te veranderen in een zacht oranje nachtlampje.
 - **PIN-Beveiliging:** Instellingen zijn vergrendeld om te voorkomen dat de configuratie per ongeluk wordt gewijzigd.
@@ -52,6 +57,15 @@ De meeste smartphones zijn ontworpen voor "digital natives". Wij draaien dat om.
 - **Veiligheid-Stoplicht:** Kleurcodes (Groen/Oranje/Rood) geven direct aan of het weer veilig is om naar buiten te gaan.
 - **Persoonlijk Advies:** Specifieke tips over kleding (bijv. "neem een sjaal mee"), tuinonderhoud, ramen sluiten en UV-bescherming.
 - **Dagdeel Voorspelling:** Een eenvoudige blik op wat de ochtend, middag, avond en nacht gaan brengen.
+
+---
+
+## 🌍 Talen & Lokalisatie
+- **Russisch (standaard) en Nederlands** zijn volledig vertaald (circa 570 interfaceteksten, meldingen, alarmen, SOS-berichten en TTS-stem inbegrepen).
+- **Taalkeuze bij installatie:** het eerste scherm van de installatiewizard vraagt om de taal, vóór de privacytoestemming. Later aan te passen in *Instellingen*.
+- Engels, Frans, Duits, Turks en Arabisch staan in de taallijst, maar daarvan zijn voorlopig alleen de appnaam en het SOS-label vertaald; de rest valt terug op Nederlands. Bijdragen zijn welkom, zie [CONTRIBUTING.md](CONTRIBUTING.md).
+- Weer-plaatszoekopdrachten en tekst-naar-spraak volgen de gekozen taal.
+- De **SMS-commando's blijven Nederlands** (`#WAAR`, `#PING`, ...) in elke taal. Het is een protocol tussen de twee apps, geen interfacetekst.
 
 ---
 
@@ -79,6 +93,16 @@ Omdat de veiligheid van de senior centraal staat, heeft de app toegang nodig tot
 - **Lokale Opslag:** Gebruikt **Room Database** voor offline opslag van contacten, medicatie en logs.
 - **Achtergrondtaken:** Maakt gebruik van **Foreground Services** en **WorkManager** om ervoor te zorgen dat noodfuncties altijd actief blijven.
 - **Architectuur:** Volgt de **MVVM (Model-View-ViewModel)** patronen voor schone en onderhoudbare code.
+- **Lokalisatie:** Teksten staan in `res/values/` (Nederlands, standaard) en `res/values-ru/` (Russisch), in `strings_ui.xml` en `strings_tiles.xml`. De code gebruikt de helper `i18n(R.string.key, args)`, die ook in services en receivers werkt.
+- **Vereisten:** `minSdk 26`, `compileSdk 36`, JDK 17, Gradle wrapper inbegrepen.
+
+### 🔧 Bouwen vanuit de broncode
+```bash
+# JDK 17 vereist (stel JAVA_HOME in)
+./gradlew assembleDebug          # Windows: gradlew.bat assembleDebug
+# APK: app/build/outputs/apk/debug/app-debug.apk
+```
+Sommige telefoons (bv. Xiaomi/MIUI zonder simkaart) blokkeren `adb install`. Kopieer de APK dan naar de telefoon en open hem met de Bestanden-app.
 
 ---
 
@@ -98,8 +122,18 @@ Omdat de veiligheid van de senior centraal staat, heeft de app toegang nodig tot
 
 ---
 
-## 🇬🇧 English Version
-Zie de **[README.md](README.md)** voor de Engelstalige versie.
+## 🌐 Andere talen
+- 🇬🇧 **[README.md](README.md)** — English version
+- 🇷🇺 **[README_RU.md](README_RU.md)** — Русская версия
+
+## 📚 Meer documentatie
+| Document | Nederlands | English | Русский |
+|:---|:---|:---|:---|
+| Handleiding beheerder | [DOCS_BEHEERDER_NL.md](DOCS_BEHEERDER_NL.md) | [DOCS_ADMIN.md](DOCS_ADMIN.md) | [DOCS_ADMIN_RU.md](DOCS_ADMIN_RU.md) |
+| SMS-commando's | [COMMANDS_NL.md](COMMANDS_NL.md) | [COMMANDS.md](COMMANDS.md) | [COMMANDS_RU.md](COMMANDS_RU.md) |
+| Privacybeleid | [PRIVACY.md](PRIVACY.md) | [PRIVACY_EN.md](PRIVACY_EN.md) | [PRIVACY_RU.md](PRIVACY_RU.md) |
+| Bijdragen | [CONTRIBUTING.md](CONTRIBUTING.md) | [CONTRIBUTING_EN.md](CONTRIBUTING_EN.md) | [CONTRIBUTING_RU.md](CONTRIBUTING_RU.md) |
+| Gedragscode | [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md) | [CODE_OF_CONDUCT_EN.md](CODE_OF_CONDUCT_EN.md) | [CODE_OF_CONDUCT_RU.md](CODE_OF_CONDUCT_RU.md) |
 
 ## ❤️ Waardering & Toekomst
 Senioren Launcher is en blijft gratis en open-source. Digitale inclusie voor ouderen is een recht, geen luxe.
