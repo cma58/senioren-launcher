@@ -74,7 +74,7 @@ fun HomeTopBar(notificationCount: Int, onNotificationsClick: () -> Unit) {
         Column(
             Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 12.dp),
+                .padding(horizontal = 16.dp, vertical = 8.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Row(
@@ -160,7 +160,7 @@ fun HomeTopBar(notificationCount: Int, onNotificationsClick: () -> Unit) {
                 currentTime,
                 maxLines = 1,
                 softWrap = false,
-                fontSize = 52.sp,
+                fontSize = 44.sp,
                 fontWeight = FontWeight.W900,
                 color = Color.White,
                 letterSpacing = (-2).sp
@@ -183,7 +183,7 @@ fun HomeSOSButton(onClick: () -> Unit, modifier: Modifier = Modifier) {
     Surface(
         onClick = onClick,
         modifier = modifier
-            .height(110.dp)
+            .heightIn(min = 72.dp)
             .fillMaxWidth(),
         shape = RoundedCornerShape(40.dp),
         color = Color(0xFFEF4444),
@@ -207,16 +207,18 @@ fun HomeSOSButton(onClick: () -> Unit, modifier: Modifier = Modifier) {
                 Icon(
                     Icons.Default.HealthAndSafety,
                     contentDescription = null,
-                    modifier = Modifier.size(48.dp),
+                    modifier = Modifier.size(36.dp),
                     tint = Color.White
                 )
-                Spacer(Modifier.width(24.dp))
+                Spacer(Modifier.width(12.dp))
                 Text(
                     i18n(R.string.sos_hulp_nodig),
-                    fontSize = 28.sp,
+                    fontSize = 22.sp,
+                    lineHeight = 26.sp,
                     fontWeight = FontWeight.W900,
                     color = Color.White,
-                    letterSpacing = 1.2.sp
+                    textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                    letterSpacing = 0.5.sp
                 )
             }
         }

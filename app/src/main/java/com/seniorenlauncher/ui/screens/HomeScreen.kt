@@ -165,7 +165,7 @@ fun HomeScreenContent(
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(24.dp)
+                    .padding(horizontal = 16.dp, vertical = 8.dp)
                     .navigationBarsPadding()
             ) {
                 HomeSOSButton(
@@ -202,12 +202,19 @@ fun HomeScreenContent(
             ) { pageIndex ->
             val startIdx = pageIndex * appsPerPage
             
+            BoxWithConstraints(Modifier.fillMaxSize()) {
+            // Tegelhoogte uit de beschikbare ruimte: bij grote tekstgrootte blijven minstens 2 rijen zichtbaar
+            val gap = 12.dp
+            val rows = ceil(appsPerPage.toDouble() / cols).toInt()
+            val origH = if (settings.layout == LayoutType.GRID_3x4) 120.dp else 168.dp
+            val fitAll = (maxHeight - gap * (rows - 1)) / rows
+            val fitTwo = (maxHeight - gap) / 2
+            val tileH = (if (fitAll >= 100.dp) fitAll else fitTwo).coerceIn(84.dp, origH)
             LazyVerticalGrid(
                 columns = GridCells.Fixed(cols),
                 modifier = Modifier.fillMaxSize(),
-                verticalArrangement = Arrangement.spacedBy(20.dp),
-                horizontalArrangement = Arrangement.spacedBy(20.dp),
-                userScrollEnabled = false
+                verticalArrangement = Arrangement.spacedBy(gap),
+                horizontalArrangement = Arrangement.spacedBy(gap)
             ) {
                 // Apps voor deze pagina
                 val endIdx = Math.min(startIdx + appsPerPage, allVisibleApps.size)
@@ -225,6 +232,7 @@ fun HomeScreenContent(
                                NotificationListener.getBadgeCountByAppId(app.id, settings.appMappings, badgeCounts)
                             } else 0,
                             weatherText = app.weatherOverlay,
+                            heightOverride = tileH,
                             onClick = {
                                 when {
                                     app.id == "camera" -> AppLauncher.openSystemCamera(context)
@@ -260,10 +268,12 @@ fun HomeScreenContent(
                             label = i18n(R.string.toevoegen),
                             color = Color(0xFF718096),
                             small = settings.layout == LayoutType.GRID_3x4,
+                            heightOverride = tileH,
                             onClick = onAddApp
                         )
                     }
                 }
+            }
             }
         }
     }

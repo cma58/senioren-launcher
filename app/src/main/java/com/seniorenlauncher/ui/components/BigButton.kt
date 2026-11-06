@@ -52,7 +52,8 @@ fun BigButton(
     onLongClick: (() -> Unit)? = null,
     badge: Int? = null, 
     small: Boolean = false,
-    weatherText: String? = null
+    weatherText: String? = null,
+    heightOverride: androidx.compose.ui.unit.Dp? = null
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val pressed by interactionSource.collectIsPressedAsState()
@@ -62,7 +63,8 @@ fun BigButton(
         label = "scale"
     )
     
-    val buttonHeight = if (small) 120.dp else 168.dp
+    val buttonHeight = heightOverride ?: if (small) 120.dp else 168.dp
+    val tight = small || buttonHeight < 140.dp
     val cornerRadius = 40.dp
 
     Box(
@@ -114,27 +116,27 @@ fun BigButton(
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center,
-            modifier = Modifier.padding(horizontal = 8.dp, vertical = 16.dp)
+            modifier = Modifier.padding(horizontal = 8.dp, vertical = if (tight) 6.dp else 16.dp)
         ) {
             Box(contentAlignment = Alignment.Center) {
                 if (vectorIcon != null) {
                     Icon(
                         imageVector = vectorIcon,
                         contentDescription = null,
-                        modifier = Modifier.size(if (small) 44.dp else 60.dp),
+                        modifier = Modifier.size(if (tight) 44.dp else 60.dp),
                         tint = Color.White
                     )
                 } else if (icon != null) {
                     Image(
                         painter = rememberAsyncImagePainter(icon),
                         contentDescription = null,
-                        modifier = Modifier.size(if (small) 44.dp else 60.dp),
+                        modifier = Modifier.size(if (tight) 44.dp else 60.dp),
                         contentScale = ContentScale.Fit
                     )
                 } else if (emoji != null) {
                     Text(
                         emoji, 
-                        fontSize = if (small) 40.sp else 56.sp,
+                        fontSize = if (tight) 40.sp else 56.sp,
                         style = androidx.compose.ui.text.TextStyle(
                             shadow = androidx.compose.ui.graphics.Shadow(
                                 color = Color.Black.copy(alpha = 0.25f),
@@ -165,10 +167,10 @@ fun BigButton(
                 }
             }
             
-            Spacer(Modifier.height(14.dp))
+            Spacer(Modifier.height(if (tight) 6.dp else 14.dp))
             
             // Verklein het lettertype tot het label past (grote tekstgrootte / langere vertalingen)
-            var labelSize by remember(label) { mutableStateOf(if (small) 15f else 19f) }
+            var labelSize by remember(label) { mutableStateOf(if (tight) 15f else 19f) }
             Text(
                 label.uppercase(), 
                 fontSize = labelSize.sp, 
