@@ -72,8 +72,8 @@ fun HomeTopBar(notificationCount: Int, onNotificationsClick: () -> Unit) {
         Row(
             Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 24.dp, vertical = 24.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
+                .padding(horizontal = 16.dp, vertical = 24.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             // Links: Status Capsule (Glass Effect)
@@ -84,9 +84,9 @@ fun HomeTopBar(notificationCount: Int, onNotificationsClick: () -> Unit) {
                 border = BorderStroke(1.dp, Color.White.copy(alpha = 0.1f))
             ) {
                 Row(
-                    Modifier.padding(horizontal = 20.dp),
+                    Modifier.padding(horizontal = 12.dp),
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(14.dp)
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     Icon(
                         imageVector = if (isCharging) Icons.Default.BatteryChargingFull else if (batteryLevel < 20) Icons.Default.BatteryAlert else Icons.Default.BatteryFull,
@@ -96,7 +96,7 @@ fun HomeTopBar(notificationCount: Int, onNotificationsClick: () -> Unit) {
                     )
                     Text(
                         text = "$batteryLevel%",
-                        fontSize = 22.sp,
+                        fontSize = 18.sp,
                         fontWeight = FontWeight.Black,
                         color = Color.White
                     )
@@ -112,21 +112,26 @@ fun HomeTopBar(notificationCount: Int, onNotificationsClick: () -> Unit) {
 
             // Midden: Elegante Klok (Hyper-Refined)
             Column(
+                Modifier.weight(1f),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Text(
                     currentTime, 
-                    fontSize = 62.sp, 
+                    maxLines = 1,
+                    softWrap = false,
+                    fontSize = 52.sp, 
                     fontWeight = FontWeight.W900,
                     color = Color.White,
                     letterSpacing = (-2).sp
                 )
                 Text(
                     currentDate.uppercase(), 
-                    fontSize = 13.sp, 
+                    maxLines = 2,
+                    textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                    fontSize = 12.sp, 
                     fontWeight = FontWeight.Black,
                     color = Color(0xFF6366F1), // Modern Indigo
-                    letterSpacing = 2.5.sp
+                    letterSpacing = 1.sp
                 )
             }
 
