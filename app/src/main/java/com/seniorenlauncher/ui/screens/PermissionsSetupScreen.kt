@@ -133,11 +133,39 @@ fun PermissionsSetupScreen(onNext: () -> Unit, isSenior: Boolean = false) {
     var isGranted by remember(currentStep) {
         mutableStateOf(checkPermissions(context, currentCategory.permissions))
     }
+    // True after the system refused to show (or the user denied) the permission dialog;
+    // the button then opens the app's settings page instead of doing nothing.
+    var needsSettings by remember(currentStep) { mutableStateOf(false) }
+
+    // Background location must be requested separately from the foreground permissions
+    // (Android 11+ silently ignores a combined request), so it is optional and asked last.
+    val backgroundLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { }
 
     val launcher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
-    ) { results ->
-        isGranted = results.values.all { it }
+    ) {
+        isGranted = checkPermissions(context, currentCategory.permissions)
+        needsSettings = !isGranted
+        if (isGranted && !isSenior && Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q &&
+            Manifest.permission.ACCESS_BACKGROUND_LOCATION in currentCategory.permissions &&
+            ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_BACKGROUND_LOCATION) != PackageManager.PERMISSION_GRANTED
+        ) {
+            backgroundLauncher.launch(Manifest.permission.ACCESS_BACKGROUND_LOCATION)
+        }
+    }
+
+    // Re-check when returning from the system settings screen.
+    val lifecycleOwner = androidx.lifecycle.compose.LocalLifecycleOwner.current
+    DisposableEffect(lifecycleOwner, currentStep) {
+        val observer = androidx.lifecycle.LifecycleEventObserver { _, event ->
+            if (event == androidx.lifecycle.Lifecycle.Event.ON_RESUME) {
+                isGranted = checkPermissions(context, currentCategory.permissions)
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
     }
 
     Box(
@@ -315,7 +343,18 @@ fun PermissionsSetupScreen(onNext: () -> Unit, isSenior: Boolean = false) {
                     )
 
                     Button(
-                        onClick = { launcher.launch(currentCategory.permissions.toTypedArray()) },
+                        onClick = {
+                            if (needsSettings) {
+                                context.startActivity(
+                                    android.content.Intent(
+                                        android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
+                                        android.net.Uri.fromParts("package", context.packageName, null)
+                                    )
+                                )
+                            } else {
+                                launcher.launch(currentCategory.permissions.filter { it != Manifest.permission.ACCESS_BACKGROUND_LOCATION }.toTypedArray())
+                            }
+                        },
                         interactionSource = grantInteractionSource,
                         modifier = Modifier
                             .fillMaxWidth()
@@ -347,7 +386,7 @@ fun PermissionsSetupScreen(onNext: () -> Unit, isSenior: Boolean = false) {
 }
 
 private fun checkPermissions(context: Context, permissions: List<String>): Boolean {
-    return permissions.all {
+    return permissions.filter { it != Manifest.permission.ACCESS_BACKGROUND_LOCATION }.all {
         ContextCompat.checkSelfPermission(context, it) == PackageManager.PERMISSION_GRANTED
     }
 }
