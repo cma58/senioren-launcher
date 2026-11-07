@@ -61,9 +61,9 @@ De meeste smartphones zijn ontworpen voor "digital natives". Wij draaien dat om.
 ---
 
 ## 🌍 Talen & Lokalisatie
-- **Russisch (standaard) en Nederlands** zijn volledig vertaald (circa 570 interfaceteksten, meldingen, alarmen, SOS-berichten en TTS-stem inbegrepen).
+- **Russisch (standaard), Nederlands en Engels** zijn volledig vertaald (circa 570 interfaceteksten, meldingen, alarmen, SOS-berichten en TTS-stem inbegrepen).
 - **Taalkeuze bij installatie:** het eerste scherm van de installatiewizard vraagt om de taal, vóór de privacytoestemming. Later aan te passen in *Instellingen*.
-- Engels, Frans, Duits, Turks en Arabisch staan in de taallijst, maar daarvan zijn voorlopig alleen de appnaam en het SOS-label vertaald; de rest valt terug op Nederlands. Bijdragen zijn welkom, zie [CONTRIBUTING.md](CONTRIBUTING.md).
+- Frans, Duits, Turks en Arabisch staan in de taallijst, maar daarvan zijn voorlopig alleen de appnaam en het SOS-label vertaald; de rest valt terug op Nederlands. Bijdragen zijn welkom, zie [CONTRIBUTING.md](CONTRIBUTING.md).
 - Weer-plaatszoekopdrachten en tekst-naar-spraak volgen de gekozen taal.
 - De **SMS-commando's blijven Nederlands** (`#WAAR`, `#PING`, ...) in elke taal. Het is een protocol tussen de twee apps, geen interfacetekst.
 
