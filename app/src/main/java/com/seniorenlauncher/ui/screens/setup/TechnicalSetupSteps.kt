@@ -53,9 +53,10 @@ fun DefaultAppsSetupScreen(onNext: () -> Unit, isSenior: Boolean = false) {
         val observer = androidx.lifecycle.LifecycleEventObserver { _, event ->
             if (event == androidx.lifecycle.Lifecycle.Event.ON_RESUME) {
                 isDefaultHome = isLauncherDefault(context)
-                
+
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                     val roleManager = context.getSystemService(Context.ROLE_SERVICE) as RoleManager
+                    if (roleManager.isRoleAvailable(RoleManager.ROLE_HOME) && roleManager.isRoleHeld(RoleManager.ROLE_HOME)) isDefaultHome = true
                     isDefaultDialer = roleManager.isRoleHeld(RoleManager.ROLE_DIALER)
                     isDefaultSms = roleManager.isRoleHeld(RoleManager.ROLE_SMS)
                 } else {
@@ -108,11 +109,18 @@ fun DefaultAppsSetupScreen(onNext: () -> Unit, isSenior: Boolean = false) {
             icon = Icons.Default.Home,
             isSenior = isSenior,
             onClick = {
-                val intent = Intent(Intent.ACTION_MAIN).apply {
-                    addCategory(Intent.CATEGORY_HOME)
-                    flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                val roleManager = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q)
+                    context.getSystemService(Context.ROLE_SERVICE) as RoleManager else null
+                if (roleManager != null && roleManager.isRoleAvailable(RoleManager.ROLE_HOME)) {
+                    // Proper way to become the default launcher on Android 10+
+                    roleLauncher.launch(roleManager.createRequestRoleIntent(RoleManager.ROLE_HOME))
+                } else {
+                    val intent = Intent(Intent.ACTION_MAIN).apply {
+                        addCategory(Intent.CATEGORY_HOME)
+                        flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                    }
+                    context.startActivity(intent)
                 }
-                context.startActivity(intent)
             }
         )
 
@@ -179,6 +187,13 @@ fun DefaultAppsSetupScreen(onNext: () -> Unit, isSenior: Boolean = false) {
                 fontWeight = FontWeight.Black,
                 textAlign = TextAlign.Center
             )
+        }
+
+        if (!allDone) {
+            // Never leave the user stuck on this screen if a role request is refused.
+            TextButton(onClick = onNext, modifier = Modifier.padding(top = 8.dp)) {
+                Text(i18n(R.string.nu_even_niet), fontSize = 18.sp, fontWeight = FontWeight.Black, color = Color(0xFF94A3B8))
+            }
         }
     }
 }

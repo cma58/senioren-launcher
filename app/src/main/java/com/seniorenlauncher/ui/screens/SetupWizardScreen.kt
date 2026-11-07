@@ -51,6 +51,9 @@ fun SetupWizardScreen(
     var flow by remember { mutableStateOf(WizardSetupFlow.NONE) }
     var caregiverStep by remember { mutableIntStateOf(1) }
     var seniorStep by remember { mutableIntStateOf(1) }
+    // True when the user chose "I am the user" without a caregiver first: then the permission
+    // and default-app steps must be part of the senior flow, because nobody else has done them.
+    var seniorDirect by remember { mutableStateOf(false) }
 
     val ctx = LocalContext.current
     if (!settings.privacyAccepted && !com.seniorenlauncher.util.LocaleHelper.isChosen(ctx)) {
@@ -70,7 +73,11 @@ fun SetupWizardScreen(
 
     when (flow) {
         WizardSetupFlow.NONE -> {
-            FlowSelectionScreen(onFlowSelected = { flow = it })
+            FlowSelectionScreen(onFlowSelected = {
+                seniorDirect = (it == WizardSetupFlow.SENIOR)
+                seniorStep = 1
+                flow = it
+            })
         }
         WizardSetupFlow.CAREGIVER -> {
             when (caregiverStep) {
@@ -92,7 +99,9 @@ fun SetupWizardScreen(
             val sosCount by contactDao.getSosContacts().collectAsState(initial = emptyList())
 
             when (seniorStep) {
-                1 -> SeniorWelcomeStep(onNext = { seniorStep = 5 })
+                1 -> SeniorWelcomeStep(onNext = { seniorStep = if (seniorDirect) 2 else 5 })
+                2 -> PermissionsSetupScreen(onNext = { seniorStep = 3 }, isSenior = true)
+                3 -> DefaultAppsSetupScreen(onNext = { seniorStep = 5 }, isSenior = true)
                 5 -> SeniorReadingStep(onNext = { seniorStep = 6 }, settingsVm = settingsVm)
                 6 -> SeniorColorsStep(onNext = { seniorStep = 7 }, settingsVm = settingsVm)
                 7 -> {
