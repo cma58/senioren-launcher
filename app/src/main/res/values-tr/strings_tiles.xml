@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="tile_move_title">Sırayı değiştir</string>
+    <string name="tile_position">%1$s: %3$d içinde %2$d. sıra</string>
+    <string name="tile_move_earlier">◀ Daha önce</string>
+    <string name="tile_move_later">Daha sonra ▶</string>
+    <string name="tile_more">Değiştir veya kaldır</string>
+    <string name="tile_done">TAMAM</string>
+</resources>

@@ -1,2 +1,22 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources><string name="app_name">مشغل كبار السن</string><string name="sos_emergency">طوارئ SOS</string></resources>
+<resources>
+    <string name="app_name">مشغل كبار السن</string>
+    <string name="sos_emergency">طوارئ SOS</string>
+    <string name="call">اتصال</string>
+    <string name="messages">الرسائل</string>
+    <string name="settings">الإعدادات</string>
+    <string name="flashlight">المصباح</string>
+    <string name="contacts">جهات الاتصال</string>
+    <string name="back">رجوع</string>
+    <string name="privacy_title">الخصوصية واللائحة العامة لحماية البيانات</string>
+    <string name="privacy_gent_support">مدعوم لكبار السن في خنت</string>
+    <string name="gdpr_compliant">متوافق مع اللائحة العامة لحماية البيانات</string>
+    <string name="privacy_promise_title">وعدنا</string>
+    <string name="privacy_promise_desc">تم تصميم Senioren Launcher بحيث تكون الخصوصية أساسه. وبالتعاون مع مبادرات الشمول الرقمي في خنت، نضمن بقاء بياناتك محلية.</string>
+    <string name="privacy_processing_title">معالجة البيانات</string>
+    <string name="privacy_processing_desc">• لا سحابة: تبقى بياناتك على هذا الجهاز.\n• إدارة الرسائل النصية: لمقدمي الرعاية المصرّح لهم فقط.\n• لا تتبّع: لا إعلانات ولا تحليلات.</string>
+    <string name="privacy_rights_title">حقوقك</string>
+    <string name="privacy_rights_desc">لديك السيطرة الكاملة. يمكنك إزالة المشرفين مباشرة، وتُمحى جميع البيانات عند حذف التطبيق.</string>
+    <string name="privacy_accept">أوافق</string>
+    <string name="privacy_version_label">الإصدار 0.8.8 - مشروع كبار السن في خنت</string>
+</resources>

@@ -1,2 +1,22 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources><string name="app_name">Lanceur Senior</string><string name="sos_emergency">SOS URGENCE</string></resources>
+<resources>
+    <string name="app_name">Lanceur Senior</string>
+    <string name="sos_emergency">SOS URGENCE</string>
+    <string name="call">Appeler</string>
+    <string name="messages">Messages</string>
+    <string name="settings">Paramètres</string>
+    <string name="flashlight">Lampe de poche</string>
+    <string name="contacts">Contacts</string>
+    <string name="back">Retour</string>
+    <string name="privacy_title">Confidentialité &amp; RGPD</string>
+    <string name="privacy_gent_support">Soutenu pour les seniors de Gand</string>
+    <string name="gdpr_compliant">Conforme au RGPD</string>
+    <string name="privacy_promise_title">Notre promesse</string>
+    <string name="privacy_promise_desc">Senioren Launcher est conçu avec la confidentialité comme fondement. En collaboration avec des initiatives d\'inclusion numérique à Gand, nous garantissons que vos données restent en local.</string>
+    <string name="privacy_processing_title">Traitement des données</string>
+    <string name="privacy_processing_desc">• Pas de cloud : vos données restent sur cet appareil.\n• Gestion par SMS : uniquement les aidants autorisés.\n• Pas de suivi : ni publicité ni analyse.</string>
+    <string name="privacy_rights_title">Vos droits</string>
+    <string name="privacy_rights_desc">Vous gardez le contrôle total. Vous pouvez supprimer directement les administrateurs et toutes les données sont effacées à la désinstallation de l\'application.</string>
+    <string name="privacy_accept">J\'ACCEPTE</string>
+    <string name="privacy_version_label">Version 0.8.8 - Projet Senioren Gand</string>
+</resources>

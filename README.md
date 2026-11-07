@@ -61,9 +61,9 @@ Most smartphones are designed for digital natives. We turn that around. The Seni
 ---
 
 ## 🌍 Languages & Localization
-- **Russian (default), Dutch and English** are fully translated (about 570 UI strings, notifications, alarms, SOS messages and TTS voice included).
+- **Russian (default), Dutch, English, French, German, Turkish and Arabic** are fully translated (about 570 UI strings, notifications, alarms, SOS messages and TTS voice included).
 - **Language picker at install:** the first screen of the setup wizard asks for the language, before the privacy consent. It can be changed later in *Settings*.
-- French, German, Turkish and Arabic appear in the language list, but only the app name and the SOS label are translated for them so far; everything else falls back to Dutch. Contributions are welcome, see [CONTRIBUTING_EN.md](CONTRIBUTING_EN.md).
+- French, German, Turkish and Arabic are machine-assisted translations; native-speaker review is welcome, see [CONTRIBUTING_EN.md](CONTRIBUTING_EN.md). Arabic is shown right-to-left.
 - Weather place search and text-to-speech follow the selected language.
 - The **SMS remote commands stay in Dutch** (`#WAAR`, `#PING`, ...) in every language. They are a protocol between the two apps, not UI text. See [COMMANDS.md](COMMANDS.md).
 

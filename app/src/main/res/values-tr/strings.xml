@@ -1,2 +1,22 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources><string name="app_name">Yaşlı Başlatıcı</string><string name="sos_emergency">SOS ACİL</string></resources>
+<resources>
+    <string name="app_name">Yaşlı Başlatıcı</string>
+    <string name="sos_emergency">SOS ACİL</string>
+    <string name="call">Ara</string>
+    <string name="messages">Mesajlar</string>
+    <string name="settings">Ayarlar</string>
+    <string name="flashlight">El feneri</string>
+    <string name="contacts">Kişiler</string>
+    <string name="back">Geri</string>
+    <string name="privacy_title">Gizlilik &amp; GDPR</string>
+    <string name="privacy_gent_support">Gent\'teki yaşlılar için desteklenir</string>
+    <string name="gdpr_compliant">GDPR uyumlu</string>
+    <string name="privacy_promise_title">Sözümüz</string>
+    <string name="privacy_promise_desc">Senioren Launcher, temeli gizlilik olacak şekilde tasarlanmıştır. Gent\'teki dijital kapsayıcılık girişimleriyle iş birliği içinde, verilerinizin cihazınızda kalmasını garanti ederiz.</string>
+    <string name="privacy_processing_title">Veri işleme</string>
+    <string name="privacy_processing_desc">• Bulut yok: Verileriniz bu cihazda kalır.\n• SMS yönetimi: Yalnızca yetkili bakıcılar.\n• İzleme yok: Reklam veya analiz yok.</string>
+    <string name="privacy_rights_title">Haklarınız</string>
+    <string name="privacy_rights_desc">Tam kontrol sizdedir. Yöneticileri doğrudan kaldırabilirsiniz ve uygulama silindiğinde tüm veriler silinir.</string>
+    <string name="privacy_accept">KABUL EDİYORUM</string>
+    <string name="privacy_version_label">Sürüm 0.8.8 - Senioren Gent Projesi</string>
+</resources>

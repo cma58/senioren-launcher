@@ -1,2 +1,22 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources><string name="app_name">Senioren Launcher</string><string name="sos_emergency">SOS NOTFALL</string></resources>
+<resources>
+    <string name="app_name">Senioren Launcher</string>
+    <string name="sos_emergency">SOS NOTFALL</string>
+    <string name="call">Anrufen</string>
+    <string name="messages">Nachrichten</string>
+    <string name="settings">Einstellungen</string>
+    <string name="flashlight">Taschenlampe</string>
+    <string name="contacts">Kontakte</string>
+    <string name="back">Zurück</string>
+    <string name="privacy_title">Datenschutz &amp; DSGVO</string>
+    <string name="privacy_gent_support">Unterstützt für Senioren in Gent</string>
+    <string name="gdpr_compliant">DSGVO-konform</string>
+    <string name="privacy_promise_title">Unser Versprechen</string>
+    <string name="privacy_promise_desc">Senioren Launcher wurde mit Datenschutz als Fundament entwickelt. In Zusammenarbeit mit Initiativen für digitale Inklusion in Gent garantieren wir, dass Ihre Daten lokal bleiben.</string>
+    <string name="privacy_processing_title">Datenverarbeitung</string>
+    <string name="privacy_processing_desc">• Keine Cloud: Ihre Daten bleiben auf diesem Gerät.\n• SMS-Verwaltung: Nur autorisierte Betreuer.\n• Kein Tracking: Keine Werbung oder Analyse.</string>
+    <string name="privacy_rights_title">Ihre Rechte</string>
+    <string name="privacy_rights_desc">Sie haben die volle Kontrolle. Sie können Administratoren direkt entfernen, und alle Daten werden beim Deinstallieren der App gelöscht.</string>
+    <string name="privacy_accept">ICH STIMME ZU</string>
+    <string name="privacy_version_label">Version 0.8.8 - Projekt Senioren Gent</string>
+</resources>
