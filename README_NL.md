@@ -138,7 +138,7 @@ Sommige telefoons (bv. Xiaomi/MIUI zonder simkaart) blokkeren `adb install`. Kop
 ## ❤️ Waardering & Toekomst
 Senioren Launcher is en blijft gratis en open-source. Digitale inclusie voor ouderen is een recht, geen luxe.
 
-[![Steun via PayPal](https://img.shields.io/badge/Steun-PayPal-blue.svg?style=for-the-badge&logo=paypal)](https://www.paypal.com/donate/?business=amine.chtaiti@gmail.com&no_recurring=0&currency_code=EUR)
+[![Steun via PayPal](https://img.shields.io/badge/Steun-PayPal-blue.svg?style=for-the-badge&logo=paypal)](https://www.paypal.com/ncp/payment/U42MC9YY623QA)
 
 ---
 *Gemaakt met zorg om generaties te verbinden en mantelzorgers rust te geven.*

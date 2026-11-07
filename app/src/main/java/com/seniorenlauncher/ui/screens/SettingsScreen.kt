@@ -374,7 +374,7 @@ fun SettingsScreenContent(
                 Button(
                     onClick = {
                         haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                        val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://www.paypal.com/donate/?business=amine.chtaiti@gmail.com&no_recurring=0&currency_code=EUR"))
+                        val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://www.paypal.com/ncp/payment/U42MC9YY623QA"))
                         context.startActivity(intent)
                     },
                     modifier = Modifier.fillMaxWidth().height(80.dp),

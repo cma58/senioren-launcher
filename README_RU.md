@@ -138,7 +138,7 @@
 ## ❤️ Поддержка и будущее
 Senior Launcher был и всегда будет бесплатным и с открытым исходным кодом. Цифровая инклюзия для пожилых людей — это право, а не роскошь.
 
-[![Donate via PayPal](https://img.shields.io/badge/Donate-PayPal-blue.svg?style=for-the-badge&logo=paypal)](https://www.paypal.com/donate/?business=amine.chtaiti@gmail.com&no_recurring=0&currency_code=EUR)
+[![Donate via PayPal](https://img.shields.io/badge/Donate-PayPal-blue.svg?style=for-the-badge&logo=paypal)](https://www.paypal.com/ncp/payment/U42MC9YY623QA)
 
 ---
 *Создано с любовью, чтобы соединять поколения и дарить спокойствие.*

@@ -138,7 +138,7 @@ Some phones (e.g. Xiaomi/MIUI without a SIM card) block `adb install`. In that c
 ## ❤️ Support & Future
 Senior Launcher is and will always remain free and open-source. Digital inclusion for seniors is a right, not a luxury.
 
-[![Donate via PayPal](https://img.shields.io/badge/Donate-PayPal-blue.svg?style=for-the-badge&logo=paypal)](https://www.paypal.com/donate/?business=amine.chtaiti@gmail.com&no_recurring=0&currency_code=EUR)
+[![Donate via PayPal](https://img.shields.io/badge/Donate-PayPal-blue.svg?style=for-the-badge&logo=paypal)](https://www.paypal.com/ncp/payment/U42MC9YY623QA)
 
 ---
 *Created with love to connect generations and provide peace of mind.*
