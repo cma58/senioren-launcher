@@ -210,10 +210,25 @@ fun AppPickerDialog(
         else installedApps.filter { it.name.contains(searchQuery, ignoreCase = true) }
     }
     
-    Dialog(onDismissRequest = onDismiss) {
+    val keyboard = androidx.compose.ui.platform.LocalSoftwareKeyboardController.current
+    val focusManager = androidx.compose.ui.platform.LocalFocusManager.current
+    val listState = androidx.compose.foundation.lazy.rememberLazyListState()
+    // Scrolling the list (or picking an app) puts the keyboard away.
+    LaunchedEffect(listState) {
+        snapshotFlow { listState.isScrollInProgress }.collect { if (it) { keyboard?.hide(); focusManager.clearFocus() } }
+    }
+    // Keep the whole dialog above the keyboard so the Add/Cancel buttons stay reachable.
+    val density = androidx.compose.ui.platform.LocalDensity.current
+    val imeBottom = with(density) { androidx.compose.foundation.layout.WindowInsets.ime.getBottom(density).toDp() }
+
+    Dialog(
+        onDismissRequest = onDismiss,
+        properties = androidx.compose.ui.window.DialogProperties(usePlatformDefaultWidth = false)
+    ) {
+      Box(Modifier.fillMaxSize().padding(bottom = imeBottom), contentAlignment = Alignment.Center) {
         Card(
             shape = RoundedCornerShape(40.dp),
-            modifier = Modifier.fillMaxWidth().fillMaxHeight(0.9f).padding(16.dp),
+            modifier = Modifier.fillMaxWidth().fillMaxHeight(if (imeBottom > 0.dp) 1f else 0.9f).padding(16.dp),
             border = BorderStroke(1.dp, Color.White.copy(alpha = 0.1f)),
             colors = CardDefaults.cardColors(containerColor = Color(0xFF1E293B))
         ) {
@@ -245,6 +260,15 @@ fun AppPickerDialog(
                     modifier = Modifier.fillMaxWidth(),
                     placeholder = { Text(i18n(R.string.zoek_app), fontWeight = FontWeight.Bold, color = Color(0xFF94A3B8)) },
                     leadingIcon = { Icon(Icons.Default.Search, null, tint = Color(0xFF94A3B8)) },
+                    trailingIcon = {
+                        // Big, obvious way to clear the text and close the keyboard
+                        IconButton(onClick = { searchQuery = ""; keyboard?.hide(); focusManager.clearFocus() }, modifier = Modifier.size(56.dp)) {
+                            Icon(Icons.Default.Close, null, tint = Color(0xFF94A3B8), modifier = Modifier.size(32.dp))
+                        }
+                    },
+                    singleLine = true,
+                    keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(imeAction = androidx.compose.ui.text.input.ImeAction.Done),
+                    keyboardActions = androidx.compose.foundation.text.KeyboardActions(onDone = { keyboard?.hide(); focusManager.clearFocus() }),
                     shape = RoundedCornerShape(20.dp),
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedTextColor = Color.White,
@@ -258,7 +282,7 @@ fun AppPickerDialog(
 
                 Spacer(Modifier.height(16.dp))
                 
-                LazyColumn(Modifier.weight(1f)) {
+                LazyColumn(Modifier.weight(1f), state = listState) {
                     items(filteredApps) { app ->
                         val isSelected = selectedPackages.contains(app.packageName)
                         val interactionSource = remember { MutableInteractionSource() }
@@ -275,6 +299,7 @@ fun AppPickerDialog(
                                 .clip(RoundedCornerShape(20.dp))
                                 .background(if (isSelected) Color.White.copy(alpha = 0.05f) else Color.Transparent)
                                 .clickable(interactionSource = interactionSource, indication = null) { 
+                                    keyboard?.hide(); focusManager.clearFocus()
                                     if (isSelected) selectedPackages.remove(app.packageName)
                                     else selectedPackages.add(app.packageName)
                                 }
@@ -339,6 +364,7 @@ fun AppPickerDialog(
                 }
             }
         }
+      }
     }
 }
 
