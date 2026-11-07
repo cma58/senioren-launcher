@@ -758,8 +758,29 @@ fun TileOptionsDialog(
     onMoveLater: () -> Unit,
     showMore: Boolean,
     onMore: () -> Unit,
+    onRemove: () -> Unit,
     onDismiss: () -> Unit
 ) {
+    var confirmRemove by remember { mutableStateOf(false) }
+    if (confirmRemove) {
+        AlertDialog(
+            onDismissRequest = { confirmRemove = false },
+            title = { Text(i18n(R.string.verwijderen_2), fontSize = 26.sp, fontWeight = FontWeight.Black) },
+            text = { Text(i18n(R.string.wilt_u_verwijderen, appName), fontSize = 20.sp) },
+            confirmButton = {
+                Button(
+                    onClick = { confirmRemove = false; onRemove() },
+                    modifier = Modifier.height(60.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFDC2626))
+                ) { Text(i18n(R.string.verwijder), fontSize = 20.sp, fontWeight = FontWeight.Black, color = Color.White) }
+            },
+            dismissButton = {
+                OutlinedButton(onClick = { confirmRemove = false }, modifier = Modifier.height(60.dp)) {
+                    Text(i18n(R.string.annuleren_2), fontSize = 20.sp, fontWeight = FontWeight.Bold)
+                }
+            }
+        )
+    }
     Dialog(onDismissRequest = onDismiss) {
         Card(
             shape = RoundedCornerShape(40.dp),
@@ -793,6 +814,12 @@ fun TileOptionsDialog(
                     modifier = Modifier.fillMaxWidth().height(56.dp),
                     shape = RoundedCornerShape(28.dp)
                 ) { Text(i18n(R.string.tile_more), fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color.White) }
+                if (showMore) Button(
+                    onClick = { confirmRemove = true },
+                    modifier = Modifier.fillMaxWidth().height(64.dp),
+                    shape = RoundedCornerShape(32.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFDC2626))
+                ) { Text("🗑  " + i18n(R.string.verwijderen_3), fontSize = 20.sp, fontWeight = FontWeight.Black, color = Color.White) }
                 Button(
                     onClick = onDismiss,
                     modifier = Modifier.fillMaxWidth().height(72.dp),

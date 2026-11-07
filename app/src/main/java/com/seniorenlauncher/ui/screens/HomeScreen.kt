@@ -89,6 +89,10 @@ fun HomeScreen(onNavigate: (String) -> Unit, settingsVm: SettingsViewModel) {
                     showTileOptionsFor = null
                     showAppPickerFor = tileId
                 },
+                onRemove = {
+                    settingsVm.updateVisibleApps(uiState.settings.visibleApps - tileId)
+                    showTileOptionsFor = null
+                },
                 onDismiss = { showTileOptionsFor = null }
             )
         }
