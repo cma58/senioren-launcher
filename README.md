@@ -1,4 +1,4 @@
-# 📱 Senioren Launcher 🛡️ (v0.8.8)
+# 📱 Senioren Launcher 🛡️ (v1.0.0)
 
 [![Open Source Love](https://badges.frapsoft.com/os/v1/open-source.svg?v=103)](https://github.com/cma58/senioren-launcher)
 [![License: GPL-3.0](https://img.shields.io/badge/License-GPL%20v3-blue.svg)](LICENSE)

@@ -18,5 +18,5 @@
     <string name="privacy_rights_title">Haklarınız</string>
     <string name="privacy_rights_desc">Tam kontrol sizdedir. Yöneticileri doğrudan kaldırabilirsiniz ve uygulama silindiğinde tüm veriler silinir.</string>
     <string name="privacy_accept">KABUL EDİYORUM</string>
-    <string name="privacy_version_label">Sürüm 0.8.8 - Senioren Gent Projesi</string>
+    <string name="privacy_version_label">Sürüm 1.0.0 - Senioren Gent Projesi</string>
 </resources>

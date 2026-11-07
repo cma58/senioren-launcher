@@ -1,4 +1,4 @@
-# Политика конфиденциальности — Senioren Launcher (v0.8.8)
+# Политика конфиденциальности — Senioren Launcher (v1.0.0)
 
 **🌐 Язык:** [English](PRIVACY_EN.md) · **Русский** · [Nederlands](PRIVACY.md)
 

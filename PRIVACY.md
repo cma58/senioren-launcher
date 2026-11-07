@@ -1,4 +1,4 @@
-# Privacybeleid — Senioren Launcher (v0.8.8)
+# Privacybeleid — Senioren Launcher (v1.0.0)
 
 **🌐 Taal:** [English](PRIVACY_EN.md) · [Русский](PRIVACY_RU.md) · **Nederlands**
 

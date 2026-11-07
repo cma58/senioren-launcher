@@ -12,8 +12,8 @@ android {
         applicationId = "com.seniorenlauncher"
         minSdk = 26
         targetSdk = 36
-        versionCode = 15
-        versionName = "0.8.8"
+        versionCode = 16
+        versionName = "1.0.0"
     }
 
     buildTypes {

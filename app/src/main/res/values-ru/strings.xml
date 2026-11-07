@@ -18,5 +18,5 @@
     <string name="privacy_rights_title">Ваши права</string>
     <string name="privacy_rights_desc">У Вас полный контроль. Вы можете сразу удалить администраторов, а все данные стираются при удалении приложения.</string>
     <string name="privacy_accept">Я СОГЛАСЕН(НА)</string>
-    <string name="privacy_version_label">Версия 0.8.8 — Проект Senioren Gent</string>
+    <string name="privacy_version_label">Версия 1.0.0 — Проект Senioren Gent</string>
 </resources>

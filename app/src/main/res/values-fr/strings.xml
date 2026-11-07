@@ -18,5 +18,5 @@
     <string name="privacy_rights_title">Vos droits</string>
     <string name="privacy_rights_desc">Vous gardez le contrôle total. Vous pouvez supprimer directement les administrateurs et toutes les données sont effacées à la désinstallation de l\'application.</string>
     <string name="privacy_accept">J\'ACCEPTE</string>
-    <string name="privacy_version_label">Version 0.8.8 - Projet Senioren Gand</string>
+    <string name="privacy_version_label">Version 1.0.0 - Projet Senioren Gand</string>
 </resources>

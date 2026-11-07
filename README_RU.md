@@ -1,4 +1,4 @@
-# 📱 Senioren Launcher 🛡️ (v0.8.8)
+# 📱 Senioren Launcher 🛡️ (v1.0.0)
 
 **🌐 Language / Язык / Taal:** [English](README.md) · **Русский** · [Nederlands](README_NL.md)
 

@@ -1,4 +1,4 @@
-# Privacy Policy — Senioren Launcher (v0.8.8)
+# Privacy Policy — Senioren Launcher (v1.0.0)
 
 **🌐 Language:** **English** · [Русский](PRIVACY_RU.md) · [Nederlands](PRIVACY.md)
 

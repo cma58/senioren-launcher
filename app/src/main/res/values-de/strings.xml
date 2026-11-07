@@ -18,5 +18,5 @@
     <string name="privacy_rights_title">Ihre Rechte</string>
     <string name="privacy_rights_desc">Sie haben die volle Kontrolle. Sie können Administratoren direkt entfernen, und alle Daten werden beim Deinstallieren der App gelöscht.</string>
     <string name="privacy_accept">ICH STIMME ZU</string>
-    <string name="privacy_version_label">Version 0.8.8 - Projekt Senioren Gent</string>
+    <string name="privacy_version_label">Version 1.0.0 - Projekt Senioren Gent</string>
 </resources>
