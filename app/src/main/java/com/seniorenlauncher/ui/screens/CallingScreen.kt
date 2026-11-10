@@ -1,4 +1,6 @@
 package com.seniorenlauncher.ui.screens
+import com.seniorenlauncher.R
+import com.seniorenlauncher.util.i18n
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
@@ -19,7 +21,7 @@ fun CallingScreen(onEnd: () -> Unit) {
         Text("👩‍🦳", fontSize = 64.sp)
         Spacer(Modifier.height(12.dp))
         Text("Mama", fontSize = 28.sp, fontWeight = FontWeight.ExtraBold, color = MaterialTheme.colorScheme.onBackground)
-        Text("Verbonden • ${"%02d".format(seconds/60)}:${"%02d".format(seconds%60)}",
+        Text(i18n(R.string.verbonden, "%02d".format(seconds/60), "%02d".format(seconds%60)),
             fontSize = 16.sp, color = Color(0xFF38A169))
         Spacer(Modifier.height(40.dp))
         Button(onClick = onEnd, colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFEF4444)),

@@ -1,4 +1,6 @@
 package com.seniorenlauncher.receiver
+import com.seniorenlauncher.R
+import com.seniorenlauncher.util.i18n
 
 import android.app.NotificationManager
 import android.app.PendingIntent
@@ -12,7 +14,7 @@ import com.seniorenlauncher.MainActivity
 
 class AlarmReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
-        val label = intent.getStringExtra("ALARM_LABEL") ?: "Wekker"
+        val label = intent.getStringExtra("ALARM_LABEL") ?: i18n(R.string.wekker)
         val alarmId = intent.getLongExtra("ALARM_ID", -1L)
         val soundUri = intent.getStringExtra("ALARM_SOUND")
         val hour = intent.getIntExtra("ALARM_HOUR", -1)
@@ -47,8 +49,8 @@ class AlarmReceiver : BroadcastReceiver() {
 
         val notification = NotificationCompat.Builder(context, channelId)
             .setSmallIcon(android.R.drawable.ic_lock_idle_alarm)
-            .setContentTitle("⏰ WEKKER")
-            .setContentText("Tik om te openen: $label")
+            .setContentTitle(i18n(R.string.wekker_2))
+            .setContentText(i18n(R.string.tik_om_te_openen, label))
             .setPriority(NotificationCompat.PRIORITY_MAX)
             .setCategory(NotificationCompat.CATEGORY_ALARM)
             .setFullScreenIntent(pendingIntent, true)

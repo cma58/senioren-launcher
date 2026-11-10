@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="tile_move_title">Изменить порядок</string>
+    <string name="tile_position">%1$s: место %2$d из %3$d</string>
+    <string name="tile_move_earlier">◀ Раньше</string>
+    <string name="tile_move_later">Позже ▶</string>
+    <string name="tile_more">Заменить или убрать</string>
+    <string name="tile_done">ГОТОВО</string>
+</resources>

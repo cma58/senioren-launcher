@@ -1,4 +1,5 @@
 package com.seniorenlauncher.ui.screens
+import com.seniorenlauncher.util.i18n
 
 import android.content.Intent
 import android.net.Uri
@@ -76,7 +77,7 @@ fun PrivacyScreen(onBack: () -> Unit) {
             ) {
                 Icon(Icons.Default.OpenInNew, null)
                 Spacer(Modifier.width(12.dp))
-                Text("VOLLEDIGE POLICY OP GITHUB", fontWeight = FontWeight.Bold)
+                Text(i18n(R.string.volledige_policy_op_github), fontWeight = FontWeight.Bold)
             }
 
             Text(

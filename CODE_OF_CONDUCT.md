@@ -1,5 +1,7 @@
 # Gedragscode
 
+**🌐 Taal:** [English](CODE_OF_CONDUCT_EN.md) · [Русский](CODE_OF_CONDUCT_RU.md) · **Nederlands**
+
 ik streven naar een open en gastvrije community. Iedereen is welkom.
 
 Positief gedrag: respectvol taalgebruik, constructieve feedback, empathie.

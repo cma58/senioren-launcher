@@ -1,4 +1,6 @@
 package com.seniorenlauncher.ui.screens
+import com.seniorenlauncher.R
+import com.seniorenlauncher.util.i18n
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -31,7 +33,7 @@ fun RemoteSupportScreen(onBack: () -> Unit) {
             .background(MaterialTheme.colorScheme.background)
             .padding(horizontal = 16.dp, vertical = 8.dp)
     ) {
-        ScreenHeader(title = "Hulp op afstand", onBack = onBack)
+        ScreenHeader(title = i18n(R.string.hulp_op_afstand), onBack = onBack)
         
         Column(
             Modifier
@@ -42,19 +44,19 @@ fun RemoteSupportScreen(onBack: () -> Unit) {
         ) {
             Text("👨‍🔧", fontSize = 60.sp)
             Text(
-                "Hoe werkt het?",
+                i18n(R.string.hoe_werkt_het),
                 fontSize = 24.sp,
                 fontWeight = FontWeight.Bold,
                 modifier = Modifier.padding(bottom = 16.dp)
             )
 
             // --- STAPPENPLAN ---
-            SupportStep(1, "Druk op de grote knop onderaan om de hulp-app (RustDesk) te openen.")
-            SupportStep(2, "Tik in die app onderaan op het icoontje 'Scherm Delen'.")
-            SupportStep(3, "Druk bovenin op de blauwe knop 'Start service'.")
-            SupportStep(4, "Kies voor 'Hele scherm delen' en druk op 'Volgende' (of 'Starten').")
-            SupportStep(5, "Vertel de 'ID' en het 'Wachtwoord' aan de persoon die u helpt.")
-            SupportStep(6, "Druk op 'Accepteren' of 'Toestaan' als er dadelijk een melding in beeld komt.")
+            SupportStep(1, i18n(R.string.druk_op_de_grote_knop))
+            SupportStep(2, i18n(R.string.tik_in_die_app_onderaan))
+            SupportStep(3, i18n(R.string.druk_bovenin_op_de_blauwe))
+            SupportStep(4, i18n(R.string.kies_voor_hele_scherm_delen))
+            SupportStep(5, i18n(R.string.vertel_de_id_en_het))
+            SupportStep(6, i18n(R.string.druk_op_accepteren_of_toestaan))
 
             Spacer(Modifier.height(32.dp))
 
@@ -69,7 +71,7 @@ fun RemoteSupportScreen(onBack: () -> Unit) {
             ) {
                 Icon(Icons.Default.Launch, null, modifier = Modifier.size(32.dp))
                 Spacer(Modifier.width(12.dp))
-                Text("OPEN HULP-APP", fontSize = 22.sp, fontWeight = FontWeight.Black)
+                Text(i18n(R.string.open_hulp_app), fontSize = 22.sp, fontWeight = FontWeight.Black)
             }
             
             Spacer(Modifier.height(24.dp))
@@ -83,7 +85,7 @@ fun RemoteSupportScreen(onBack: () -> Unit) {
                     Icon(Icons.Default.Info, null, tint = MaterialTheme.colorScheme.primary)
                     Spacer(Modifier.width(12.dp))
                     Text(
-                        "U kunt de hulp-app altijd afsluiten om de verbinding te verbreken.",
+                        i18n(R.string.u_kunt_de_hulp_app),
                         fontSize = 14.sp,
                         lineHeight = 20.sp,
                         modifier = Modifier.weight(1f)

@@ -1,4 +1,6 @@
 package com.seniorenlauncher.ui.screens.home
+import com.seniorenlauncher.R
+import com.seniorenlauncher.util.i18n
 
 import android.content.Context
 import android.content.Intent
@@ -67,104 +69,111 @@ fun HomeTopBar(notificationCount: Int, onNotificationsClick: () -> Unit) {
         color = Color.Transparent,
         modifier = Modifier.fillMaxWidth()
     ) {
-        Row(
+        // Het hele scherm schaalt mee met de tekstgrootte (Theme.kt), dus de balk moet
+        // in twee rijen: status + meldingen bovenaan, de klok op volle breedte eronder.
+        Column(
             Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 24.dp, vertical = 24.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
+                .padding(horizontal = 16.dp, vertical = 8.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // Links: Status Capsule (Glass Effect)
-            Surface(
-                shape = RoundedCornerShape(30.dp),
-                color = Color(0xFF1E293B).copy(alpha = 0.6f),
-                modifier = Modifier.height(76.dp),
-                border = BorderStroke(1.dp, Color.White.copy(alpha = 0.1f))
+            Row(
+                Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Row(
-                    Modifier.padding(horizontal = 20.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(14.dp)
+                // Links: Status Capsule (Glass Effect)
+                Surface(
+                    shape = RoundedCornerShape(30.dp),
+                    color = Color(0xFF1E293B).copy(alpha = 0.6f),
+                    modifier = Modifier.weight(1f).height(60.dp),
+                    border = BorderStroke(1.dp, Color.White.copy(alpha = 0.1f))
                 ) {
-                    Icon(
-                        imageVector = if (isCharging) Icons.Default.BatteryChargingFull else if (batteryLevel < 20) Icons.Default.BatteryAlert else Icons.Default.BatteryFull,
-                        contentDescription = null,
-                        modifier = Modifier.size(28.dp),
-                        tint = if (batteryLevel < 20 && !isCharging) Color(0xFFEF4444) else Color(0xFF10B981)
-                    )
-                    Text(
-                        text = "$batteryLevel%",
-                        fontSize = 22.sp,
-                        fontWeight = FontWeight.Black,
-                        color = Color.White
-                    )
-                    Box(Modifier.width(1.dp).height(24.dp).background(Color.White.copy(alpha = 0.2f)))
-                    Icon(
-                        imageVector = if (isWifiConnected) Icons.Default.Wifi else Icons.Default.SignalCellularAlt,
-                        contentDescription = null,
-                        modifier = Modifier.size(26.dp),
-                        tint = Color.White.copy(alpha = 0.6f)
-                    )
+                    Row(
+                        Modifier.padding(horizontal = 8.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceEvenly
+                    ) {
+                        Icon(
+                            imageVector = if (isCharging) Icons.Default.BatteryChargingFull else if (batteryLevel < 20) Icons.Default.BatteryAlert else Icons.Default.BatteryFull,
+                            contentDescription = null,
+                            modifier = Modifier.size(24.dp),
+                            tint = if (batteryLevel < 20 && !isCharging) Color(0xFFEF4444) else Color(0xFF10B981)
+                        )
+                        Text(
+                            text = "$batteryLevel%",
+                            fontSize = 16.sp,
+                            maxLines = 1,
+                            fontWeight = FontWeight.Black,
+                            color = Color.White
+                        )
+                        Icon(
+                            imageVector = if (isWifiConnected) Icons.Default.Wifi else Icons.Default.SignalCellularAlt,
+                            contentDescription = null,
+                            modifier = Modifier.size(22.dp),
+                            tint = Color.White.copy(alpha = 0.6f)
+                        )
+                    }
                 }
-            }
 
-            // Midden: Elegante Klok (Hyper-Refined)
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Text(
-                    currentTime, 
-                    fontSize = 62.sp, 
-                    fontWeight = FontWeight.W900,
-                    color = Color.White,
-                    letterSpacing = (-2).sp
-                )
-                Text(
-                    currentDate.uppercase(), 
-                    fontSize = 13.sp, 
-                    fontWeight = FontWeight.Black,
-                    color = Color(0xFF6366F1), // Modern Indigo
-                    letterSpacing = 2.5.sp
-                )
-            }
-
-            // Rechts: Notification Avatar (Glass Effect)
-            Surface(
-                onClick = onNotificationsClick,
-                modifier = Modifier.size(76.dp),
-                shape = CircleShape,
-                color = Color(0xFF1E293B).copy(alpha = 0.6f),
-                border = BorderStroke(1.dp, Color.White.copy(alpha = 0.1f))
-            ) {
-                Box(contentAlignment = Alignment.Center) {
-                    Icon(
-                        Icons.Default.Notifications, 
-                        contentDescription = "Meldingen",
-                        modifier = Modifier.size(34.dp),
-                        tint = if (notificationCount > 0) Color(0xFF6366F1) else Color.White.copy(alpha = 0.4f)
-                    )
-                    if (notificationCount > 0) {
-                        Surface(
-                            modifier = Modifier
-                                .align(Alignment.TopEnd)
-                                .padding(4.dp)
-                                .size(24.dp),
-                            shape = CircleShape,
-                            color = Color(0xFFEF4444),
-                            border = BorderStroke(2.dp, Color(0xFF0F172A))
-                        ) {
-                            Box(contentAlignment = Alignment.Center) {
-                                Text(
-                                    "$notificationCount",
-                                    color = Color.White,
-                                    fontSize = 12.sp,
-                                    fontWeight = FontWeight.Black
-                                )
+                // Rechts: Notification Avatar (Glass Effect)
+                Surface(
+                    onClick = onNotificationsClick,
+                    modifier = Modifier.size(60.dp),
+                    shape = CircleShape,
+                    color = Color(0xFF1E293B).copy(alpha = 0.6f),
+                    border = BorderStroke(1.dp, Color.White.copy(alpha = 0.1f))
+                ) {
+                    Box(contentAlignment = Alignment.Center) {
+                        Icon(
+                            Icons.Default.Notifications, 
+                            contentDescription = i18n(R.string.meldingen_2),
+                            modifier = Modifier.size(30.dp),
+                            tint = if (notificationCount > 0) Color(0xFF6366F1) else Color.White.copy(alpha = 0.4f)
+                        )
+                        if (notificationCount > 0) {
+                            Surface(
+                                modifier = Modifier
+                                    .align(Alignment.TopEnd)
+                                    .padding(4.dp)
+                                    .size(24.dp),
+                                shape = CircleShape,
+                                color = Color(0xFFEF4444),
+                                border = BorderStroke(2.dp, Color(0xFF0F172A))
+                            ) {
+                                Box(contentAlignment = Alignment.Center) {
+                                    Text(
+                                        "$notificationCount",
+                                        color = Color.White,
+                                        fontSize = 12.sp,
+                                        fontWeight = FontWeight.Black
+                                    )
+                                }
                             }
                         }
                     }
                 }
             }
+
+            // Klok op volle breedte
+            Text(
+                currentTime,
+                maxLines = 1,
+                softWrap = false,
+                fontSize = 44.sp,
+                fontWeight = FontWeight.W900,
+                color = Color.White,
+                letterSpacing = (-2).sp
+            )
+            Text(
+                currentDate.uppercase(),
+                maxLines = 2,
+                textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                fontSize = 12.sp,
+                fontWeight = FontWeight.Black,
+                color = Color(0xFF6366F1), // Modern Indigo
+                letterSpacing = 1.sp
+            )
         }
     }
 }
@@ -174,7 +183,6 @@ fun HomeSOSButton(onClick: () -> Unit, modifier: Modifier = Modifier) {
     Surface(
         onClick = onClick,
         modifier = modifier
-            .height(110.dp)
             .fillMaxWidth(),
         shape = RoundedCornerShape(40.dp),
         color = Color(0xFFEF4444),
@@ -182,7 +190,9 @@ fun HomeSOSButton(onClick: () -> Unit, modifier: Modifier = Modifier) {
     ) {
         Box(
             modifier = Modifier
-                .fillMaxSize()
+                .fillMaxWidth()
+                .heightIn(min = 72.dp)
+                .padding(vertical = 8.dp)
                 .background(
                     Brush.horizontalGradient(
                         colors = listOf(Color(0xFFEF4444), Color(0xFF991B1B))
@@ -198,16 +208,18 @@ fun HomeSOSButton(onClick: () -> Unit, modifier: Modifier = Modifier) {
                 Icon(
                     Icons.Default.HealthAndSafety,
                     contentDescription = null,
-                    modifier = Modifier.size(48.dp),
+                    modifier = Modifier.size(36.dp),
                     tint = Color.White
                 )
-                Spacer(Modifier.width(24.dp))
+                Spacer(Modifier.width(12.dp))
                 Text(
-                    "SOS HULP NODIG",
-                    fontSize = 28.sp,
+                    i18n(R.string.sos_hulp_nodig),
+                    fontSize = 22.sp,
+                    lineHeight = 26.sp,
                     fontWeight = FontWeight.W900,
                     color = Color.White,
-                    letterSpacing = 1.2.sp
+                    textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                    letterSpacing = 0.5.sp
                 )
             }
         }
@@ -241,14 +253,14 @@ fun HomeStatusCard(
             Spacer(Modifier.width(24.dp))
             Column {
                 Text(
-                    "HERINNERING",
+                    i18n(R.string.herinnering_2),
                     fontSize = 13.sp,
                     fontWeight = FontWeight.Black,
                     letterSpacing = 1.5.sp,
                     color = Color(0xFF10B981)
                 )
                 Text(
-                    "Nog $pendingMedsCount medicijnen", 
+                    i18n(R.string.nog_medicijnen, pendingMedsCount), 
                     fontSize = 22.sp, 
                     fontWeight = FontWeight.Black,
                     color = Color.White

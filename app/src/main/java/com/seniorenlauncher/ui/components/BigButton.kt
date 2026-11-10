@@ -20,6 +20,8 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -50,7 +52,8 @@ fun BigButton(
     onLongClick: (() -> Unit)? = null,
     badge: Int? = null, 
     small: Boolean = false,
-    weatherText: String? = null
+    weatherText: String? = null,
+    heightOverride: androidx.compose.ui.unit.Dp? = null
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val pressed by interactionSource.collectIsPressedAsState()
@@ -60,7 +63,8 @@ fun BigButton(
         label = "scale"
     )
     
-    val buttonHeight = if (small) 120.dp else 168.dp
+    val buttonHeight = heightOverride ?: if (small) 120.dp else 168.dp
+    val tight = small || buttonHeight < 140.dp
     val cornerRadius = 40.dp
 
     Box(
@@ -112,27 +116,27 @@ fun BigButton(
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center,
-            modifier = Modifier.padding(16.dp)
+            modifier = Modifier.padding(horizontal = 8.dp, vertical = if (tight) 6.dp else 16.dp)
         ) {
             Box(contentAlignment = Alignment.Center) {
                 if (vectorIcon != null) {
                     Icon(
                         imageVector = vectorIcon,
                         contentDescription = null,
-                        modifier = Modifier.size(if (small) 44.dp else 60.dp),
+                        modifier = Modifier.size(if (tight) 44.dp else 60.dp),
                         tint = Color.White
                     )
                 } else if (icon != null) {
                     Image(
                         painter = rememberAsyncImagePainter(icon),
                         contentDescription = null,
-                        modifier = Modifier.size(if (small) 44.dp else 60.dp),
+                        modifier = Modifier.size(if (tight) 44.dp else 60.dp),
                         contentScale = ContentScale.Fit
                     )
                 } else if (emoji != null) {
                     Text(
                         emoji, 
-                        fontSize = if (small) 40.sp else 56.sp,
+                        fontSize = if (tight) 40.sp else 56.sp,
                         style = androidx.compose.ui.text.TextStyle(
                             shadow = androidx.compose.ui.graphics.Shadow(
                                 color = Color.Black.copy(alpha = 0.25f),
@@ -163,17 +167,21 @@ fun BigButton(
                 }
             }
             
-            Spacer(Modifier.height(14.dp))
+            Spacer(Modifier.height(if (tight) 6.dp else 14.dp))
             
+            // Verklein het lettertype tot het label past (grote tekstgrootte / langere vertalingen)
+            var labelSize by remember(label) { mutableStateOf(if (tight) 15f else 19f) }
             Text(
                 label.uppercase(), 
-                fontSize = if (small) 15.sp else 19.sp, 
+                fontSize = labelSize.sp, 
                 fontWeight = FontWeight.Black,
                 color = Color.White, 
                 textAlign = TextAlign.Center, 
                 maxLines = 1,
-                letterSpacing = 1.2.sp,
-                overflow = TextOverflow.Ellipsis
+                softWrap = false,
+                letterSpacing = 0.6.sp,
+                overflow = TextOverflow.Clip,
+                onTextLayout = { if (it.hasVisualOverflow && labelSize > 8f) labelSize -= 0.5f }
             )
         }
         
@@ -217,30 +225,30 @@ fun ScreenHeader(title: String, onBack: () -> Unit) {
         ) {
             Surface(
                 onClick = onBack,
-                modifier = Modifier.size(80.dp),
-                shape = RoundedCornerShape(32.dp),
+                modifier = Modifier.size(64.dp),
+                shape = RoundedCornerShape(28.dp),
                 color = Color(0xFF1E293B), // Slate 800
                 border = BorderStroke(1.dp, Color.White.copy(alpha = 0.1f))
             ) {
                 Box(contentAlignment = Alignment.Center) {
                     Text(
                         "←", 
-                        fontSize = 44.sp, 
+                        fontSize = 36.sp, 
                         fontWeight = FontWeight.Black, 
                         color = Color.White
                     )
                 }
             }
-            Spacer(Modifier.width(24.dp))
+            Spacer(Modifier.width(12.dp))
             Text(
                 title, 
-                fontSize = 34.sp,
+                fontSize = 26.sp,
                 fontWeight = FontWeight.Black, 
                 color = Color.White,
-                maxLines = 1,
+                maxLines = 3,
                 overflow = TextOverflow.Ellipsis,
                 modifier = Modifier.weight(1f),
-                lineHeight = 42.sp
+                lineHeight = 32.sp
             )
         }
     }

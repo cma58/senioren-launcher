@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Senioren Launcher</string>
+    <string name="sos_emergency">SOS ЭКСТРЕННЫЙ СЛУЧАЙ</string>
+    <string name="call">Позвонить</string>
+    <string name="messages">Сообщения</string>
+    <string name="settings">Настройки</string>
+    <string name="flashlight">Фонарик</string>
+    <string name="contacts">Контакты</string>
+    <string name="back">Назад</string>
+    <string name="privacy_title">Конфиденциальность и GDPR</string>
+    <string name="privacy_gent_support">При поддержке пожилых жителей Гента</string>
+    <string name="gdpr_compliant">Соответствует GDPR</string>
+    <string name="privacy_promise_title">Наше обещание</string>
+    <string name="privacy_promise_desc">Senioren Launcher создан с конфиденциальностью в основе. Совместно с инициативами цифровой инклюзии в Генте мы гарантируем, что Ваши данные остаются на устройстве.</string>
+    <string name="privacy_processing_title">Обработка данных</string>
+    <string name="privacy_processing_desc">• Без облака: Ваши данные остаются на этом устройстве.\n• Управление SMS: только уполномоченные опекуны.\n• Без слежки: никакой рекламы и аналитики.</string>
+    <string name="privacy_rights_title">Ваши права</string>
+    <string name="privacy_rights_desc">У Вас полный контроль. Вы можете сразу удалить администраторов, а все данные стираются при удалении приложения.</string>
+    <string name="privacy_accept">Я СОГЛАСЕН(НА)</string>
+    <string name="privacy_version_label">Версия 1.0.0 — Проект Senioren Gent</string>
+</resources>

@@ -1,4 +1,6 @@
-# Privacybeleid — Senioren Launcher (v0.8.8)
+# Privacybeleid — Senioren Launcher (v1.0.0)
+
+**🌐 Taal:** [English](PRIVACY_EN.md) · [Русский](PRIVACY_RU.md) · **Nederlands**
 
 ## Samenvatting
 Senioren Launcher is ontworpen met een "Privacy by Design" aanpak. Wij verzamelen **geen enkele** vorm van persoonlijke data op externe servers.
@@ -14,6 +16,12 @@ In het kader van de samenwerking met lokale overheden (zoals de stad **Gent**) e
 
 ## Externe Communicatie (SMS)
 De app reageert alleen op SMS-commando's van door u ingestelde vertrouwde contactpersonen (zorgverleners). Deze communicatie verloopt rechtstreeks via het mobiele netwerk van uw provider, zonder tussenkomst van onze servers.
+
+## Taalinstelling & Internetgebruik
+De gekozen interfacetaal wordt alleen op het toestel bewaard. De app doet uitsluitend de volgende internetverzoeken, en geen ervan bevat contacten, berichten, medicatiegegevens of andere persoonlijke inhoud:
+- **Weer** (Open-Meteo): de coördinaten of de ingevoerde plaatsnaam en de taal, om de voorspelling te ontvangen.
+- **App-updates** (GitHub): een controle op een nieuwe versie.
+- **Internetradio**: de audiostream van het gekozen station en, bij zoeken, de zoektekst (radio-browser.info).
 
 ## GDPR Compliance
 Omdat er geen persoonlijke data wordt verwerkt buiten het apparaat, voldoet de app volledig aan de GDPR-richtlijnen voor lokale gegevensverwerking. Gebruikers hebben volledige controle en kunnen alle gegevens wissen door de app te verwijderen of de gegevens van de app te wissen in de Android-instellingen.

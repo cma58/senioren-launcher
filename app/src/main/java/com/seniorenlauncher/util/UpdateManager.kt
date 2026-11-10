@@ -1,4 +1,6 @@
 package com.seniorenlauncher.util
+import com.seniorenlauncher.R
+import com.seniorenlauncher.util.i18n
 
 import android.app.DownloadManager
 import android.content.Context
@@ -78,8 +80,8 @@ class UpdateManager(private val context: Context) {
         }
 
         val request = DownloadManager.Request(Uri.parse(downloadUri))
-            .setTitle("Senioren Launcher Veiligheidsupdate")
-            .setDescription("Nieuwe beveiligde versie ${release.tagName}")
+            .setTitle(i18n(R.string.senioren_launcher_veiligheidsupdate))
+            .setDescription(i18n(R.string.nieuwe_beveiligde_versie, release.tagName))
             .setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
             .setDestinationInExternalFilesDir(context, Environment.DIRECTORY_DOWNLOADS, "senioren-launcher-update.apk")
             .setAllowedOverMetered(true)

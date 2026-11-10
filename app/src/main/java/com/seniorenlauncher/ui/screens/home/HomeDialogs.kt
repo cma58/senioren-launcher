@@ -1,4 +1,6 @@
 package com.seniorenlauncher.ui.screens.home
+import com.seniorenlauncher.R
+import com.seniorenlauncher.util.i18n
 
 import android.content.Context
 import androidx.compose.animation.core.animateFloatAsState
@@ -99,7 +101,7 @@ fun PinDialog(
                     .verticalScroll(scrollState),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Text("BEVEILIGDE INSTELLINGEN", fontSize = 22.sp, fontWeight = FontWeight.Black, color = Color.White)
+                Text(i18n(R.string.beveiligde_instellingen), fontSize = 22.sp, fontWeight = FontWeight.Black, color = Color.White)
                 
                 Spacer(Modifier.height(24.dp))
                 
@@ -208,16 +210,31 @@ fun AppPickerDialog(
         else installedApps.filter { it.name.contains(searchQuery, ignoreCase = true) }
     }
     
-    Dialog(onDismissRequest = onDismiss) {
+    val keyboard = androidx.compose.ui.platform.LocalSoftwareKeyboardController.current
+    val focusManager = androidx.compose.ui.platform.LocalFocusManager.current
+    val listState = androidx.compose.foundation.lazy.rememberLazyListState()
+    // Scrolling the list (or picking an app) puts the keyboard away.
+    LaunchedEffect(listState) {
+        snapshotFlow { listState.isScrollInProgress }.collect { if (it) { keyboard?.hide(); focusManager.clearFocus() } }
+    }
+    // Keep the whole dialog above the keyboard so the Add/Cancel buttons stay reachable.
+    val density = androidx.compose.ui.platform.LocalDensity.current
+    val imeBottom = with(density) { androidx.compose.foundation.layout.WindowInsets.ime.getBottom(density).toDp() }
+
+    Dialog(
+        onDismissRequest = onDismiss,
+        properties = androidx.compose.ui.window.DialogProperties(usePlatformDefaultWidth = false)
+    ) {
+      Box(Modifier.fillMaxSize().padding(bottom = imeBottom), contentAlignment = Alignment.Center) {
         Card(
             shape = RoundedCornerShape(40.dp),
-            modifier = Modifier.fillMaxWidth().fillMaxHeight(0.9f).padding(16.dp),
+            modifier = Modifier.fillMaxWidth().fillMaxHeight(if (imeBottom > 0.dp) 1f else 0.9f).padding(16.dp),
             border = BorderStroke(1.dp, Color.White.copy(alpha = 0.1f)),
             colors = CardDefaults.cardColors(containerColor = Color(0xFF1E293B))
         ) {
             Column(Modifier.padding(24.dp)) {
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                    Text("KIES APPS", fontSize = 24.sp, fontWeight = FontWeight.Black, color = Color.White)
+                    Text(i18n(R.string.kies_apps), fontSize = 24.sp, fontWeight = FontWeight.Black, color = Color.White)
                     if (appId.startsWith("mapped_")) {
                         val interactionSource = remember { MutableInteractionSource() }
                         val pressed by interactionSource.collectIsPressedAsState()
@@ -230,7 +247,7 @@ fun AppPickerDialog(
                             interactionSource = interactionSource,
                             modifier = Modifier.scale(scale)
                         ) {
-                            Text("VERWIJDEREN", color = Color(0xFFEF4444), fontWeight = FontWeight.Black)
+                            Text(i18n(R.string.verwijderen_3), color = Color(0xFFEF4444), fontWeight = FontWeight.Black)
                         }
                     }
                 }
@@ -241,8 +258,17 @@ fun AppPickerDialog(
                     value = searchQuery,
                     onValueChange = { searchQuery = it },
                     modifier = Modifier.fillMaxWidth(),
-                    placeholder = { Text("Zoek app...", fontWeight = FontWeight.Bold, color = Color(0xFF94A3B8)) },
+                    placeholder = { Text(i18n(R.string.zoek_app), fontWeight = FontWeight.Bold, color = Color(0xFF94A3B8)) },
                     leadingIcon = { Icon(Icons.Default.Search, null, tint = Color(0xFF94A3B8)) },
+                    trailingIcon = {
+                        // Big, obvious way to clear the text and close the keyboard
+                        IconButton(onClick = { searchQuery = ""; keyboard?.hide(); focusManager.clearFocus() }, modifier = Modifier.size(56.dp)) {
+                            Icon(Icons.Default.Close, null, tint = Color(0xFF94A3B8), modifier = Modifier.size(32.dp))
+                        }
+                    },
+                    singleLine = true,
+                    keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(imeAction = androidx.compose.ui.text.input.ImeAction.Done),
+                    keyboardActions = androidx.compose.foundation.text.KeyboardActions(onDone = { keyboard?.hide(); focusManager.clearFocus() }),
                     shape = RoundedCornerShape(20.dp),
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedTextColor = Color.White,
@@ -256,7 +282,7 @@ fun AppPickerDialog(
 
                 Spacer(Modifier.height(16.dp))
                 
-                LazyColumn(Modifier.weight(1f)) {
+                LazyColumn(Modifier.weight(1f), state = listState) {
                     items(filteredApps) { app ->
                         val isSelected = selectedPackages.contains(app.packageName)
                         val interactionSource = remember { MutableInteractionSource() }
@@ -273,6 +299,7 @@ fun AppPickerDialog(
                                 .clip(RoundedCornerShape(20.dp))
                                 .background(if (isSelected) Color.White.copy(alpha = 0.05f) else Color.Transparent)
                                 .clickable(interactionSource = interactionSource, indication = null) { 
+                                    keyboard?.hide(); focusManager.clearFocus()
                                     if (isSelected) selectedPackages.remove(app.packageName)
                                     else selectedPackages.add(app.packageName)
                                 }
@@ -298,25 +325,7 @@ fun AppPickerDialog(
                     }
                 }
                 
-                Row(Modifier.fillMaxWidth().padding(top = 16.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                    val cancelInteractionSource = remember { MutableInteractionSource() }
-                    val cancelPressed by cancelInteractionSource.collectIsPressedAsState()
-                    val cancelScale by animateFloatAsState(
-                        targetValue = if (cancelPressed) 0.94f else 1f,
-                        animationSpec = spring(dampingRatio = 0.7f, stiffness = 500f)
-                    )
-
-                    OutlinedButton(
-                        onClick = onDismiss, 
-                        interactionSource = cancelInteractionSource,
-                        modifier = Modifier.weight(1f).height(80.dp).scale(cancelScale),
-                        shape = RoundedCornerShape(40.dp),
-                        border = BorderStroke(1.dp, Color.White.copy(alpha = 0.1f)),
-                        colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.White)
-                    ) {
-                        Text("ANNULEREN", fontWeight = FontWeight.Black)
-                    }
-
+                Column(Modifier.fillMaxWidth().padding(top = 16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                     val addInteractionSource = remember { MutableInteractionSource() }
                     val addPressed by addInteractionSource.collectIsPressedAsState()
                     val addScale by animateFloatAsState(
@@ -327,16 +336,35 @@ fun AppPickerDialog(
                     Button(
                         onClick = { onAppsSelected(selectedPackages.toList()) }, 
                         interactionSource = addInteractionSource,
-                        modifier = Modifier.weight(1f).height(80.dp).scale(addScale),
+                        modifier = Modifier.fillMaxWidth().height(64.dp).scale(addScale),
                         enabled = selectedPackages.isNotEmpty(),
                         shape = RoundedCornerShape(40.dp),
                         colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF3B82F6))
                     ) {
-                        Text("VOEG TOE", fontWeight = FontWeight.Black)
+                        Text(i18n(R.string.voeg_toe), fontWeight = FontWeight.Black)
                     }
+                    val cancelInteractionSource = remember { MutableInteractionSource() }
+                    val cancelPressed by cancelInteractionSource.collectIsPressedAsState()
+                    val cancelScale by animateFloatAsState(
+                        targetValue = if (cancelPressed) 0.94f else 1f,
+                        animationSpec = spring(dampingRatio = 0.7f, stiffness = 500f)
+                    )
+
+                    OutlinedButton(
+                        onClick = onDismiss, 
+                        interactionSource = cancelInteractionSource,
+                        modifier = Modifier.fillMaxWidth().height(64.dp).scale(cancelScale),
+                        shape = RoundedCornerShape(40.dp),
+                        border = BorderStroke(1.dp, Color.White.copy(alpha = 0.1f)),
+                        colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.White)
+                    ) {
+                        Text(i18n(R.string.annuleren), fontWeight = FontWeight.Black)
+                    }
+
                 }
             }
         }
+      }
     }
 }
 
@@ -357,8 +385,8 @@ fun WifiDialog(
 
     if (!hasPermission) {
         PermissionRequestDialog(
-            title = "Wifi Toegang",
-            description = "Om wifi informatie te kunnen tonen, hebben we toestemming nodig om nabijgelegen apparaten te scannen.",
+            title = i18n(R.string.wifi_toegang),
+            description = i18n(R.string.om_wifi_informatie_te_kunnen),
             onDismiss = onDismiss,
             onGrant = {
                 permissionLauncher.launch(PermissionUtils.getRequiredWifiPermissions().toTypedArray())
@@ -374,7 +402,7 @@ fun WifiDialog(
         WifiManager.calculateSignalLevel(wifiInfo.rssi, 5)
     } else 0
     
-    val ssid = wifiInfo?.ssid?.removeSurrounding("\"") ?: "Niet verbonden"
+    val ssid = wifiInfo?.ssid?.removeSurrounding("\"") ?: i18n(R.string.niet_verbonden)
 
     Dialog(onDismissRequest = onDismiss) {
         Card(
@@ -387,7 +415,7 @@ fun WifiDialog(
                 Modifier.padding(32.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Text("WIFI VERBINDING", fontSize = 28.sp, fontWeight = FontWeight.Black, color = Color.White)
+                Text(i18n(R.string.wifi_verbinding), fontSize = 28.sp, fontWeight = FontWeight.Black, color = Color.White)
                 Spacer(Modifier.height(24.dp))
                 
                 val wifiIcon = when {
@@ -408,7 +436,7 @@ fun WifiDialog(
                 
                 if (isWifiEnabled) {
                     Text(
-                        "VERBONDEN MET:",
+                        i18n(R.string.verbonden_met),
                         fontSize = 16.sp,
                         color = Color(0xFFCBD5E1),
                         fontWeight = FontWeight.Bold
@@ -422,14 +450,14 @@ fun WifiDialog(
                     )
                     
                     val strengthText = when(signalLevel) {
-                        0 -> "Geen signaal"
-                        1 -> "Zwak signaal"
-                        2 -> "Matig signaal"
-                        3 -> "Goed signaal"
-                        else -> "Uitstekend signaal"
+                        0 -> i18n(R.string.geen_signaal)
+                        1 -> i18n(R.string.zwak_signaal)
+                        2 -> i18n(R.string.matig_signaal)
+                        3 -> i18n(R.string.goed_signaal)
+                        else -> i18n(R.string.uitstekend_signaal)
                     }
                     Text(
-                        "Signaalsterkte: $strengthText",
+                        i18n(R.string.signaalsterkte, strengthText),
                         fontSize = 18.sp,
                         fontWeight = FontWeight.Bold,
                         color = Color.White.copy(alpha = 0.7f),
@@ -437,7 +465,7 @@ fun WifiDialog(
                     )
                 } else {
                     Text(
-                        "UW WIFI STAAT UIT",
+                        i18n(R.string.uw_wifi_staat_uit),
                         fontSize = 24.sp,
                         fontWeight = FontWeight.Black,
                         textAlign = TextAlign.Center,
@@ -464,7 +492,7 @@ fun WifiDialog(
                     shape = RoundedCornerShape(40.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF3B82F6))
                 ) {
-                    Text("WIFI INSTELLINGEN", fontSize = 20.sp, fontWeight = FontWeight.Black)
+                    Text(i18n(R.string.wifi_instellingen), fontSize = 20.sp, fontWeight = FontWeight.Black)
                 }
                 
                 Spacer(Modifier.height(16.dp))
@@ -484,7 +512,7 @@ fun WifiDialog(
                     border = BorderStroke(1.dp, Color.White.copy(alpha = 0.1f)),
                     colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.White)
                 ) {
-                    Text("TERUG", fontSize = 18.sp, fontWeight = FontWeight.Black)
+                    Text(i18n(R.string.terug_2), fontSize = 18.sp, fontWeight = FontWeight.Black)
                 }
             }
         }
@@ -542,7 +570,7 @@ fun PermissionRequestDialog(
                     shape = RoundedCornerShape(40.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF3B82F6))
                 ) {
-                    Text("TOESTAAN", fontSize = 20.sp, fontWeight = FontWeight.Black)
+                    Text(i18n(R.string.toestaan_2), fontSize = 20.sp, fontWeight = FontWeight.Black)
                 }
                 Spacer(Modifier.height(16.dp))
 
@@ -552,10 +580,10 @@ fun PermissionRequestDialog(
                     }
                     context.startActivity(intent)
                 }) {
-                    Text("HANDMATIG INSTELLEN", fontWeight = FontWeight.Black, color = Color(0xFF3B82F6))
+                    Text(i18n(R.string.handmatig_instellen), fontWeight = FontWeight.Black, color = Color(0xFF3B82F6))
                 }
                 TextButton(onClick = onDismiss) {
-                    Text("ANNULEREN", color = Color(0xFFCBD5E1), fontWeight = FontWeight.Black)
+                    Text(i18n(R.string.annuleren), color = Color(0xFFCBD5E1), fontWeight = FontWeight.Black)
                 }
             }
         }
@@ -580,7 +608,7 @@ fun SOSCountdownDialog(
     if (!hasPermission) {
         PermissionRequestDialog(
             title = "SOS Toegang",
-            description = "Om hulp te kunnen inschakelen hebben we toestemming nodig voor locatie, bellen en SMS.",
+            description = i18n(R.string.om_hulp_te_kunnen_inschakelen_2),
             onDismiss = onDismiss,
             onGrant = {
                 permissionLauncher.launch(PermissionUtils.getRequiredSosPermissions().toTypedArray())
@@ -623,7 +651,7 @@ fun SOSCountdownDialog(
                 Spacer(Modifier.height(24.dp))
                 
                 Text(
-                    "SOS ALARM WORDT VERSTUURD OVER:",
+                    i18n(R.string.sos_alarm_wordt_verstuurd_over),
                     fontSize = 24.sp,
                     fontWeight = FontWeight.Black,
                     color = Color.White,
@@ -655,7 +683,7 @@ fun SOSCountdownDialog(
                     colors = ButtonDefaults.buttonColors(containerColor = Color.White, contentColor = Color(0xFFEF4444)),
                     shape = RoundedCornerShape(40.dp)
                 ) {
-                    Text("STOP / ANNULEER", fontSize = 26.sp, fontWeight = FontWeight.Black)
+                    Text(i18n(R.string.stop_annuleer), fontSize = 26.sp, fontWeight = FontWeight.Black)
                 }
             }
         }
@@ -681,7 +709,7 @@ fun BluetoothDialog(
                 Modifier.padding(32.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Text("BLUETOOTH", fontSize = 28.sp, fontWeight = FontWeight.Black, color = Color.White)
+                Text(i18n(R.string.bluetooth), fontSize = 28.sp, fontWeight = FontWeight.Black, color = Color.White)
                 Spacer(Modifier.height(24.dp))
                 
                 Icon(
@@ -694,7 +722,7 @@ fun BluetoothDialog(
                 Spacer(Modifier.height(24.dp))
                 
                 Text(
-                    if (isBluetoothEnabled) "BLUETOOTH STAAT AAN" else "BLUETOOTH STAAT UIT",
+                    if (isBluetoothEnabled) i18n(R.string.bluetooth_staat_aan) else i18n(R.string.bluetooth_staat_uit),
                     fontSize = 22.sp,
                     fontWeight = FontWeight.Black,
                     textAlign = TextAlign.Center,
@@ -720,7 +748,7 @@ fun BluetoothDialog(
                     shape = RoundedCornerShape(40.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF3B82F6))
                 ) {
-                    Text("INSTELLINGEN", fontSize = 20.sp, fontWeight = FontWeight.Black)
+                    Text(i18n(R.string.instellingen), fontSize = 20.sp, fontWeight = FontWeight.Black)
                 }
                 
                 Spacer(Modifier.height(16.dp))
@@ -740,8 +768,90 @@ fun BluetoothDialog(
                     border = BorderStroke(1.dp, Color.White.copy(alpha = 0.1f)),
                     colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.White)
                 ) {
-                    Text("TERUG", fontSize = 18.sp, fontWeight = FontWeight.Black)
+                    Text(i18n(R.string.terug_2), fontSize = 18.sp, fontWeight = FontWeight.Black)
                 }
+            }
+        }
+    }
+}
+
+@Composable
+fun TileOptionsDialog(
+    appName: String,
+    position: Int,
+    total: Int,
+    onMoveEarlier: () -> Unit,
+    onMoveLater: () -> Unit,
+    showMore: Boolean,
+    onMore: () -> Unit,
+    onRemove: () -> Unit,
+    onDismiss: () -> Unit
+) {
+    var confirmRemove by remember { mutableStateOf(false) }
+    if (confirmRemove) {
+        AlertDialog(
+            onDismissRequest = { confirmRemove = false },
+            title = { Text(i18n(R.string.verwijderen_2), fontSize = 26.sp, fontWeight = FontWeight.Black) },
+            text = { Text(i18n(R.string.wilt_u_verwijderen, appName), fontSize = 20.sp) },
+            confirmButton = {
+                Button(
+                    onClick = { confirmRemove = false; onRemove() },
+                    modifier = Modifier.height(60.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFDC2626))
+                ) { Text(i18n(R.string.verwijder), fontSize = 20.sp, fontWeight = FontWeight.Black, color = Color.White) }
+            },
+            dismissButton = {
+                OutlinedButton(onClick = { confirmRemove = false }, modifier = Modifier.height(60.dp)) {
+                    Text(i18n(R.string.annuleren_2), fontSize = 20.sp, fontWeight = FontWeight.Bold)
+                }
+            }
+        )
+    }
+    Dialog(onDismissRequest = onDismiss) {
+        Card(
+            shape = RoundedCornerShape(40.dp),
+            colors = CardDefaults.cardColors(containerColor = Color(0xFF1E293B)),
+            border = BorderStroke(1.dp, Color.White.copy(alpha = 0.1f))
+        ) {
+            Column(
+                Modifier.padding(20.dp).verticalScroll(rememberScrollState()),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Text(i18n(R.string.tile_move_title), fontSize = 22.sp, fontWeight = FontWeight.Black, color = Color.White, textAlign = TextAlign.Center)
+                Text(
+                    i18n(R.string.tile_position, appName, position, total),
+                    fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color(0xFFCBD5E1), textAlign = TextAlign.Center
+                )
+                Button(
+                    onClick = onMoveEarlier,
+                    enabled = position > 1,
+                    modifier = Modifier.fillMaxWidth().height(72.dp),
+                    shape = RoundedCornerShape(36.dp)
+                ) { Text(i18n(R.string.tile_move_earlier), fontSize = 22.sp, fontWeight = FontWeight.Black) }
+                Button(
+                    onClick = onMoveLater,
+                    enabled = position < total,
+                    modifier = Modifier.fillMaxWidth().height(72.dp),
+                    shape = RoundedCornerShape(36.dp)
+                ) { Text(i18n(R.string.tile_move_later), fontSize = 22.sp, fontWeight = FontWeight.Black) }
+                if (showMore) OutlinedButton(
+                    onClick = onMore,
+                    modifier = Modifier.fillMaxWidth().height(56.dp),
+                    shape = RoundedCornerShape(28.dp)
+                ) { Text(i18n(R.string.tile_more), fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color.White) }
+                if (showMore) Button(
+                    onClick = { confirmRemove = true },
+                    modifier = Modifier.fillMaxWidth().height(64.dp),
+                    shape = RoundedCornerShape(32.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFDC2626))
+                ) { Text("🗑  " + i18n(R.string.verwijderen_3), fontSize = 20.sp, fontWeight = FontWeight.Black, color = Color.White) }
+                Button(
+                    onClick = onDismiss,
+                    modifier = Modifier.fillMaxWidth().height(72.dp),
+                    shape = RoundedCornerShape(36.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF10B981))
+                ) { Text(i18n(R.string.tile_done), fontSize = 22.sp, fontWeight = FontWeight.Black, color = Color.White) }
             }
         }
     }

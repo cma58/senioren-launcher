@@ -1,4 +1,6 @@
 package com.seniorenlauncher.ui.screens
+import com.seniorenlauncher.R
+import com.seniorenlauncher.util.i18n
 
 import android.Manifest
 import android.content.Context
@@ -61,28 +63,28 @@ fun PermissionsSetupScreen(onNext: () -> Unit, isSenior: Boolean = false) {
         }
 
         list.add(PermissionCategory(
-            if (isSenior) "HULP BIJ NOOD" else "LOCATIE", 
-            if (isSenior) "Als u in nood bent, kan de app uw familie vertellen waar u bent." 
-            else "Nodig voor de SOS-functie om uw locatie te bepalen.", 
-            "Privacy: Uw locatie wordt alleen gedeeld tijdens een SOS-oproep.",
+            if (isSenior) i18n(R.string.hulp_bij_nood) else i18n(R.string.locatie), 
+            if (isSenior) i18n(R.string.als_u_in_nood_bent) 
+            else i18n(R.string.nodig_voor_de_sos_functie), 
+            i18n(R.string.privacy_uw_locatie_wordt_alleen),
             Icons.Default.LocationOn, 
             locationPermissions
         ))
 
         list.add(PermissionCategory(
-            if (isSenior) "FAMILIE BELLEN" else "TELEFOON", 
-            if (isSenior) "Hiermee kunt u direct uw kinderen of de dokter bellen."
-            else "Om direct vanuit de launcher te bellen.", 
-            "Privacy: De app belt alleen wanneer u zelf op een contact drukt.",
+            if (isSenior) i18n(R.string.familie_bellen) else i18n(R.string.telefoon), 
+            if (isSenior) i18n(R.string.hiermee_kunt_u_direct_uw)
+            else i18n(R.string.om_direct_vanuit_de_launcher), 
+            i18n(R.string.privacy_de_app_belt_alleen),
             Icons.Default.Phone, 
             listOf(Manifest.permission.CALL_PHONE)
         ))
 
         list.add(PermissionCategory(
-            if (isSenior) "BERICHTEN" else "SMS SERVICE", 
-            if (isSenior) "Zodat de telefoon een noodbericht kan sturen naar uw familie."
-            else "Nodig voor SOS en batterijwaarschuwingen.", 
-            "Privacy: We lezen NOOIT uw privéberichten.",
+            if (isSenior) i18n(R.string.berichten_2) else i18n(R.string.sms_service), 
+            if (isSenior) i18n(R.string.zodat_de_telefoon_een_noodbericht)
+            else i18n(R.string.nodig_voor_sos_en_batterijwaarschuwingen), 
+            i18n(R.string.privacy_we_lezen_nooit_uw),
             Icons.Default.Sms, 
             listOf(Manifest.permission.SEND_SMS, Manifest.permission.READ_SMS, Manifest.permission.RECEIVE_SMS)
         ))
@@ -94,29 +96,29 @@ fun PermissionsSetupScreen(onNext: () -> Unit, isSenior: Boolean = false) {
             }
             
             list.add(PermissionCategory(
-                "GEZONDHEID", 
-                "Zodat de telefoon uw stapjes kan tellen voor uw dagelijkse beweging.", 
-                "Privacy: Deze gegevens blijven veilig op uw eigen telefoon.",
+                i18n(R.string.gezondheid), 
+                i18n(R.string.zodat_de_telefoon_uw_stapjes), 
+                i18n(R.string.privacy_deze_gegevens_blijven_veilig),
                 Icons.AutoMirrored.Filled.DirectionsWalk, 
                 healthPermissions
             ))
         }
 
         list.add(PermissionCategory(
-            if (isSenior) "VERGROOTGLAS" else "CAMERA", 
-            if (isSenior) "Zodat u kleine lettertjes makkelijk kunt lezen met de camera."
-            else "Nodig voor het vergrootglas en de zaklamp.", 
-            "Privacy: Er worden geen foto's ongevraagd opgeslagen.",
+            if (isSenior) i18n(R.string.vergrootglas_2) else i18n(R.string.camera), 
+            if (isSenior) i18n(R.string.zodat_u_kleine_lettertjes_makkelijk)
+            else i18n(R.string.nodig_voor_het_vergrootglas_en), 
+            i18n(R.string.privacy_er_worden_geen_foto),
             Icons.Default.CameraAlt, 
             listOf(Manifest.permission.CAMERA)
         ))
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             list.add(PermissionCategory(
-                if (isSenior) "HERINNERINGEN" else "MELDINGEN", 
-                if (isSenior) "Zodat u een seintje krijgt als het tijd is voor uw medicijnen."
-                else "Nodig voor medicijnalarmen.", 
-                "Privacy: Geen reclame, alleen uw eigen belangrijke meldingen.",
+                if (isSenior) i18n(R.string.herinneringen) else i18n(R.string.meldingen), 
+                if (isSenior) i18n(R.string.zodat_u_een_seintje_krijgt)
+                else i18n(R.string.nodig_voor_medicijnalarmen), 
+                i18n(R.string.privacy_geen_reclame_alleen_uw),
                 Icons.Default.Notifications, 
                 listOf(Manifest.permission.POST_NOTIFICATIONS)
             ))
@@ -131,11 +133,39 @@ fun PermissionsSetupScreen(onNext: () -> Unit, isSenior: Boolean = false) {
     var isGranted by remember(currentStep) {
         mutableStateOf(checkPermissions(context, currentCategory.permissions))
     }
+    // True after the system refused to show (or the user denied) the permission dialog;
+    // the button then opens the app's settings page instead of doing nothing.
+    var needsSettings by remember(currentStep) { mutableStateOf(false) }
+
+    // Background location must be requested separately from the foreground permissions
+    // (Android 11+ silently ignores a combined request), so it is optional and asked last.
+    val backgroundLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { }
 
     val launcher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
-    ) { results ->
-        isGranted = results.values.all { it }
+    ) {
+        isGranted = checkPermissions(context, currentCategory.permissions)
+        needsSettings = !isGranted
+        if (isGranted && !isSenior && Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q &&
+            Manifest.permission.ACCESS_BACKGROUND_LOCATION in currentCategory.permissions &&
+            ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_BACKGROUND_LOCATION) != PackageManager.PERMISSION_GRANTED
+        ) {
+            backgroundLauncher.launch(Manifest.permission.ACCESS_BACKGROUND_LOCATION)
+        }
+    }
+
+    // Re-check when returning from the system settings screen.
+    val lifecycleOwner = androidx.lifecycle.compose.LocalLifecycleOwner.current
+    DisposableEffect(lifecycleOwner, currentStep) {
+        val observer = androidx.lifecycle.LifecycleEventObserver { _, event ->
+            if (event == androidx.lifecycle.Lifecycle.Event.ON_RESUME) {
+                isGranted = checkPermissions(context, currentCategory.permissions)
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
     }
 
     Box(
@@ -154,7 +184,7 @@ fun PermissionsSetupScreen(onNext: () -> Unit, isSenior: Boolean = false) {
             // Premium Stepper
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 Text(
-                    text = "STAP ${currentStep + 1} VAN ${categories.size}".uppercase(),
+                    text = i18n(R.string.stap_van, currentStep + 1, categories.size).uppercase(),
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Black,
                     letterSpacing = 2.sp,
@@ -296,7 +326,7 @@ fun PermissionsSetupScreen(onNext: () -> Unit, isSenior: Boolean = false) {
                     ) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Text(
-                                if (currentStep < categories.size - 1) "VOLGENDE STAP" else "START DE APP", 
+                                if (currentStep < categories.size - 1) i18n(R.string.volgende_stap) else i18n(R.string.start_de_app), 
                                 fontSize = 24.sp, 
                                 fontWeight = FontWeight.Black
                             )
@@ -313,7 +343,18 @@ fun PermissionsSetupScreen(onNext: () -> Unit, isSenior: Boolean = false) {
                     )
 
                     Button(
-                        onClick = { launcher.launch(currentCategory.permissions.toTypedArray()) },
+                        onClick = {
+                            if (needsSettings) {
+                                context.startActivity(
+                                    android.content.Intent(
+                                        android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
+                                        android.net.Uri.fromParts("package", context.packageName, null)
+                                    )
+                                )
+                            } else {
+                                launcher.launch(currentCategory.permissions.filter { it != Manifest.permission.ACCESS_BACKGROUND_LOCATION }.toTypedArray())
+                            }
+                        },
                         interactionSource = grantInteractionSource,
                         modifier = Modifier
                             .fillMaxWidth()
@@ -322,7 +363,7 @@ fun PermissionsSetupScreen(onNext: () -> Unit, isSenior: Boolean = false) {
                         shape = RoundedCornerShape(40.dp),
                         colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF3B82F6))
                     ) {
-                        Text("JA, DIT IS GOED", fontSize = 24.sp, fontWeight = FontWeight.Black)
+                        Text(i18n(R.string.ja_dit_is_goed), fontSize = 24.sp, fontWeight = FontWeight.Black)
                     }
                     
                     TextButton(
@@ -332,7 +373,7 @@ fun PermissionsSetupScreen(onNext: () -> Unit, isSenior: Boolean = false) {
                         modifier = Modifier.align(Alignment.CenterHorizontally)
                     ) {
                         Text(
-                            "NU EVEN NIET", 
+                            i18n(R.string.nu_even_niet), 
                             fontSize = 18.sp, 
                             fontWeight = FontWeight.Black,
                             color = Color(0xFF94A3B8)
@@ -345,7 +386,7 @@ fun PermissionsSetupScreen(onNext: () -> Unit, isSenior: Boolean = false) {
 }
 
 private fun checkPermissions(context: Context, permissions: List<String>): Boolean {
-    return permissions.all {
+    return permissions.filter { it != Manifest.permission.ACCESS_BACKGROUND_LOCATION }.all {
         ContextCompat.checkSelfPermission(context, it) == PackageManager.PERMISSION_GRANTED
     }
 }

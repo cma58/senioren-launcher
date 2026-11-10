@@ -1,4 +1,6 @@
 package com.seniorenlauncher.ui.screens
+import com.seniorenlauncher.R
+import com.seniorenlauncher.util.i18n
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -36,15 +38,15 @@ fun NotesScreen(onBack: () -> Unit) {
     var noteToEdit by remember { mutableStateOf<Note?>(null) }
 
     Column(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background).padding(horizontal = 12.dp, vertical = 8.dp)) {
-        ScreenHeader(title = "Notities", onBack = onBack)
+        ScreenHeader(title = i18n(R.string.notities), onBack = onBack)
         
         if (notes.isEmpty()) {
             Box(Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.Center) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Text("📝", fontSize = 80.sp)
                     Spacer(Modifier.height(16.dp))
-                    Text("Nog geen notities", fontSize = 20.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    Text("Druk op de + knop om te beginnen", fontSize = 16.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text(i18n(R.string.nog_geen_notities), fontSize = 20.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text(i18n(R.string.druk_op_de_knop_om), fontSize = 16.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             }
         } else {
@@ -74,7 +76,7 @@ fun NotesScreen(onBack: () -> Unit) {
             containerColor = MaterialTheme.colorScheme.primaryContainer,
             shape = RoundedCornerShape(20.dp)
         ) {
-            Icon(Icons.Default.Add, "Nieuwe notitie", modifier = Modifier.size(40.dp))
+            Icon(Icons.Default.Add, i18n(R.string.nieuwe_notitie), modifier = Modifier.size(40.dp))
         }
     }
 
@@ -109,12 +111,12 @@ fun NoteCard(note: Note, onClick: () -> Unit, onDelete: () -> Unit) {
     ) {
         Row(Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
             Column(Modifier.weight(1f)) {
-                Text(note.title.ifBlank { "Geen titel" }, fontSize = 20.sp, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                Text(note.title.ifBlank { i18n(R.string.geen_titel_2) }, fontSize = 20.sp, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 Text(note.content, fontSize = 16.sp, maxLines = 2, overflow = TextOverflow.Ellipsis, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 Text(dateStr, fontSize = 12.sp, color = MaterialTheme.colorScheme.primary, modifier = Modifier.padding(top = 4.dp))
             }
             IconButton(onClick = onDelete) {
-                Icon(Icons.Default.Delete, "Verwijder", tint = Color.Red.copy(alpha = 0.7f))
+                Icon(Icons.Default.Delete, i18n(R.string.verwijder_2), tint = Color.Red.copy(alpha = 0.7f))
             }
         }
     }
@@ -127,20 +129,20 @@ fun NoteDialog(note: Note?, onDismiss: () -> Unit, onSave: (String, String) -> U
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text(if (note == null) "Nieuwe Notitie" else "Notitie Bewerken", fontWeight = FontWeight.Bold) },
+        title = { Text(if (note == null) i18n(R.string.nieuwe_notitie_2) else i18n(R.string.notitie_bewerken), fontWeight = FontWeight.Bold) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 OutlinedTextField(
                     value = title,
                     onValueChange = { title = it },
-                    label = { Text("Titel") },
+                    label = { Text(i18n(R.string.titel)) },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true
                 )
                 OutlinedTextField(
                     value = content,
                     onValueChange = { content = it },
-                    label = { Text("Uw tekst...") },
+                    label = { Text(i18n(R.string.uw_tekst)) },
                     modifier = Modifier.fillMaxWidth().height(200.dp),
                     minLines = 5
                 )
@@ -151,12 +153,12 @@ fun NoteDialog(note: Note?, onDismiss: () -> Unit, onSave: (String, String) -> U
                 onClick = { if (content.isNotBlank() || title.isNotBlank()) onSave(title, content) },
                 shape = RoundedCornerShape(12.dp)
             ) {
-                Text("Opslaan", fontSize = 18.sp)
+                Text(i18n(R.string.opslaan_2), fontSize = 18.sp)
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("Annuleren", fontSize = 18.sp)
+                Text(i18n(R.string.annuleren_2), fontSize = 18.sp)
             }
         }
     )

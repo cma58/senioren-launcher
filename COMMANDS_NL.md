@@ -1,5 +1,7 @@
 # 📟 Volledig Overzicht SMS-Commando's (v0.8.5)
 
+**🌐 Taal:** [English](COMMANDS.md) · [Русский](COMMANDS_RU.md) · **Nederlands**
+
 Deze pagina bevat **alle** beschikbare commando's waarmee u de Senioren Launcher op afstand kunt beheren. 
 
 ---

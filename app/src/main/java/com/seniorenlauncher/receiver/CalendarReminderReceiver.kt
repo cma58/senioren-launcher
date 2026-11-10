@@ -1,4 +1,6 @@
 package com.seniorenlauncher.receiver
+import com.seniorenlauncher.R
+import com.seniorenlauncher.util.i18n
 
 import android.app.NotificationManager
 import android.app.PendingIntent
@@ -21,7 +23,7 @@ class CalendarReminderReceiver : BroadcastReceiver() {
         @OptIn(DelicateCoroutinesApi::class)
         GlobalScope.launch(Dispatchers.IO) {
             try {
-                var eventTitle = "Geplande afspraak"
+                var eventTitle = i18n(R.string.geplande_afspraak)
                 var startTime: Long = -1
                 var eventId: Long = System.currentTimeMillis()
 
@@ -51,8 +53,8 @@ class CalendarReminderReceiver : BroadcastReceiver() {
                 val eventHour = cal.get(Calendar.HOUR_OF_DAY)
                 val eventMinute = cal.get(Calendar.MINUTE)
 
-                val eventTimeString = if (eventMinute == 0) "om $eventHour uur" else "om $eventHour uur $eventMinute"
-                val ttsLabel = "U heeft een afspraak voor $eventTitle $eventTimeString."
+                val eventTimeString = if (eventMinute == 0) i18n(R.string.om_uur, eventHour) else i18n(R.string.om_uur_2, eventHour, eventMinute)
+                val ttsLabel = i18n(R.string.u_heeft_een_afspraak_voor, eventTitle, eventTimeString)
 
                 // 2. Bouw de Intent (EXTREEM DWINGEND)
                 val notificationId = 9999
@@ -81,7 +83,7 @@ class CalendarReminderReceiver : BroadcastReceiver() {
                 // 3. Bouw de Notificatie
                 val notification = NotificationCompat.Builder(context, LauncherApp.CH_CALENDAR)
                     .setSmallIcon(android.R.drawable.ic_lock_idle_alarm)
-                    .setContentTitle("📅 AFSPRAAK")
+                    .setContentTitle(i18n(R.string.afspraak))
                     .setContentText(eventTitle)
                     .setPriority(NotificationCompat.PRIORITY_MAX)
                     .setCategory(NotificationCompat.CATEGORY_ALARM)

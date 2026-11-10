@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="tile_move_title">Change order</string>
+    <string name="tile_position">%1$s: position %2$d of %3$d</string>
+    <string name="tile_move_earlier">◀ Earlier</string>
+    <string name="tile_move_later">Later ▶</string>
+    <string name="tile_more">Change or remove</string>
+    <string name="tile_done">DONE</string>
+</resources>

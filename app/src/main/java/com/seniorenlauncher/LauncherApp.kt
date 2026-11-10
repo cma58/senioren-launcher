@@ -1,4 +1,6 @@
 package com.seniorenlauncher
+import com.seniorenlauncher.R
+import com.seniorenlauncher.util.i18n
 
 import android.app.Application
 import android.app.Notification
@@ -29,8 +31,8 @@ class LauncherApp : Application() {
         val mgr = getSystemService(NotificationManager::class.java)
         
         // SMS Channel
-        val smsChannel = NotificationChannel(CH_SMS, "SMS Berichten", NotificationManager.IMPORTANCE_HIGH).apply {
-            description = "Meldingen voor nieuwe SMS-berichten"
+        val smsChannel = NotificationChannel(CH_SMS, i18n(R.string.sms_berichten), NotificationManager.IMPORTANCE_HIGH).apply {
+            description = i18n(R.string.meldingen_voor_nieuwe_sms_berichten)
             enableLights(true)
             enableVibration(true)
             setShowBadge(true)
@@ -43,8 +45,8 @@ class LauncherApp : Application() {
         }
 
         // Medicijnen Channel
-        val medsChannel = NotificationChannel(CH_MEDS, "Medicijnen", NotificationManager.IMPORTANCE_HIGH).apply {
-            description = "Herinneringen voor inname van medicatie"
+        val medsChannel = NotificationChannel(CH_MEDS, i18n(R.string.medicijnen_2), NotificationManager.IMPORTANCE_HIGH).apply {
+            description = i18n(R.string.herinneringen_voor_inname_van_medicatie)
             enableLights(true)
             enableVibration(true)
             setShowBadge(true)
@@ -58,8 +60,8 @@ class LauncherApp : Application() {
         }
 
         // Wekker Channel
-        val alarmChannel = NotificationChannel(CH_ALARM, "Wekkers", NotificationManager.IMPORTANCE_MAX).apply {
-            description = "Kanaal voor wekker die moet blijven afgaan"
+        val alarmChannel = NotificationChannel(CH_ALARM, i18n(R.string.wekkers), NotificationManager.IMPORTANCE_MAX).apply {
+            description = i18n(R.string.kanaal_voor_wekker_die_moet)
             enableLights(true)
             enableVibration(true)
             setBypassDnd(true)
@@ -72,8 +74,8 @@ class LauncherApp : Application() {
         }
 
         // Agenda Wekker Channel
-        val calendarChannel = NotificationChannel(CH_CALENDAR, "Agenda Wekkers", NotificationManager.IMPORTANCE_MAX).apply {
-            description = "Grote meldingen voor agenda afspraken"
+        val calendarChannel = NotificationChannel(CH_CALENDAR, i18n(R.string.agenda_wekkers), NotificationManager.IMPORTANCE_MAX).apply {
+            description = i18n(R.string.grote_meldingen_voor_agenda_afspraken)
             enableLights(true)
             enableVibration(true)
             setBypassDnd(true)
@@ -86,14 +88,14 @@ class LauncherApp : Application() {
         }
 
         mgr.createNotificationChannels(listOf(
-            NotificationChannel(CH_SOS, "SOS Noodgeval", NotificationManager.IMPORTANCE_HIGH),
+            NotificationChannel(CH_SOS, i18n(R.string.sos_noodgeval), NotificationManager.IMPORTANCE_HIGH),
             medsChannel,
             smsChannel,
             alarmChannel,
             calendarChannel,
-            NotificationChannel(CH_RADIO, "Radio Speler", NotificationManager.IMPORTANCE_LOW),
-            NotificationChannel(CH_BATTERY, "Batterij", NotificationManager.IMPORTANCE_DEFAULT),
-            NotificationChannel(CH_GENERAL, "Algemeen", NotificationManager.IMPORTANCE_DEFAULT)
+            NotificationChannel(CH_RADIO, i18n(R.string.radio_speler), NotificationManager.IMPORTANCE_LOW),
+            NotificationChannel(CH_BATTERY, i18n(R.string.batterij), NotificationManager.IMPORTANCE_DEFAULT),
+            NotificationChannel(CH_GENERAL, i18n(R.string.algemeen), NotificationManager.IMPORTANCE_DEFAULT)
         ))
     }
 

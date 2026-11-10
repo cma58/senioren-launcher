@@ -1,4 +1,6 @@
 package com.seniorenlauncher.util
+import com.seniorenlauncher.R
+import com.seniorenlauncher.util.i18n
 
 import android.content.Context
 import android.content.Intent
@@ -37,7 +39,7 @@ object AppLauncher {
             context.startActivity(intent)
         } catch (e: Exception) {
             Log.e("AppLauncher", "Error opening camera", e)
-            Toast.makeText(context, "Kan camera niet openen", Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, i18n(R.string.kan_camera_niet_openen), Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -80,7 +82,7 @@ object AppLauncher {
                 intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                 context.startActivity(intent)
             } else {
-                Toast.makeText(context, "RustDesk niet gevonden", Toast.LENGTH_LONG).show()
+                Toast.makeText(context, i18n(R.string.rustdesk_niet_gevonden), Toast.LENGTH_LONG).show()
             }
         } catch (e: Exception) {
             Log.e("AppLauncher", "Error starting remote support", e)
@@ -98,7 +100,7 @@ object AppLauncher {
             context.startActivity(intent)
         } catch (e: Exception) {
             Log.e("AppLauncher", "Error opening wifi settings", e)
-            Toast.makeText(context, "Kan wifi-instellingen niet openen", Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, i18n(R.string.kan_wifi_instellingen_niet_openen), Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -119,7 +121,7 @@ object AppLauncher {
                 context.startActivity(intent)
             } catch (e2: Exception) {
                 Log.e("AppLauncher", "Error opening bluetooth settings", e2)
-                Toast.makeText(context, "Kan bluetooth-instellingen niet openen", Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, i18n(R.string.kan_bluetooth_instellingen_niet_openen), Toast.LENGTH_SHORT).show()
             }
         }
     }

@@ -67,7 +67,9 @@ class HomeViewModel : ViewModel() {
                 weatherOverlay = if (it.id == "weather" && weatherData != null) "${weatherData.temp.toInt()}°" else null
             )
         }
+        val order = settings.appOrder
         return (visibleStandardApps + mappedApps).distinctBy { it.id }
+            .sortedBy { app -> order.indexOf(app.id).let { if (it < 0) Int.MAX_VALUE else it } }
     }
 
     fun setWeatherData(data: WeatherData?) {

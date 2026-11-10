@@ -1,4 +1,6 @@
 package com.seniorenlauncher.ui.screens.home
+import com.seniorenlauncher.R
+import com.seniorenlauncher.util.i18n
 
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
@@ -46,8 +48,8 @@ fun FallDetectionDialog(
 
     if (!hasPermission) {
         PermissionRequestDialog(
-            title = "SOS Toegang",
-            description = "Om hulp te kunnen inschakelen bij een val hebben we toestemming nodig voor locatie, bellen en SMS.",
+            title = i18n(R.string.sos_toegang),
+            description = i18n(R.string.om_hulp_te_kunnen_inschakelen),
             onDismiss = onCancel,
             onGrant = {
                 permissionLauncher.launch(PermissionUtils.getRequiredSosPermissions().toTypedArray())
@@ -89,7 +91,7 @@ fun FallDetectionDialog(
                 )
 
                 Text(
-                    "VAL GEDETECTEERD!",
+                    i18n(R.string.val_gedetecteerd),
                     fontSize = 32.sp,
                     fontWeight = FontWeight.Black,
                     color = Color.White,
@@ -97,7 +99,7 @@ fun FallDetectionDialog(
                 )
 
                 Text(
-                    "Bent u gevallen? We gaan hulp inschakelen over:",
+                    i18n(R.string.bent_u_gevallen_we_gaan),
                     fontSize = 20.sp,
                     fontWeight = FontWeight.Bold,
                     color = Color.White,
@@ -125,7 +127,7 @@ fun FallDetectionDialog(
                     colors = ButtonDefaults.buttonColors(containerColor = Color.White, contentColor = Color(0xFFEF4444)),
                     shape = RoundedCornerShape(40.dp)
                 ) {
-                    Text("STOP / ANNULEER", fontSize = 24.sp, fontWeight = FontWeight.Black)
+                    Text(i18n(R.string.stop_annuleer), fontSize = 24.sp, fontWeight = FontWeight.Black)
                 }
 
                 val confirmInteractionSource = remember { MutableInteractionSource() }
@@ -143,7 +145,7 @@ fun FallDetectionDialog(
                     border = BorderStroke(2.dp, Color.White.copy(alpha = 0.5f)),
                     shape = RoundedCornerShape(40.dp)
                 ) {
-                    Text("BEL NU HULP", fontSize = 22.sp, fontWeight = FontWeight.Black)
+                    Text(i18n(R.string.bel_nu_hulp), fontSize = 22.sp, fontWeight = FontWeight.Black)
                 }
             }
         }

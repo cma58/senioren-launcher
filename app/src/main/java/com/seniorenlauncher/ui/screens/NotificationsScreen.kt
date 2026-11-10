@@ -1,4 +1,6 @@
 package com.seniorenlauncher.ui.screens
+import com.seniorenlauncher.R
+import com.seniorenlauncher.util.i18n
 
 import android.app.Notification
 import android.app.PendingIntent
@@ -64,7 +66,7 @@ fun NotificationsScreen(onBack: () -> Unit, onNavigate: (String) -> Unit) {
             .background(MaterialTheme.colorScheme.background)
             .padding(horizontal = 12.dp, vertical = 8.dp)
     ) {
-        ScreenHeader(title = "Berichten & Herinneringen", onBack = onBack)
+        ScreenHeader(title = i18n(R.string.berichten_herinneringen), onBack = onBack)
 
         if (!hasPermission) {
             PermissionRequiredScreen()
@@ -74,7 +76,7 @@ fun NotificationsScreen(onBack: () -> Unit, onNavigate: (String) -> Unit) {
             if (grouped.isEmpty()) {
                 Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     Text(
-                        "Geen nieuwe berichten",
+                        i18n(R.string.geen_nieuwe_berichten),
                         fontSize = 22.sp,
                         color = Color.Gray,
                         textAlign = TextAlign.Center
@@ -109,7 +111,7 @@ fun NotificationsScreen(onBack: () -> Unit, onNavigate: (String) -> Unit) {
                         ) {
                             Icon(Icons.Default.Delete, contentDescription = null)
                             Spacer(Modifier.width(12.dp))
-                            Text("ALLES WISSEN", fontSize = 20.sp, fontWeight = FontWeight.Black)
+                            Text(i18n(R.string.alles_wissen), fontSize = 20.sp, fontWeight = FontWeight.Black)
                         }
                     }
                 }
@@ -120,8 +122,8 @@ fun NotificationsScreen(onBack: () -> Unit, onNavigate: (String) -> Unit) {
     if (showClearConfirm) {
         AlertDialog(
             onDismissRequest = { showClearConfirm = false },
-            title = { Text("Alle meldingen wissen?", fontSize = 22.sp, fontWeight = FontWeight.Bold) },
-            text = { Text("Weet u zeker dat u alle meldingen wilt verwijderen? U kunt dit niet ongedaan maken.", fontSize = 18.sp) },
+            title = { Text(i18n(R.string.alle_meldingen_wissen), fontSize = 22.sp, fontWeight = FontWeight.Bold) },
+            text = { Text(i18n(R.string.weet_u_zeker_dat_u), fontSize = 18.sp) },
             confirmButton = {
                 Button(
                     onClick = {
@@ -130,12 +132,12 @@ fun NotificationsScreen(onBack: () -> Unit, onNavigate: (String) -> Unit) {
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
                 ) {
-                    Text("Ja, wis alles", fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                    Text(i18n(R.string.ja_wis_alles), fontSize = 18.sp, fontWeight = FontWeight.Bold)
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showClearConfirm = false }) {
-                    Text("Nee, terug", fontSize = 18.sp)
+                    Text(i18n(R.string.nee_terug), fontSize = 18.sp)
                 }
             },
             shape = RoundedCornerShape(20.dp)
@@ -159,14 +161,14 @@ fun PermissionRequiredScreen() {
         )
         Spacer(Modifier.height(24.dp))
         Text(
-            "Toegang nodig",
+            i18n(R.string.toegang_nodig),
             fontSize = 28.sp,
             fontWeight = FontWeight.Bold,
             textAlign = TextAlign.Center
         )
         Spacer(Modifier.height(16.dp))
         Text(
-            "Om uw berichten van WhatsApp, SMS en andere apps hier te tonen, hebben we toestemming nodig.",
+            i18n(R.string.om_uw_berichten_van_whatsapp),
             fontSize = 20.sp,
             textAlign = TextAlign.Center,
             lineHeight = 28.sp
@@ -179,7 +181,7 @@ fun PermissionRequiredScreen() {
             modifier = Modifier.fillMaxWidth().height(70.dp),
             shape = RoundedCornerShape(16.dp)
         ) {
-            Text("Instellingen openen", fontSize = 20.sp, fontWeight = FontWeight.Bold)
+            Text(i18n(R.string.instellingen_openen), fontSize = 20.sp, fontWeight = FontWeight.Bold)
         }
     }
 }
@@ -219,7 +221,7 @@ fun NotificationGroupCard(
                 IconButton(onClick = {
                     group.items.forEach { NotificationListener.dismiss(it.key) }
                 }) {
-                    Icon(Icons.Default.Close, "Wis groep", tint = Color.Gray)
+                    Icon(Icons.Default.Close, i18n(R.string.wis_groep), tint = Color.Gray)
                 }
             }
             
@@ -229,7 +231,7 @@ fun NotificationGroupCard(
                 Column(Modifier.weight(1f)) {
                     Text(
                         text = if (group.items.size > 1) {
-                            "${group.items.size} nieuwe berichten"
+                            i18n(R.string.nieuwe_berichten, group.items.size)
                         } else {
                             group.items.first().title
                         },
@@ -276,7 +278,7 @@ fun NotificationGroupCard(
                                 Text(item.text, fontSize = 16.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
                             }
                             IconButton(onClick = { NotificationListener.dismiss(item.key) }) {
-                                Icon(Icons.Default.Close, contentDescription = "Wis", modifier = Modifier.size(20.dp))
+                                Icon(Icons.Default.Close, contentDescription = i18n(R.string.wis), modifier = Modifier.size(20.dp))
                             }
                         }
                     }

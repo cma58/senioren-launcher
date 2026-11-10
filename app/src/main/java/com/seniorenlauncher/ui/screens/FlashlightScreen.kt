@@ -1,4 +1,6 @@
 package com.seniorenlauncher.ui.screens
+import com.seniorenlauncher.R
+import com.seniorenlauncher.util.i18n
 
 import android.content.Context
 import android.hardware.camera2.CameraManager
@@ -39,7 +41,7 @@ fun FlashlightScreen(onBack: () -> Unit) {
     }
 
     Column(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background).padding(horizontal = 12.dp, vertical = 8.dp)) {
-        ScreenHeader(title = "Zaklamp", onBack = onBack)
+        ScreenHeader(title = i18n(R.string.zaklamp), onBack = onBack)
         
         Column(
             Modifier.weight(1f).fillMaxWidth(),
@@ -47,7 +49,7 @@ fun FlashlightScreen(onBack: () -> Unit) {
             verticalArrangement = Arrangement.Center
         ) {
             Text(
-                if (isFlashOn) "De zaklamp is AAN" else "De zaklamp is UIT",
+                if (isFlashOn) i18n(R.string.de_zaklamp_is_aan) else i18n(R.string.de_zaklamp_is_uit),
                 fontSize = 24.sp,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onBackground
@@ -97,7 +99,7 @@ fun FlashlightScreen(onBack: () -> Unit) {
                 shape = RoundedCornerShape(16.dp)
             ) {
                 Text(
-                    if (isFlashOn) "ZET UIT" else "ZET AAN",
+                    if (isFlashOn) i18n(R.string.zet_uit) else i18n(R.string.zet_aan),
                     fontSize = 24.sp,
                     fontWeight = FontWeight.ExtraBold
                 )

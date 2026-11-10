@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="tile_move_title">Reihenfolge ändern</string>
+    <string name="tile_position">%1$s: Platz %2$d von %3$d</string>
+    <string name="tile_move_earlier">◀ Früher</string>
+    <string name="tile_move_later">Später ▶</string>
+    <string name="tile_more">Ändern oder entfernen</string>
+    <string name="tile_done">FERTIG</string>
+</resources>

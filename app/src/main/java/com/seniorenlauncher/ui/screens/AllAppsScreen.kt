@@ -1,4 +1,6 @@
 package com.seniorenlauncher.ui.screens
+import com.seniorenlauncher.R
+import com.seniorenlauncher.util.i18n
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -49,7 +51,7 @@ fun AllAppsScreen(onBack: () -> Unit) {
     }
 
     Column(Modifier.fillMaxSize().background(Color(0xFF0F172A)).padding(horizontal = 12.dp, vertical = 8.dp)) {
-        ScreenHeader(title = "Alle Apps", onBack = onBack)
+        ScreenHeader(title = i18n(R.string.alle_apps), onBack = onBack)
         
         Spacer(Modifier.height(8.dp))
 
@@ -58,7 +60,7 @@ fun AllAppsScreen(onBack: () -> Unit) {
             value = searchQuery,
             onValueChange = { searchQuery = it },
             modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),
-            placeholder = { Text("Zoek een app...", fontWeight = FontWeight.Bold) },
+            placeholder = { Text(i18n(R.string.zoek_een_app), fontWeight = FontWeight.Bold) },
             leadingIcon = { Icon(Icons.Default.Search, null, tint = Color.White) },
             shape = RoundedCornerShape(40.dp),
             textStyle = androidx.compose.ui.text.TextStyle(fontSize = 18.sp, fontWeight = FontWeight.Black, color = Color.White),

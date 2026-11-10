@@ -1,4 +1,6 @@
 package com.seniorenlauncher.service
+import com.seniorenlauncher.R
+import com.seniorenlauncher.util.i18n
 
 import android.Manifest
 import android.app.Service
@@ -32,8 +34,8 @@ class SOSService : Service() {
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         val notification = NotificationCompat.Builder(this, LauncherApp.CH_SOS)
-            .setContentTitle("SOS ALARM ACTIEF")
-            .setContentText("Uw locatie is verzonden en hulp wordt gebeld.")
+            .setContentTitle(i18n(R.string.sos_alarm_actief))
+            .setContentText(i18n(R.string.uw_locatie_is_verzonden_en))
             .setSmallIcon(android.R.drawable.ic_dialog_alert)
             .setOngoing(true)
             .setPriority(NotificationCompat.PRIORITY_MAX)
@@ -86,9 +88,9 @@ class SOSService : Service() {
 
         val mapsUrl = location?.let { "https://www.google.com/maps?q=${it.latitude},${it.longitude}" }
         val message = if (mapsUrl != null) {
-            "Sionro NOODGEVAL! Ik heb direct hulp nodig. Locatie: $mapsUrl"
+            i18n(R.string.sionro_noodgeval_ik_heb_direct, mapsUrl)
         } else {
-            "Sionro NOODGEVAL! Ik heb direct hulp nodig. Kon exacte locatie niet bepalen."
+            i18n(R.string.sionro_noodgeval_ik_heb_direct_2)
         }
 
         // 2. SMS versturen naar alle SOS contacten

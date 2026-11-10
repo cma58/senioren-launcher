@@ -1,4 +1,6 @@
 package com.seniorenlauncher.ui.screens
+import com.seniorenlauncher.R
+import com.seniorenlauncher.util.i18n
 
 import android.app.Activity
 import android.content.Context
@@ -166,7 +168,7 @@ fun IncomingCallScreen(onEnd: () -> Unit = {}) {
         } else null
     }
     
-    val displayName = contactName ?: rawNumber.ifEmpty { "Onbekend Nummer" }
+    val displayName = contactName ?: rawNumber.ifEmpty { i18n(R.string.onbekend_nummer) }
     val isRinging = callState == Call.STATE_RINGING
     val isSpeakerOn = audioState?.route == CallAudioState.ROUTE_SPEAKER
 
@@ -182,7 +184,7 @@ fun IncomingCallScreen(onEnd: () -> Unit = {}) {
         Spacer(Modifier.height(32.dp))
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             Text(
-                text = if (isRinging) "INKOMENDE OPROEP" else "IN GESPREK",
+                text = if (isRinging) i18n(R.string.inkomende_oproep) else i18n(R.string.in_gesprek),
                 color = Color.White.copy(alpha = 0.7f),
                 fontSize = 20.sp,
                 fontWeight = FontWeight.Bold
@@ -227,7 +229,7 @@ fun IncomingCallScreen(onEnd: () -> Unit = {}) {
                         Icon(Icons.Default.CallEnd, null, modifier = Modifier.size(40.dp))
                         Spacer(Modifier.height(4.dp))
                         Text(
-                            "WEIGEREN", 
+                            i18n(R.string.weigeren), 
                             fontSize = 18.sp, 
                             fontWeight = FontWeight.Black,
                             textAlign = TextAlign.Center,
@@ -250,7 +252,7 @@ fun IncomingCallScreen(onEnd: () -> Unit = {}) {
                         Icon(Icons.Default.Call, null, modifier = Modifier.size(40.dp))
                         Spacer(Modifier.height(4.dp))
                         Text(
-                            "OPNEMEN", 
+                            i18n(R.string.opnemen), 
                             fontSize = 18.sp, 
                             fontWeight = FontWeight.Black,
                             textAlign = TextAlign.Center,
@@ -288,7 +290,7 @@ fun IncomingCallScreen(onEnd: () -> Unit = {}) {
                         )
                         Spacer(Modifier.width(12.dp))
                         Text(
-                            if (isSpeakerOn) "LUIDSPREKER AAN" else "LUIDSPREKER UIT", 
+                            if (isSpeakerOn) i18n(R.string.luidspreker_aan) else i18n(R.string.luidspreker_uit), 
                             fontSize = 22.sp, 
                             fontWeight = FontWeight.Bold,
                             textAlign = TextAlign.Center
@@ -312,7 +314,7 @@ fun IncomingCallScreen(onEnd: () -> Unit = {}) {
                         Icon(Icons.Default.CallEnd, null, modifier = Modifier.size(40.dp))
                         Spacer(Modifier.width(12.dp))
                         Text(
-                            "OPHANGEN", 
+                            i18n(R.string.ophangen), 
                             fontSize = 26.sp, 
                             fontWeight = FontWeight.Black,
                             textAlign = TextAlign.Center
